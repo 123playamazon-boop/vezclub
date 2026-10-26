@@ -1632,7 +1632,7 @@
     var isca = PHOTO_LADDER[0].usd;
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
     html += '<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem"><span class="streak">' + I.flame + 'Sequência de ' + state.streak + ' dias</span><span style="font-size:0.78rem;color:var(--faint)">volte amanhã pra não perder</span></div>';
-    html += '<div class="page-head"><div class="eyebrow">Explorar</div><h1>Descubra criadoras</h1><p>Cada perfil é um mundo. Entre no de quem te chamar.</p></div>';
+    html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Elas estão online agora.", "They're online right now.", "Ellas están en línea ahora.") + '</h1><p>' + L("Toca em uma e vê tudo que ela não mostra em mais lugar nenhum — e o chat é com ela mesma, não com robô.", "Tap one and see everything she shows nowhere else — and the chat is with her, personally, not a bot.", "Toca en una y mira todo lo que no enseña en ningún otro lugar — y el chat es con ella misma, no un bot.") + '</p></div>';
     html += '<div style="display:flex;justify-content:flex-end;margin:-0.6rem 0 0.8rem"><button class="btn btn-ghost btn-sm" data-coll="1">' + I.star + ' Minha coleção</button></div>';
     html += storiesRow();
     if (!state.feedCat) state.feedCat = "alta";
@@ -1971,24 +1971,24 @@
 
   function agencyPitchHtml() {
     var w = [
-      ["Um time dedicado a você", "Equipe de produção, edição e estratégia cuidando da sua conta. Você só grava."],
-      ["IA que multiplica seus vídeos", "Nossa IA pega um vídeo e replica em dezenas de cortes e formatos pra espalhar."],
-      ["Rede de contas no Instagram", "Uma fazenda de contas empurra seu conteúdo todo dia pra milhares de pessoas."],
-      ["Tráfego pago no seu nome", "A gente investe anúncios do nosso bolso pra construir a SUA audiência."]
+      [L("Um time inteiro trabalhando por você", "A whole team working for you", "Un equipo entero trabajando por ti"), L("Produção, edição e estratégia cuidando da sua conta enquanto você dorme. Você só grava do celular.", "Production, editing and strategy running your account while you sleep. You just record from your phone.", "Producción, edición y estrategia manejando tu cuenta mientras duermes. Tú solo grabas desde el celular.")],
+      [L("IA que multiplica cada vídeo seu", "AI that multiplies every video you make", "IA que multiplica cada video tuyo"), L("Um vídeo vira dezenas de cortes espalhados por todo canto — você aparece em todo lugar sem gravar mais.", "One video becomes dozens of cuts spread everywhere — you're everywhere without recording more.", "Un video se vuelve decenas de cortes por todos lados — apareces en todas partes sin grabar más.")],
+      [L("Uma rede de contas te empurrando", "A network of accounts pushing you", "Una red de cuentas empujándote"), L("Dezenas de perfis jogam seu conteúdo pra milhares de pessoas novas todo santo dia.", "Dozens of profiles push your content to thousands of new people every single day.", "Decenas de perfiles lanzan tu contenido a miles de personas nuevas cada día.")],
+      [L("Tráfego pago no SEU nome", "Paid traffic in YOUR name", "Tráfico pago en TU nombre"), L("A gente queima anúncio do nosso próprio bolso pra construir a SUA audiência. Você não paga nada.", "We burn ad money out of our own pocket to build YOUR audience. You pay nothing.", "Quemamos dinero en anuncios de nuestro bolsillo para construir TU audiencia. Tú no pagas nada.")]
     ];
     return '<div class="offer" style="margin-bottom:1.5rem"><div class="offer-pad">' +
-      '<div class="offer-name">Não é só postar numa plataforma</div>' +
-      '<div class="offer-line">A gente investe na sua carreira. Você só cria — a gente faz você faturar.</div>' +
+      '<div class="offer-name">' + L("Isso não é uma plataforma. É uma máquina de te fazer faturar.", "This isn't a platform. It's a machine built to make you money.", "Esto no es una plataforma. Es una máquina para hacerte facturar.") + '</div>' +
+      '<div class="offer-line">' + L("A gente investe do nosso bolso pra te transformar em marca — e em renda. Você só cria.", "We invest our own money to turn you into a brand — and into income. You just create.", "Invertimos de nuestro bolsillo para convertirte en marca — y en ingresos. Tú solo creas.") + '</div>' +
       '<ul class="offer-stack" style="margin:1.1rem 0">' + w.map(function (x) { return '<li>' + I.check + '<span class="s-txt"><b>' + x[0] + '</b><br><span style="opacity:.9;font-weight:400">' + x[1] + '</span></span></li>'; }).join("") + '</ul>' +
-      '<div class="offer-guarantee">' + I.shield + 'Zero investimento seu, zero risco. Se não faturar, você não perdeu nada — o risco é todo nosso.</div>' +
-      '<div class="offer-micro" style="margin-top:0.8rem">' + I.bolt + ' Você fica com 20%. A gente banca os outros 80% em tráfego, time e tecnologia pra te fazer crescer.</div>' +
+      '<div class="offer-guarantee">' + I.shield + L("Zero investimento seu, zero risco. Se você não faturar, não perdeu nada — o risco é 100% nosso.", "Zero investment from you, zero risk. If you don't earn, you lost nothing — the risk is 100% ours.", "Cero inversión tuya, cero riesgo. Si no facturas, no perdiste nada — el riesgo es 100% nuestro.") + '</div>' +
+      '<div class="offer-micro" style="margin-top:0.8rem">' + I.bolt + ' ' + L("Você fica com 20% e não gasta nada. A gente banca os outros 80% em tráfego, time e tecnologia pra te fazer explodir.", "You keep 20% and spend nothing. We cover the other 80% in traffic, team and tech to blow you up.", "Te quedas con 20% y no gastas nada. Cubrimos el otro 80% en tráfico, equipo y tecnología para hacerte explotar.") + '</div>' +
       '</div></div>';
   }
 
   function creatorProofHtml() {
     var q = [
-      [L("Em 2 meses eu já vivia disso. A equipe cuida de tudo, eu só gravo.", "In 2 months I was already living off this. The team handles everything, I just record.", "En 2 meses ya vivía de esto. El equipo se encarga de todo, yo solo grabo."), "Luna M."],
-      [L("Nunca pensei que teria tráfego assim. Minha audiência triplicou.", "Never thought I'd get traffic like this. My audience tripled.", "Nunca pensé que tendría tráfico así. Mi audiencia se triplicó."), "Bianca R."]
+      [L("No 2º mês já vivia disso e larguei meu emprego. Eu só gravo do quarto — a equipe faz o resto.", "By month 2 I was living off this and quit my job. I just record from my room — the team does the rest.", "En el 2º mes ya vivía de esto y dejé mi empleo. Yo solo grabo desde mi cuarto — el equipo hace el resto."), "Luna M."],
+      [L("Em 90 dias minha audiência triplicou sem eu gastar 1 real em anúncio. Eles bancam tudo.", "In 90 days my audience tripled without me spending a cent on ads. They cover everything.", "En 90 días mi audiencia se triplicó sin gastar un peso en anuncios. Ellos cubren todo."), "Bianca R."]
     ];
     return '<div class="pf-section" style="margin-top:0"><div class="fans-grid">' + q.map(function (x) { return '<div class="fan">"' + x[0] + '"<div class="who">— ' + x[1] + '</div></div>'; }).join("") + '</div><p class="muted-note">' + L("Depoimentos ilustrativos.", "Illustrative testimonials.", "Testimonios ilustrativos.") + '</p></div>';
   }
@@ -1998,7 +1998,7 @@
     var html = protoNotice('<span><b>Como a criadora entra.</b> Identidade, verificação 18+, dados de pagamento, contrato e aprovação — tudo antes de postar.</span>');
     html += stepperHtml(s);
     if (s === 1) {
-      html += '<div class="page-head" style="margin-top:0.3rem"><div class="eyebrow">' + L("Seja uma criadora Vezclub", "Become an Vezclub creator", "Sé una creadora Vezclub") + '</div><h1>' + L("Você cria. A gente faz você faturar.", "You create. We make you money.", "Tú creas. Nosotros te hacemos facturar.") + '</h1><p>' + L("Tráfego pago, equipe e tecnologia por nossa conta — você só aparece.", "Paid traffic, team and tech on us — you just show up.", "Tráfico pago, equipo y tecnología por nuestra cuenta — tú solo apareces.") + '</p></div>';
+      html += '<div class="page-head" style="margin-top:0.3rem"><div class="eyebrow">' + L("Seja uma criadora Vezclub", "Become an Vezclub creator", "Sé una creadora Vezclub") + '</div><h1>' + L("Você cria. A gente faz você faturar.", "You create. We make you money.", "Tú creas. Nosotros te hacemos facturar.") + '</h1><p>' + L("Você só grava do celular. A gente coloca tráfego, equipe e tecnologia pra transformar isso em renda — sem você gastar um centavo.", "You just record from your phone. We put in the traffic, team and tech to turn it into income — without you spending a cent.", "Tú solo grabas desde el celular. Nosotros ponemos tráfico, equipo y tecnología para volverlo ingresos — sin que gastes un centavo.") + '</p></div>';
       html += agencyPitchHtml();
       html += creatorProofHtml();
     }
