@@ -1602,6 +1602,41 @@
     else renderAdmin();
     try { app.classList.remove("vin"); void app.offsetWidth; app.classList.add("vin"); } catch (e) {}
     window.scrollTo(0, 0);
+    applyDynTranslation();
+  }
+
+  /* --- live auto-translation of creator-written text (bio, captions) --- */
+  var _trCache = {};
+  function translateOne(text, tl, cb) {
+    try {
+      var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(tl) + "&dt=t&q=" + encodeURIComponent(text);
+      fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+        var out = ""; if (d && d[0]) { d[0].forEach(function (seg) { if (seg && seg[0]) out += seg[0]; }); }
+        cb(out || text);
+      }).catch(function () { cb(text); });
+    } catch (e) { cb(text); }
+  }
+  function applyDynTranslation() {
+    var tl = lang;
+    var nodes = document.querySelectorAll(".pf-hook, .pf-about, .cc-hook2, .rc-cap, .ph-time ~ .post-cap, .post-cap");
+    nodes.forEach(function (el) {
+      if (el.querySelector && el.querySelector("*")) return; // only plain-text nodes
+      var orig = el.getAttribute("data-orig");
+      if (orig === null) { orig = el.textContent; el.setAttribute("data-orig", orig); }
+      orig = (orig || "").trim();
+      if (!orig) return;
+      var key = tl + "|" + orig;
+      var cached = _trCache[key];
+      if (cached === undefined) { try { var ls = localStorage.getItem("tr:" + key); if (ls !== null) cached = ls; } catch (e) {} if (cached !== undefined) _trCache[key] = cached; }
+      if (cached !== undefined) { el.textContent = cached; return; }
+      _trCache[key] = orig; // placeholder to avoid refetch storms; fallback is original
+      translateOne(orig, tl, function (tr) {
+        _trCache[key] = tr; try { localStorage.setItem("tr:" + key, tr); } catch (e) {}
+        document.querySelectorAll(".pf-hook, .pf-about, .cc-hook2, .rc-cap, .post-cap").forEach(function (x) {
+          if ((x.getAttribute("data-orig") || x.textContent || "").trim() === orig) x.textContent = tr;
+        });
+      });
+    });
   }
 
   function protoNotice(txt) {
@@ -1746,6 +1781,7 @@
       b.innerHTML = html;
       items.forEach(function (p) { signUrl(p.media_path).then(function (u) { var el = document.getElementById("col-" + p.id); if (!el || !u) return; el.innerHTML = (p.media_type === "video" ? '<video src="' + u + '" muted playsinline></video>' : '<img src="' + u + '" alt="">') + wmHtml(); }); });
       b.querySelectorAll("[data-coll-open]").forEach(function (row) { row.onclick = function () { state.creatorId = row.getAttribute("data-coll-open"); state.view = "store"; render(); }; });
+      applyDynTranslation();
     });
   }
 
@@ -2568,6 +2604,7 @@
       }).join("") + '</div>';
       pr.data.forEach(function (p) { showFree(p); });
       wireGuestCta(b);
+      applyDynTranslation();
     });
   }
   function wireGuestCta(b) { b.querySelectorAll("[data-gate-signup]").forEach(function (el) { el.onclick = function () { needLogin(); }; }); }
@@ -2619,6 +2656,7 @@
         };
       });
       wireSub(b, creatorKey, subPrice);
+      applyDynTranslation();
     });
   }
   function showFree(p) {
