@@ -1281,7 +1281,7 @@
   };
   function chatSeed() {
     return [
-      { from: "her", text: "Oi... vi que você passou no meu perfil. Fica um pouco comigo?" },
+      { from: "her", text: "Oi... te vi passando no meu perfil. Não some não 🔥 fica comigo?" },
       { from: "her", text: "Tava esperando alguém como você aparecer hoje." },
       { from: "her", locked: true, price: 14, text: "Gravei um vídeo rapidinho só pra você. Quer ver?" }
     ];
@@ -2360,13 +2360,13 @@
     var icon = opts.icon === "video" || opts.icon === "vid" ? I.video : opts.icon === "call" ? I.call : I.photo;
     var c = CREATORS.find(function (x) { return x.id === state.creatorId; });
     var canBump = c && !state.subscribed[c.id];
-    var bumpHtml = canBump ? '<label class="bump"><input type="checkbox" id="bump-sub"><div><div class="bump-t">Vire assinante do ' + c.offerName + '</div><div class="bump-s">+ pack de boas-vindas e 20% off em tudo</div></div><span class="bump-plus">+' + usd(c.subPrice) + '/mês</span></label>' : "";
+    var bumpHtml = canBump ? '<label class="bump"><input type="checkbox" id="bump-sub"><div><div class="bump-t">' + L("Destrava TUDO: vira assinante agora", "Unlock EVERYTHING: go member now", "Desbloquea TODO: hazte miembro ya") + '</div><div class="bump-s">' + L("+ pack de boas-vindas grátis e 20% off em tudo, pra sempre", "+ free welcome pack and 20% off everything, forever", "+ pack de bienvenida gratis y 20% off en todo, para siempre") + '</div></div><span class="bump-plus">+' + usd(c.subPrice) + '/' + L("mês","mo","mes") + '</span></label>' : "";
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal"><div class="modal-pad">' +
-      '<h3>Finalizar compra</h3><p class="m-sub">Revise seu pedido antes de pagar.</p>' +
+      '<h3>' + L("Falta um toque.", "One tap away.", "Falta un toque.") + '</h3><p class="m-sub">' + L("Acesso na hora, direto no seu perfil. Cancele quando quiser.", "Instant access, straight to your profile. Cancel anytime.", "Acceso al instante, directo en tu perfil. Cancela cuando quieras.") + '</p>' +
       '<div class="order"><div class="lr-icon">' + icon + '</div><div class="o-main"><div class="lr-title">' + opts.title + '</div><div class="lr-sub">' + opts.creator + '</div></div><div class="o-total">' + usd(opts.price) + '</div></div>' +
       bumpHtml +
-      '<div class="pay-stub">Pagamento entra na <b>etapa final</b> do projeto.<div class="pay-logos"><span>CCBill</span><span>Stripe</span><span>Cakto</span><span>Pix</span></div></div>' +
-      '<div class="modal-foot"><button class="btn btn-ghost btn-block" data-close>Cancelar</button><button class="btn btn-primary btn-block" id="confirm-buy">Simular compra</button></div>' +
+      '<div class="pay-stub">' + L("Pagamento entra na <b>etapa final</b> do projeto.", "Payment comes in the <b>final stage</b> of the project.", "El pago entra en la <b>etapa final</b> del proyecto.") + '<div class="pay-logos"><span>CCBill</span><span>Stripe</span><span>Cakto</span><span>Pix</span></div></div>' +
+      '<div class="modal-foot"><button class="btn btn-ghost btn-block" data-close>' + L("Agora não", "Not now", "Ahora no") + '</button><button class="btn btn-primary btn-block" id="confirm-buy">' + L("Liberar agora", "Unlock now", "Liberar ahora") + '</button></div>' +
       '</div></div></div>';
     document.getElementById("confirm-buy").onclick = function () {
       var bumpEl = document.getElementById("bump-sub"), bumped = bumpEl && bumpEl.checked;
@@ -2379,7 +2379,7 @@
           if (r.error) { toast("Erro: " + r.error.message); return; }
           state.subscribed[opts.realSub] = true;
           state.subscribedTier[opts.realSub] = opts.tier || "entry";
-          toast("Assinatura ativa · 30 dias de tudo");
+          toast(L("Tá dentro 🔥 acesso a TUDO dela por 30 dias", "You're in 🔥 access to ALL of her for 30 days", "Estás dentro 🔥 acceso a TODO de ella por 30 días"));
           render();
         });
         return;
@@ -2389,7 +2389,7 @@
         sb.rpc("unlock_post", { p_id: opts.realPost }).then(function (r) {
           closeModal();
           if (r.error) { toast("Erro: " + r.error.message); return; }
-          toast("Desbloqueado · acesso por 30 dias");
+          toast(L("Liberado 🔥 é todo seu por 30 dias", "Unlocked 🔥 it's all yours for 30 days", "Desbloqueado 🔥 es todo tuyo por 30 días"));
           render();
         });
         return;
@@ -2954,7 +2954,7 @@
 
   function openChatThread(cid) {
     var c = CREATORS.find(function (x) { return x.id === cid; });
-    var wel = L("Oi 👀 vi que você passou no meu perfil. Fica um pouco comigo?", "Hey 👀 saw you stopped by my profile. Stay with me a bit?", "Hola 👀 vi que pasaste por mi perfil. ¿Te quedas un rato conmigo?");
+    var wel = L("Oi 👀 te vi passando no meu perfil… não some agora não, eu tava doida pra falar com você. Fica comigo? 🔥", "Hey 👀 saw you creeping on my profile… don't disappear now, I was dying to talk to you. Stay with me? 🔥", "Hola 👀 te vi pasando por mi perfil… no desaparezcas ahora, me moría por hablarte. ¿Te quedas conmigo? 🔥");
     if (!sb || !account) { renderThread("", c.name.split(" ")[0], avatar(c), "offline", openChatList, wel); return; }
     sb.rpc("open_conversation", { p_creator_key: cid }).then(function (r) {
       if (r.error || !r.data) { toast("Erro ao abrir conversa"); return; }
@@ -3155,7 +3155,7 @@
         sb.rpc("subscribe_creator", { p_creator_key: cid, p_amount_cents: (cObjS ? cObjS.subPrice : 19) * 100, p_tier: "entry" }).then(function (r) {
           state.subscribed[cid] = true;
           state.subscribedTier[cid] = "entry";
-          toast(r && r.error ? "Erro: " + r.error.message : "Assinatura ativa · 30 dias de tudo");
+          toast(r && r.error ? "Erro: " + r.error.message : L("Tá dentro 🔥 acesso a TUDO dela por 30 dias", "You're in 🔥 access to ALL of her for 30 days", "Estás dentro 🔥 acceso a TODO de ella por 30 días"));
           render();
         });
       } else { state.subscribed[cid] = true; state.subscribedTier[cid] = "entry"; toast("Assinatura simulada"); render(); }
