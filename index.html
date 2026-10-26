@@ -792,11 +792,11 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand"><span class="dot">V</span>Vezclub<small>.com</small></div>
+    <div class="brand" id="brand-home" style="cursor:pointer" title="Início"><span class="dot">V</span>Vezclub<small>.com</small></div>
     <div class="roles" id="roles">
       <button data-role="buyer" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Comprador</span></button>
       <button data-role="creator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Criadora</span></button>
-      <button data-role="admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 9h8V3h-8z"/></svg><span>Admin</span></button>
+      <button data-role="admin" id="role-admin" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 9h8V3h-8z"/></svg><span>Admin</span></button>
     </div>
     <div class="top-actions">
       <span class="proto-pill">Protótipo</span>
@@ -1906,10 +1906,12 @@
 
   /* ---------------- creator dashboard ---------------- */
   function renderCreator() {
+    var isCreator = !!(account && account.role === "creator");
+    if (!isCreator) state.creatorTab = "onboarding"; // guests only see the recruitment/sign-up
     var tabs = '<div class="ctabs" style="max-width:520px">' +
       '<button data-ctab="onboarding" class="' + (state.creatorTab === "onboarding" ? "on" : "") + '">Cadastro</button>' +
-      '<button data-ctab="dashboard" class="' + (state.creatorTab === "dashboard" ? "on" : "") + '">Painel</button>' +
-      '<button data-ctab="inbox" class="' + (state.creatorTab === "inbox" ? "on" : "") + '">Mensagens</button>' +
+      (isCreator ? '<button data-ctab="dashboard" class="' + (state.creatorTab === "dashboard" ? "on" : "") + '">Painel</button>' +
+        '<button data-ctab="inbox" class="' + (state.creatorTab === "inbox" ? "on" : "") + '">Mensagens</button>' : '') +
     '</div>';
     var inner = state.creatorTab === "onboarding" ? onboardingHtml() : state.creatorTab === "inbox" ? inboxShell() : dashHtml();
     app.innerHTML = tabs + inner;
@@ -2262,6 +2264,7 @@
 
   /* ---------------- admin console ---------------- */
   function renderAdmin() {
+    if (!(account && account.isAdmin)) { goHome(); return; } // admin console is not public
     var rows = [
       { c: CREATORS[0], status: "ok", month: 8420 },
       { c: CREATORS[1], status: "ok", month: 12940 },
@@ -3061,9 +3064,22 @@
   }
 
   /* ---------------- events ---------------- */
+  function updateRoleButtons() {
+    var adm = document.getElementById("role-admin");
+    if (adm) adm.style.display = (account && account.isAdmin) ? "" : "none";
+  }
+  function goHome() {
+    state.role = "buyer"; state.view = "feed";
+    document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-role") === "buyer"); });
+    render();
+  }
+  var brandHome = document.getElementById("brand-home");
+  if (brandHome) brandHome.addEventListener("click", goHome);
   document.getElementById("roles").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
-    state.role = b.getAttribute("data-role");
+    var role = b.getAttribute("data-role");
+    if (role === "admin" && !(account && account.isAdmin)) return; // admin area is not public
+    state.role = role;
     state.view = "feed";
     document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
@@ -3468,6 +3484,7 @@
     account = null; stopSalesWatch();
     state.role = "buyer"; state.view = "feed";
     document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-role") === "buyer"); });
+    updateRoleButtons();
     renderGuestBadge();
     loadCreators(function () { render(); ageGate(); });
   }
@@ -3475,9 +3492,15 @@
   function enterPlatform(session) {
     account = acctFrom(session);
     account.creatorKey = account.id;
+    account.isAdmin = false;
     if (account.role === "creator" && sb) {
       sb.from("creators").select("key").eq("account_id", account.id).limit(1).then(function (r) { if (r.data && r.data[0]) account.creatorKey = r.data[0].key; });
     }
+    if (sb) sb.from("profiles").select("is_admin").eq("id", account.id).limit(1).then(function (r) {
+      account.isAdmin = !!(r.data && r.data[0] && r.data[0].is_admin);
+      updateRoleButtons();
+      if (state.role === "admin" && !account.isAdmin) { goHome(); }
+    });
     hideAuthGate();
     state.role = account.role === "creator" ? "creator" : "buyer";
     document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-role") === state.role); });
