@@ -2391,6 +2391,10 @@
       '<div id="crm-segs" style="margin-top:0.4rem"></div>' +
       '<div id="crm-list" style="margin-top:0.8rem"><p class="muted-note">Carregando clientes…</p></div></div>';
 
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Recuperação · win-back</h3><button class="btn btn-primary btn-sm" id="wb-notify">📣 Avisar o time (Pushcut)</button></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Quem sumiu (10d+) ou ficou sem crédito. No MVP é manual: clique pra avisar o time e recuperem no contato. O disparo automático com cupom entra junto com o pagamento.</p>' +
+      '<div id="wb-list"><p class="muted-note">Carregando…</p></div></div>';
+
     html += '<div class="card"><div class="card-head"><h3>Campanhas · Brasil × EUA</h3><span class="hint">links pro anúncio</span></div>' +
       '<p class="muted-note" style="margin-top:-0.3rem">Cada link abre o site já na moeda e nos meios de pagamento certos. Use um por público no tráfego pago.</p>' +
       '<div class="ladder">' +
@@ -2481,6 +2485,7 @@
 
     app.innerHTML = html;
     loadCrm();
+    loadWinback();
     loadAdminReview();
     loadApplications();
     loadWebhooks();
@@ -3070,6 +3075,53 @@
       });
       body.innerHTML = h; body.scrollTop = body.scrollHeight;
     });
+  }
+
+  var WB_TARGETS = [];
+  function loadWinback() {
+    var box = document.getElementById("wb-list"); if (!box || !sb) return;
+    sb.rpc("admin_customers", { p_limit: 500 }).then(function (r) {
+      var b = document.getElementById("wb-list"); if (!b) return;
+      if (r.error) { b.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
+      // alvo = inativo 10d+ OU sem crédito (mas que já usou, pra não puxar quem nunca entrou)
+      WB_TARGETS = (r.data || []).filter(function (c) { return c.segment === "inativo" || (c.sem_credito && c.last_active); });
+      if (!WB_TARGETS.length) { b.innerHTML = '<p class="muted-note">Ninguém pra recuperar agora. 🎉</p>'; wireWbNotify(); return; }
+      var h = '<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Motivo</th><th>Último acesso</th><th class="num">Msgs</th><th></th></tr></thead><tbody>';
+      WB_TARGETS.forEach(function (c) {
+        var motivo = c.segment === "inativo" ? '🔴 Sumido (10d+)' : '💳 Sem crédito';
+        h += '<tr><td><div style="font-weight:600;font-size:.84rem">' + escHtml((c.email || "—").split("@")[0]) + '</div><small style="color:var(--mut)">' + escHtml(c.email || "") + '</small></td>' +
+          '<td style="font-size:.78rem">' + motivo + '</td>' +
+          '<td style="font-size:.8rem">' + crmFmtDate(c.last_active) + '</td>' +
+          '<td class="num" style="font-size:.8rem">' + (c.msgs || 0) + '</td>' +
+          '<td>' + ((c.msgs || 0) > 0 ? '<button class="btn btn-ghost btn-sm" data-crmchat="' + c.user_id + '" data-crmemail="' + escHtml(c.email || "") + '">Ver chat</button>' : '') + '</td></tr>';
+      });
+      var inativos = WB_TARGETS.filter(function (c) { return c.segment === "inativo"; }).length;
+      var semcred = WB_TARGETS.filter(function (c) { return c.sem_credito; }).length;
+      h += '</tbody></table></div><p class="muted-note" style="margin-top:.5rem"><b>' + WB_TARGETS.length + '</b> pra recuperar · ' + inativos + ' sumidos · ' + semcred + ' sem crédito.</p>';
+      b.innerHTML = h;
+      b.querySelectorAll("[data-crmchat]").forEach(function (btn) { btn.onclick = function () { openUserChat(btn.getAttribute("data-crmchat"), btn.getAttribute("data-crmemail")); }; });
+      wireWbNotify();
+    });
+  }
+  function wireWbNotify() {
+    var btn = document.getElementById("wb-notify"); if (!btn) return;
+    btn.onclick = function () {
+      if (!WB_TARGETS.length) { toast("Ninguém pra recuperar agora."); return; }
+      var inativos = WB_TARGETS.filter(function (c) { return c.segment === "inativo"; }).length;
+      var semcred = WB_TARGETS.filter(function (c) { return c.sem_credito; }).length;
+      var title = "Win-back · Vezclub";
+      var text = WB_TARGETS.length + " cliente(s) pra recuperar — " + inativos + " sumidos (10d+), " + semcred + " sem crédito. Abra o painel pra ver quem.";
+      btn.disabled = true;
+      sb.from("alert_webhooks").select("url,label,active").eq("active", true).then(function (r) {
+        var hooks = (r.data || []).filter(function (w) { return w.url; });
+        if (!hooks.length) { btn.disabled = false; toast("Nenhum Pushcut cadastrado ainda — cadastre o time no card de notificações."); return; }
+        hooks.forEach(function (w) {
+          try { fetch(w.url + "?title=" + encodeURIComponent(title) + "&text=" + encodeURIComponent(text), { mode: "no-cors" }); } catch (e) {}
+        });
+        btn.disabled = false;
+        toast("Avisei " + hooks.length + " pessoa(s) do time no Pushcut.");
+      });
+    };
   }
 
   function loadApplications() {
