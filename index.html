@@ -1324,7 +1324,7 @@
     ]
   };
 
-  try { var t = localStorage.getItem("aura_theme"); if (t) { state.theme = t; document.documentElement.setAttribute("data-theme", t); } } catch (e) {}
+  try { var t = localStorage.getItem("aura_theme"); if (!t) t = "light"; state.theme = t; document.documentElement.setAttribute("data-theme", t); } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
   updateThemeIcon();
 
   var app = document.getElementById("app");
