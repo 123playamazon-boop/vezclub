@@ -144,6 +144,14 @@
   footer{border-top:1px solid var(--line);padding:34px 0;color:var(--mut2);font-size:.82rem;background:var(--bg2)}
   footer .wrap{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
 
+  .tm .card{display:flex;flex-direction:column;gap:14px}
+  .tm .quote{font-size:1.02rem;color:var(--ink);line-height:1.5}
+  .tm .quote::before{content:"\201C";color:var(--brand);font-weight:900;font-size:1.3rem;margin-right:2px}
+  .tm-head{display:flex;gap:11px;align-items:center;margin-top:auto}
+  .tm-av{width:42px;height:42px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem}
+  .tm-head b{display:block;color:var(--ink);font-size:.95rem}
+  .tm-head small{color:var(--mut2);font-size:.8rem;font-weight:600}
+
   @media(max-width:820px){ .g2,.g3,.tiers{grid-template-columns:1fr} .stats{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:640px){
     section{padding:46px 0}
@@ -256,8 +264,21 @@
   </div>
 </section>
 
+<!-- TESTIMONIALS -->
+<section class="tm" id="provas">
+  <div class="wrap">
+    <span class="eyebrow" data-i="tm_eye">Quem já está dentro</span>
+    <h2 data-i="tm_h2">O que as criadoras Vezclub dizem</h2>
+    <div class="grid g3" style="margin-top:26px">
+      <div class="card"><p class="quote" data-i="tm1q">Em poucas semanas meu Instagram explodiu. Nunca tinha visto tanta gente nova chegando na minha página.</p><div class="tm-head"><div class="tm-av">L</div><div><b>Lari</b><small data-i="tm_role">criadora Vezclub</small></div></div></div>
+      <div class="card"><p class="quote" data-i="tm2q">O que eu mais gosto é não precisar mais ficar presa no chat. O time responde e ainda vende por mim.</p><div class="tm-head"><div class="tm-av">B</div><div><b>Bia</b><small data-i="tm_role2">criadora Vezclub</small></div></div></div>
+      <div class="card"><p class="quote" data-i="tm3q">Meu faturamento do mês foi recorde. Com o time cuidando dos vídeos e dos preços, foi outro nível.</p><div class="tm-head"><div class="tm-av">N</div><div><b>Nat</b><small data-i="tm_role3">criadora Vezclub</small></div></div></div>
+    </div>
+  </div>
+</section>
+
 <!-- EARNINGS -->
-<section id="ganhos">
+<section id="ganhos" style="background:var(--bg2)">
   <div class="wrap">
     <span class="eyebrow" data-i="g_eye">Potencial de ganhos</span>
     <h2 data-i="g_h2">Quanto dá pra faturar</h2>
@@ -278,7 +299,7 @@
 </section>
 
 <!-- VALUE STACK -->
-<section id="valor" style="background:var(--bg2)">
+<section id="valor">
   <div class="wrap">
     <span class="eyebrow" data-i="v_eye">O que isso custaria sozinha</span>
     <h2 data-i="v_h2">A equipe que a Vezclub te dá de graça</h2>
@@ -435,6 +456,12 @@
     o2b:["$0 de entrada, sem mensalidade e sem exclusividade forçada. A gente só ganha quando você ganha. Se quiser sair, você sai — e leva tudo o que produziu.","$0 to start, no monthly fee and no forced exclusivity. We only earn when you earn. If you want to leave, you leave — and take everything you produced."],
     o3q:['“E se eu não for boa o suficiente?”','“What if I’m not good enough?”'],
     o3b:["Você não precisa de audiência nem de experiência. A gente aceita quem está começando e constrói o crescimento com você. Seu trabalho é gravar — o resto é nosso.","You don't need an audience or experience. We accept beginners and build the growth with you. Your job is to film — the rest is ours."],
+    tm_eye:["Quem já está dentro","Who's already in"],
+    tm_h2:["O que as criadoras Vezclub dizem","What Vezclub creators say"],
+    tm1q:["Em poucas semanas meu Instagram explodiu. Nunca tinha visto tanta gente nova chegando na minha página.","In a few weeks my Instagram blew up. I'd never seen so many new people landing on my page."],
+    tm2q:["O que eu mais gosto é não precisar mais ficar presa no chat. O time responde e ainda vende por mim.","What I love most is not being stuck in the chat anymore. The team replies and even sells for me."],
+    tm3q:["Meu faturamento do mês foi recorde. Com o time cuidando dos vídeos e dos preços, foi outro nível.","My monthly revenue hit a record. With the team handling the videos and pricing, it was another level."],
+    tm_role:["criadora Vezclub","Vezclub creator"], tm_role2:["criadora Vezclub","Vezclub creator"], tm_role3:["criadora Vezclub","Vezclub creator"],
     g_eye:["Potencial de ganhos","Earning potential"],
     g_h2:["Quanto dá pra faturar","How much you can make"],
     g_sub:["Faixas reais que criadoras alcançam no mercado, conforme dedicação e crescimento. Não é promessa de renda — é o potencial do modelo quando a estrutura trabalha com você.","Real ranges creators reach in the market, depending on dedication and growth. Not an income promise — it's the model's potential when the structure works with you."],
