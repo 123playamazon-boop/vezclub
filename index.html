@@ -3470,6 +3470,7 @@
           note("(não consegui responder agora)"); return;
         }
         her(d.reply);
+        if (d.gift && d.gift.url) { setTimeout(function () { if (d.gift.caption) her(d.gift.caption); body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:4px;max-width:72%"><img src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block"></div>'); body.scrollTop = body.scrollHeight; }, 800); }
         if (typeof d.balance === "number") setBal(d.balance);
         try { document.getElementById("chat-text").focus(); } catch (_) {}
       }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
