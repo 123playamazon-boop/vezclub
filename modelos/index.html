@@ -377,7 +377,7 @@
       <div class="formwrap">
         <form id="appform" novalidate>
           <div class="field"><label data-i="l_name">Nome ou @ do Instagram</label><input name="name" id="f_name" autocomplete="name" required></div>
-          <div class="field"><label data-i="l_insta">Seu Instagram</label><input name="instagram" id="f_insta" placeholder="@seuperfil"></div>
+          <div class="field"><label data-i="l_insta">Seu Instagram ou TikTok</label><input name="instagram" id="f_insta" placeholder="@seuperfil ou link do TikTok" required></div>
           <div class="field"><label data-i="l_contact">WhatsApp ou e-mail</label><input name="contact" id="f_contact" required></div>
           <div class="field"><label data-i="l_exp">Já cria conteúdo adulto?</label>
             <select name="experience" id="f_exp">
@@ -515,7 +515,7 @@
     a_s2:["✓ Conversa 100% confidencial","✓ 100% confidential conversation"],
     a_s3:["✓ Você decide se quer seguir depois de entender tudo","✓ You decide whether to continue after understanding it all"],
     l_name:["Nome ou @ do Instagram","Name or Instagram @"],
-    l_insta:["Seu Instagram","Your Instagram"],
+    l_insta:["Seu Instagram ou TikTok","Your Instagram or TikTok"],
     l_contact:["WhatsApp ou e-mail","WhatsApp or email"],
     l_exp:["Já cria conteúdo adulto?","Do you already create adult content?"],
     l_exp0:["Selecione","Select"], l_exp1:["Sim, já crio","Yes, I already do"], l_exp2:["Não, mas tenho interesse","No, but I'm interested"], l_exp3:["Quero entender melhor antes","I want to understand more first"],
@@ -568,8 +568,10 @@
     ev.preventDefault();
     var name=document.getElementById("f_name").value.trim();
     var contact=document.getElementById("f_contact").value.trim();
+    var insta=document.getElementById("f_insta").value.trim();
     var age=document.getElementById("f_age").checked;
     if(!name||!contact){ alert(lang==="en"?"Please fill name and contact.":"Preencha nome e contato."); return; }
+    if(!insta){ alert(lang==="en"?"Please add your Instagram or TikTok so we can review it.":"Coloque seu Instagram ou TikTok pra gente avaliar."); return; }
     if(!age){ alert(lang==="en"?"Please confirm you are 18+.":"Confirme que tem 18 anos ou mais."); return; }
     var btn=document.getElementById("f_submit");
     btn.disabled=true; btn.textContent=lang==="en"?"Sending...":"Enviando...";
