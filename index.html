@@ -1296,6 +1296,22 @@
   var _locale = { pt: "pt-BR", en: "en-US", es: "es-ES" };
   function nfmt(n) { try { return (n || 0).toLocaleString(_locale[lang] || "pt-BR"); } catch (e) { return String(n); } }
   function brl(n) { return "R$" + Math.round(n * 2.8).toLocaleString("pt-BR"); }
+  /* ---------- região (Brasil x EUA): moeda, preços e meios de pagamento ---------- */
+  var REGIONS = {
+    us: { cur: "$", dec: ".", kit: { fotos: 990, videos: 1490, tudo: 1990, anchor: 2480 }, bump: { videos: 700, fotos: 500, cross: 990 }, pay: ["Visa", "Mastercard", "Amex", "Apple Pay"] },
+    br: { cur: "R$", dec: ",", kit: { fotos: 1990, videos: 2990, tudo: 3990, anchor: 4980 }, bump: { videos: 1490, fotos: 990, cross: 1990 }, pay: ["Pix", "Cartão", "Boleto"] }
+  };
+  var region = "us";
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search).get("r");
+      if (q === "br" || q === "us") { region = q; localStorage.setItem("vz_region", q); }
+      else { var s = localStorage.getItem("vz_region"); if (s === "br" || s === "us") region = s; else region = (navigator.language || "").toLowerCase().indexOf("pt") === 0 ? "br" : "us"; }
+    } catch (e) {}
+  })();
+  function RG() { return REGIONS[region] || REGIONS.us; }
+  function money(cents) { var r = RG(); return r.cur + (cents / 100).toFixed(2).replace(".", r.dec); }
+  function setRegion(x) { if (x !== "br" && x !== "us") return; region = x; try { localStorage.setItem("vz_region", x); } catch (e) {} render(); }
 
   /* ---------------- state ---------------- */
   var state = {
@@ -2346,6 +2362,18 @@
     var html = protoNotice('<span><b>Painel admin (vocês).</b> Gerencie criadoras, veja a comissão da plataforma e os pagamentos. Ações são simuladas.</span>');
     html += '<div class="page-head"><div class="eyebrow">Operação</div><h1>Painel da plataforma</h1><p>Visão geral do mês e gestão das criadoras.</p></div>';
 
+    html += '<div class="card"><div class="card-head"><h3>Campanhas · Brasil × EUA</h3><span class="hint">links pro anúncio</span></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Cada link abre o site já na moeda e nos meios de pagamento certos. Use um por público no tráfego pago.</p>' +
+      '<div class="ladder">' +
+        '<div class="ladder-row"><div class="lr-icon">🇧🇷</div><div class="lr-main"><div class="lr-title">Brasil · R$ · Pix, Cartão, Boleto</div><div class="lr-sub">vezclub.com/?r=br</div></div><div class="lr-buy"><button class="btn btn-ghost btn-sm" data-copy="https://vezclub.com/?r=br">Copiar</button></div></div>' +
+        '<div class="ladder-row"><div class="lr-icon">🇺🇸</div><div class="lr-main"><div class="lr-title">EUA · US$ · Cartão, Apple Pay</div><div class="lr-sub">vezclub.com/?r=us</div></div><div class="lr-buy"><button class="btn btn-ghost btn-sm" data-copy="https://vezclub.com/?r=us">Copiar</button></div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.9rem;flex-wrap:wrap"><span class="muted-note">Pré-visualizar o site como:</span>' +
+        '<button class="btn btn-sm ' + (region === "br" ? "btn-primary" : "btn-ghost") + '" data-region="br">🇧🇷 Brasil</button>' +
+        '<button class="btn btn-sm ' + (region === "us" ? "btn-primary" : "btn-ghost") + '" data-region="us">🇺🇸 EUA</button>' +
+      '</div>' +
+      '<p class="muted-note" style="margin-top:0.7rem">A separação real de gateway (Pix no BR, cartão nos EUA) e o relatório de receita por país entram junto com a integração de pagamento.</p></div>';
+
     html += '<div class="stat-grid">' +
       statId(I.chart, "GMV (vendas totais)", "ad-gmv", "tudo que entrou") +
       statId(I.money, "Comissão da plataforma", "ad-comm", "80% — tráfego + operação") +
@@ -2409,6 +2437,8 @@
     loadAiAdmin();
     wireAiAdd();
     wirePushSettings();
+    app.querySelectorAll("[data-region]").forEach(function (b) { b.onclick = function () { setRegion(b.getAttribute("data-region")); }; });
+    app.querySelectorAll("[data-copy]").forEach(function (b) { b.onclick = function () { var t = b.getAttribute("data-copy"); try { navigator.clipboard.writeText(t); } catch (e) {} toast(L("Link copiado: ", "Link copied: ", "Enlace copiado: ") + t); }; });
   }
 
   function payRow(c, amt) {
@@ -2423,16 +2453,15 @@
     var icon = opts.icon === "video" || opts.icon === "vid" ? I.video : opts.icon === "call" ? I.call : I.photo;
     var c = CREATORS.find(function (x) { return x.id === state.creatorId; });
     var canBump = c && c.hasSub && !state.subscribed[c.id];
-    var fmtC2 = function (cc) { return "$" + (cc / 100).toFixed(2); };
-    var priceLabel = (opts.priceCents != null) ? fmtC2(opts.priceCents) : usd(opts.price);
+    var priceLabel = (opts.priceCents != null) ? money(opts.priceCents) : usd(opts.price);
     var bumpHtml = "";
     if (canBump) bumpHtml = '<label class="bump"><input type="checkbox" id="bump-sub"><div><div class="bump-t">' + L("Destrava TUDO: vira assinante agora", "Unlock EVERYTHING: go member now", "Desbloquea TODO: hazte miembro ya") + '</div><div class="bump-s">' + L("+ pack de boas-vindas grátis e 20% off em tudo, pra sempre", "+ free welcome pack and 20% off everything, forever", "+ pack de bienvenida gratis y 20% off en todo, para siempre") + '</div></div><span class="bump-plus">+' + usd(c.subPrice) + '/' + L("mês","mo","mes") + '</span></label>';
-    else if (opts.bump) bumpHtml = '<label class="bump"><input type="checkbox" id="bump-pack"><div><div class="bump-t">➕ ' + opts.bump.label + '</div><div class="bump-s">' + opts.bump.sub + '</div></div><span class="bump-plus">+' + fmtC2(opts.bump.amount) + '</span></label>';
+    else if (opts.bump) bumpHtml = '<label class="bump"><input type="checkbox" id="bump-pack"><div><div class="bump-t">➕ ' + opts.bump.label + '</div><div class="bump-s">' + opts.bump.sub + '</div></div><span class="bump-plus">+' + money(opts.bump.amount) + '</span></label>';
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal"><div class="modal-pad">' +
       '<h3>' + L("Falta um toque.", "One tap away.", "Falta un toque.") + '</h3><p class="m-sub">' + L("Acesso na hora, direto no seu perfil. Pague uma vez, é seu por 30 dias.", "Instant access, straight to your profile. Pay once, yours for 30 days.", "Acceso al instante. Paga una vez, tuyo por 30 días.") + '</p>' +
       '<div class="order"><div class="lr-icon">' + icon + '</div><div class="o-main"><div class="lr-title">' + opts.title + '</div><div class="lr-sub">' + ((opts.titleSub ? opts.titleSub + ' · ' : '') + opts.creator) + '</div></div><div class="o-total">' + priceLabel + '</div></div>' +
       bumpHtml +
-      '<div class="pay-stub">' + L("Pagamento entra na <b>etapa final</b> do projeto.", "Payment comes in the <b>final stage</b> of the project.", "El pago entra en la <b>etapa final</b> del proyecto.") + '<div class="pay-logos"><span>CCBill</span><span>Stripe</span><span>Cakto</span><span>Pix</span></div></div>' +
+      '<div class="pay-stub">' + L("Pagamento entra na <b>etapa final</b> do projeto.", "Payment comes in the <b>final stage</b> of the project.", "El pago entra en la <b>etapa final</b> del proyecto.") + '<div class="pay-logos">' + RG().pay.map(function (p) { return '<span>' + p + '</span>'; }).join("") + '</div></div>' +
       '<div class="modal-foot"><button class="btn btn-ghost btn-block" data-close>' + L("Agora não", "Not now", "Ahora no") + '</button><button class="btn btn-primary btn-block" id="confirm-buy">' + L("Liberar agora", "Unlock now", "Liberar ahora") + '</button></div>' +
       '</div></div></div>';
     document.getElementById("confirm-buy").onclick = function () {
@@ -2709,24 +2738,24 @@
           var nPh = paidPosts.filter(function (p) { return p.media_type !== "video"; }).length;
           var nVd = paidPosts.filter(function (p) { return p.media_type === "video"; }).length;
           var nAll = paidPosts.length;
-          var fmtC = function (c) { return "$" + (c / 100).toFixed(2); };
+          var R = RG();
           var other = CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false && x.avatarUrl; })[0] || CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false; })[0];
-          var crossBump = other ? { label: L("Espia a ", "Peek at ", "Mira a ") + other.name + L(" também", " too", " también"), sub: L("prévia quente de outra modelo · 5 fotos", "a taste of another model · 5 photos", "otra modelo · 5 fotos"), amount: 990, target: { creatorKey: other.id, n: 5, ptype: "image" } } : null;
+          var crossBump = other ? { label: L("Espia a ", "Peek at ", "Mira a ") + other.name + L(" também", " too", " también"), sub: L("prévia quente de outra modelo · 5 fotos", "a taste of another model · 5 photos", "otra modelo · 5 fotos"), amount: R.bump.cross, target: { creatorKey: other.id, n: 5, ptype: "image" } } : null;
           var KITS = [];
-          if (nPh) KITS.push({ icon: I.photo, key: "fotos", title: "🔥 " + L("Kit Fotos", "Photo Kit", "Kit Fotos"), sub: nPh + " " + L("fotos", "photos", "fotos") + " · " + L("liberado na hora · 30 dias", "instant · 30 days", "al instante · 30 días"), amount: 990, n: nPh, ptype: "image",
-            bump: nVd ? { label: L("Adiciona os ", "Add the ", "Agrega los ") + nVd + " " + L("vídeos", "videos", "videos"), sub: L("completa a coleção dela", "complete her collection", "completa su colección"), amount: 700, target: { creatorKey: creatorKey, n: nVd, ptype: "video" } } : crossBump });
-          if (nVd) KITS.push({ icon: I.video, key: "videos", title: "🎥 " + L("Kit Vídeos", "Video Kit", "Kit Videos"), sub: nVd + " " + L("vídeos", "videos", "videos") + " · " + L("sem corte · 30 dias", "uncut · 30 days", "sin cortes · 30 días"), amount: 1490, n: nVd, ptype: "video",
-            bump: nPh ? { label: L("Adiciona as ", "Add the ", "Agrega las ") + nPh + " " + L("fotos", "photos", "fotos"), sub: L("pague uma vez, leve tudo", "pay once, take it all", "paga una vez, llévalo todo"), amount: 500, target: { creatorKey: creatorKey, n: nPh, ptype: "image" } } : crossBump });
-          if (nPh && nVd) KITS.push({ icon: I.star, key: "tudo", title: "👑 " + L("Kit Completo · 30 dias", "Full Kit · 30 days", "Kit Completo · 30 días"), sub: nPh + " " + L("fotos", "photos", "fotos") + " + " + nVd + " " + L("vídeos", "videos", "videos") + " · " + L("tudo dela", "all of her", "todo de ella"), amount: 1990, n: nAll, ptype: null, badge: L("Mais popular", "Most popular", "Más popular"), anchor: 2480, bump: crossBump });
+          if (nPh) KITS.push({ icon: I.photo, key: "fotos", title: "🔥 " + L("Kit Fotos", "Photo Kit", "Kit Fotos"), sub: nPh + " " + L("fotos", "photos", "fotos") + " · " + L("liberado na hora · 30 dias", "instant · 30 days", "al instante · 30 días"), amount: R.kit.fotos, n: nPh, ptype: "image",
+            bump: nVd ? { label: L("Adiciona os ", "Add the ", "Agrega los ") + nVd + " " + L("vídeos", "videos", "videos"), sub: L("completa a coleção dela", "complete her collection", "completa su colección"), amount: R.bump.videos, target: { creatorKey: creatorKey, n: nVd, ptype: "video" } } : crossBump });
+          if (nVd) KITS.push({ icon: I.video, key: "videos", title: "🎥 " + L("Kit Vídeos", "Video Kit", "Kit Videos"), sub: nVd + " " + L("vídeos", "videos", "videos") + " · " + L("sem corte · 30 dias", "uncut · 30 days", "sin cortes · 30 días"), amount: R.kit.videos, n: nVd, ptype: "video",
+            bump: nPh ? { label: L("Adiciona as ", "Add the ", "Agrega las ") + nPh + " " + L("fotos", "photos", "fotos"), sub: L("pague uma vez, leve tudo", "pay once, take it all", "paga una vez, llévalo todo"), amount: R.bump.fotos, target: { creatorKey: creatorKey, n: nPh, ptype: "image" } } : crossBump });
+          if (nPh && nVd) KITS.push({ icon: I.star, key: "tudo", title: "👑 " + L("Kit Completo · 30 dias", "Full Kit · 30 days", "Kit Completo · 30 días"), sub: nPh + " " + L("fotos", "photos", "fotos") + " + " + nVd + " " + L("vídeos", "videos", "videos") + " · " + L("tudo dela", "all of her", "todo de ella"), amount: R.kit.tudo, n: nAll, ptype: null, badge: L("Mais popular", "Most popular", "Más popular"), anchor: R.kit.anchor, bump: crossBump });
           function kitRow(k) {
             var id = creatorKey + "-kit-" + k.key;
             var owned = state.purchased[id];
-            var anchor = k.anchor ? '<span style="text-decoration:line-through;color:var(--faint);font-size:0.8rem;margin-right:0.35rem">' + fmtC(k.anchor) + '</span>' : '';
+            var anchor = k.anchor ? '<span style="text-decoration:line-through;color:var(--faint);font-size:0.8rem;margin-right:0.35rem">' + money(k.anchor) + '</span>' : '';
             var badge = k.badge ? '<span class="lr-badge">' + k.badge + '</span>' : '';
             return '<div class="ladder-row">' +
               '<div class="lr-icon">' + k.icon + '</div>' +
               '<div class="lr-main"><div class="lr-title">' + k.title + badge + '</div><div class="lr-sub">' + k.sub + '</div></div>' +
-              '<div class="lr-price">' + anchor + fmtC(k.amount) + '</div>' +
+              '<div class="lr-price">' + anchor + money(k.amount) + '</div>' +
               '<div class="lr-buy">' + (owned ? '<button class="btn btn-good btn-sm" disabled>' + I.check + '</button>' : '<button class="btn btn-primary btn-sm" data-kit="' + k.key + '">' + L("Pegar", "Get", "Tomar") + '</button>') + '</div></div>';
           }
           realWrap.innerHTML = KITS.length ? '<div class="ladder">' + KITS.map(kitRow).join("") + '</div>' : '<p class="muted-note">' + L("Em breve.", "Coming soon.", "Pronto.") + '</p>';
@@ -3163,11 +3192,10 @@
   function ageGate() {
     try { if (localStorage.getItem("aura_age_ok")) return; } catch (e) {}
     modalRoot.innerHTML = '<div class="modal-bg"><div class="modal"><div class="modal-pad age-center">' +
-      '<div class="age-logo">A</div>' +
+      '<div class="age-logo">V</div>' +
       '<h3>Conteúdo para maiores de 18</h3>' +
       '<p class="m-sub">A Vezclub é uma plataforma de conteúdo adulto. Confirme que você tem 18 anos ou mais para continuar.</p>' +
       '<div class="modal-foot"><button class="btn btn-ghost btn-block" id="age-no">Sair</button><button class="btn btn-primary btn-block" id="age-yes">Tenho 18+ · entrar</button></div>' +
-      '<p class="muted-note" style="margin-top:0.9rem">No produto real, alguns estados e países exigem verificação de idade com documento.</p>' +
       '</div></div></div>';
     document.getElementById("age-yes").onclick = function () { try { localStorage.setItem("aura_age_ok", "1"); } catch (e) {} closeModal(); };
     document.getElementById("age-no").onclick = function () { app.innerHTML = '<div style="text-align:center;padding:4rem 1rem;color:var(--muted)">Você precisa ter 18 anos ou mais para acessar.</div>'; closeModal(); };
