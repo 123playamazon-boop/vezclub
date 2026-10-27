@@ -2388,8 +2388,9 @@
       '</div>' +
       '<p class="muted-note" style="margin-top:0.7rem">A separação real de gateway (Pix no BR, cartão nos EUA) e o relatório de receita por país entram junto com a integração de pagamento.</p></div>';
 
-    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Candidaturas de criadoras</h3><span class="hint">vezclub.com/modelos</span></div>' +
-      '<p class="muted-note" style="margin-top:-0.3rem">Leads das campanhas de captação de modelos reais. Entre em contato pelo WhatsApp/e-mail informado.</p>' +
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Candidaturas de criadoras</h3>' +
+      '<button class="btn btn-ghost btn-sm" id="apps-csv">⬇ Baixar CSV</button></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Leads das campanhas de captação de modelos reais. Entre em contato pelo WhatsApp/e-mail informado. Chegam aqui ao vivo.</p>' +
       '<div id="admin-apps"><p class="muted-note">Carregando…</p></div></div>';
 
     html += '<div class="stat-grid">' +
@@ -2963,11 +2964,54 @@
       if (r.error) { b.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
       var rows = r.data || [];
       if (!rows.length) { b.innerHTML = '<p class="muted-note">Nenhuma candidatura ainda. Solte as campanhas pra vezclub.com/modelos.</p>'; return; }
-      b.innerHTML = '<div class="apps-list">' + rows.map(appRow).join("") + '</div><p class="muted-note" style="margin-top:0.6rem">' + rows.length + ' candidatura(s).</p>';
-      b.querySelectorAll("[data-appdet]").forEach(function (btn) {
-        btn.onclick = function () { var d = document.getElementById(btn.getAttribute("data-appdet")); if (d) { var open = d.style.display !== "none"; d.style.display = open ? "none" : "block"; btn.textContent = open ? "Ver" : "Fechar"; } };
-      });
+      APPS = rows.slice();
+      renderApps();
+      wireAppsCsv();
+      subscribeApps();
     });
+  }
+  var APPS = [];
+  function renderApps() {
+    var b = document.getElementById("admin-apps"); if (!b) return;
+    if (!APPS.length) { b.innerHTML = '<p class="muted-note">Nenhuma candidatura ainda. Solte as campanhas pra vezclub.com/modelos.</p>'; return; }
+    b.innerHTML = '<div class="apps-list">' + APPS.map(appRow).join("") + '</div><p class="muted-note" style="margin-top:0.6rem">' + APPS.length + ' candidatura(s).</p>';
+    b.querySelectorAll("[data-appdet]").forEach(function (btn) {
+      btn.onclick = function () { var d = document.getElementById(btn.getAttribute("data-appdet")); if (d) { var open = d.style.display !== "none"; d.style.display = open ? "none" : "block"; btn.textContent = open ? "Ver" : "Fechar"; } };
+    });
+  }
+  function wireAppsCsv() {
+    var btn = document.getElementById("apps-csv"); if (!btn) return;
+    btn.onclick = function () {
+      if (!APPS.length) { toast("Nenhuma candidatura pra exportar."); return; }
+      var cols = ["created_at", "name", "instagram", "contact", "experience", "age_ok", "lang", "region", "source", "status"];
+      var head = ["Enviado em", "Nome", "Instagram", "Contato", "Experiencia", "18+", "Idioma", "Regiao", "Origem", "Status"];
+      function cell(v) { v = (v == null ? "" : String(v)); return '"' + v.replace(/"/g, '""') + '"'; }
+      var lines = [head.map(cell).join(",")];
+      APPS.forEach(function (a) { lines.push(cols.map(function (k) { return cell(a[k]); }).join(",")); });
+      var csv = "﻿" + lines.join("\r\n");
+      var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url; link.download = "candidaturas-vezclub-" + new Date().toISOString().slice(0, 10) + ".csv";
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    };
+  }
+  var appsCh = null;
+  function subscribeApps() {
+    if (!sb || appsCh) return;
+    try { if (window.Notification && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+    appsCh = sb.channel("apps-live")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "creator_applications" }, function (payload) {
+        var a = payload["new"] || payload.record; if (!a) return;
+        if (APPS.some(function (x) { return x.id === a.id; })) return;
+        APPS.unshift(a); renderApps();
+        var who = a.name || a.instagram || "Nova candidata";
+        toast("🔔 Nova candidatura: " + who);
+        try { var au = new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA="); au.play().catch(function () {}); } catch (e) {}
+        try { if (window.Notification && Notification.permission === "granted") new Notification("Nova candidatura · Vezclub", { body: who + " acabou de se candidatar." }); } catch (e) {}
+      })
+      .subscribe();
   }
   function appWa(a) {
     var c = (a.contact || "").trim();
