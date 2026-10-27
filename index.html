@@ -602,7 +602,7 @@
   .pf-cta-bar .cta-price { font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; line-height: 1.1; }
   .pf-cta-bar .cta-sub { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
   .pf-cta-bar .btn { flex: none; }
-  @media (max-width: 640px) { .pf-cta-bar.show { display: flex; } .profile.has-cta { padding-bottom: 4.8rem; } }
+  @media (max-width: 640px) { .pf-cta-bar.show { display: flex; } .profile.has-cta { padding-bottom: 6.5rem; } }
 
   /* ---- final round: micro-interactions ---- */
   /* unlock reveal */
@@ -1966,6 +1966,15 @@
 
     app.innerHTML = html;
     startTicker();
+    // no mobile, esconder a barra fixa quando os pacotes estão na tela (pra não cobrir o preço)
+    if (!c.hasSub) {
+      var _bar = document.querySelector(".pf-cta-bar");
+      var _packs = document.getElementById("pf-packs-real-wrap");
+      if (_bar && _packs && "IntersectionObserver" in window) {
+        var _io = new IntersectionObserver(function (ents) { ents.forEach(function (e) { _bar.style.display = e.isIntersecting ? "none" : ""; }); }, { threshold: 0.12 });
+        _io.observe(_packs);
+      }
+    }
     loadBuyerContent(c.id);
   }
 
