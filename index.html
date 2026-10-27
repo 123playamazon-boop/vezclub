@@ -2423,16 +2423,21 @@
     var icon = opts.icon === "video" || opts.icon === "vid" ? I.video : opts.icon === "call" ? I.call : I.photo;
     var c = CREATORS.find(function (x) { return x.id === state.creatorId; });
     var canBump = c && c.hasSub && !state.subscribed[c.id];
-    var bumpHtml = canBump ? '<label class="bump"><input type="checkbox" id="bump-sub"><div><div class="bump-t">' + L("Destrava TUDO: vira assinante agora", "Unlock EVERYTHING: go member now", "Desbloquea TODO: hazte miembro ya") + '</div><div class="bump-s">' + L("+ pack de boas-vindas grátis e 20% off em tudo, pra sempre", "+ free welcome pack and 20% off everything, forever", "+ pack de bienvenida gratis y 20% off en todo, para siempre") + '</div></div><span class="bump-plus">+' + usd(c.subPrice) + '/' + L("mês","mo","mes") + '</span></label>' : "";
+    var fmtC2 = function (cc) { return "$" + (cc / 100).toFixed(2); };
+    var priceLabel = (opts.priceCents != null) ? fmtC2(opts.priceCents) : usd(opts.price);
+    var bumpHtml = "";
+    if (canBump) bumpHtml = '<label class="bump"><input type="checkbox" id="bump-sub"><div><div class="bump-t">' + L("Destrava TUDO: vira assinante agora", "Unlock EVERYTHING: go member now", "Desbloquea TODO: hazte miembro ya") + '</div><div class="bump-s">' + L("+ pack de boas-vindas grátis e 20% off em tudo, pra sempre", "+ free welcome pack and 20% off everything, forever", "+ pack de bienvenida gratis y 20% off en todo, para siempre") + '</div></div><span class="bump-plus">+' + usd(c.subPrice) + '/' + L("mês","mo","mes") + '</span></label>';
+    else if (opts.bump) bumpHtml = '<label class="bump"><input type="checkbox" id="bump-pack"><div><div class="bump-t">➕ ' + opts.bump.label + '</div><div class="bump-s">' + opts.bump.sub + '</div></div><span class="bump-plus">+' + fmtC2(opts.bump.amount) + '</span></label>';
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal"><div class="modal-pad">' +
-      '<h3>' + L("Falta um toque.", "One tap away.", "Falta un toque.") + '</h3><p class="m-sub">' + L("Acesso na hora, direto no seu perfil. Cancele quando quiser.", "Instant access, straight to your profile. Cancel anytime.", "Acceso al instante, directo en tu perfil. Cancela cuando quieras.") + '</p>' +
-      '<div class="order"><div class="lr-icon">' + icon + '</div><div class="o-main"><div class="lr-title">' + opts.title + '</div><div class="lr-sub">' + opts.creator + '</div></div><div class="o-total">' + usd(opts.price) + '</div></div>' +
+      '<h3>' + L("Falta um toque.", "One tap away.", "Falta un toque.") + '</h3><p class="m-sub">' + L("Acesso na hora, direto no seu perfil. Pague uma vez, é seu por 30 dias.", "Instant access, straight to your profile. Pay once, yours for 30 days.", "Acceso al instante. Paga una vez, tuyo por 30 días.") + '</p>' +
+      '<div class="order"><div class="lr-icon">' + icon + '</div><div class="o-main"><div class="lr-title">' + opts.title + '</div><div class="lr-sub">' + ((opts.titleSub ? opts.titleSub + ' · ' : '') + opts.creator) + '</div></div><div class="o-total">' + priceLabel + '</div></div>' +
       bumpHtml +
       '<div class="pay-stub">' + L("Pagamento entra na <b>etapa final</b> do projeto.", "Payment comes in the <b>final stage</b> of the project.", "El pago entra en la <b>etapa final</b> del proyecto.") + '<div class="pay-logos"><span>CCBill</span><span>Stripe</span><span>Cakto</span><span>Pix</span></div></div>' +
       '<div class="modal-foot"><button class="btn btn-ghost btn-block" data-close>' + L("Agora não", "Not now", "Ahora no") + '</button><button class="btn btn-primary btn-block" id="confirm-buy">' + L("Liberar agora", "Unlock now", "Liberar ahora") + '</button></div>' +
       '</div></div></div>';
     document.getElementById("confirm-buy").onclick = function () {
       var bumpEl = document.getElementById("bump-sub"), bumped = bumpEl && bumpEl.checked;
+      var packBumpEl = document.getElementById("bump-pack"), packBumped = packBumpEl && packBumpEl.checked;
       if (c) state.fanXP[c.id] = (state.fanXP[c.id] || 0) + 15;
       if (bumped && c) { state.subscribed[c.id] = true; state.fanXP[c.id] += 40; }
       if (opts.realSub && sb && account) {
@@ -2459,13 +2464,21 @@
       }
       if (opts.realPack && sb && account) {
         var btnP = document.getElementById("confirm-buy"); btnP.disabled = true; btnP.textContent = "Processando…";
-        sb.rpc("unlock_pack", { p_creator_key: opts.realPack.creatorKey, p_n: opts.realPack.n, p_price_cents: opts.realPack.amount || Math.round(opts.price * 100), p_media_type: opts.realPack.ptype }).then(function (r) {
-          closeModal();
-          if (r.error) { toast("Erro: " + r.error.message); return; }
+        var doBump = function () {
+          if (packBumped && opts.bump && opts.bump.target) return sb.rpc("unlock_pack", { p_creator_key: opts.bump.target.creatorKey, p_n: opts.bump.target.n, p_price_cents: opts.bump.amount, p_media_type: opts.bump.target.ptype });
+          return Promise.resolve({ data: 0 });
+        };
+        sb.rpc("unlock_pack", { p_creator_key: opts.realPack.creatorKey, p_n: opts.realPack.n, p_price_cents: opts.realPack.amount || opts.priceCents || Math.round(opts.price * 100), p_media_type: opts.realPack.ptype }).then(function (r) {
+          if (r.error) { closeModal(); toast("Erro: " + r.error.message); return; }
           var got = (typeof r.data === "number") ? r.data : (r.data && r.data[0]) || 0;
-          if (got > 0) { state.purchased[opts.id] = true; toast(got + L(" conteúdos desbloqueados · 30 dias", " items unlocked · 30 days", " contenidos desbloqueados · 30 días")); }
-          else toast(L("Você já desbloqueou tudo dela por aqui. Veja na sua coleção.", "You already unlocked everything here. Check your collection.", "Ya desbloqueaste todo aquí. Mira tu colección."));
-          render();
+          if (got > 0) state.purchased[opts.id] = true;
+          doBump().then(function (r2) {
+            closeModal();
+            var extra = (r2 && !r2.error && typeof r2.data === "number") ? r2.data : 0;
+            if (got + extra > 0) toast((got + extra) + L(" conteúdos liberados · 30 dias", " items unlocked · 30 days", " contenidos liberados · 30 días"));
+            else toast(L("Você já tem tudo isso. Veja na sua coleção.", "You already have all this. Check your collection.", "Ya tienes todo esto. Mira tu colección."));
+            render();
+          });
         });
         return;
       }
@@ -2693,25 +2706,34 @@
         var realWrap = document.getElementById("pf-packs-real");
         if (realWrap) {
           var paidPosts = pr.data.filter(function (p) { return !p.is_free; });
-          var ph = paidPosts.filter(function (p) { return p.media_type !== "video"; });
-          var vd = paidPosts.filter(function (p) { return p.media_type === "video"; });
-          var sumC = function (arr) { return arr.reduce(function (a, p) { return a + (p.price_cents || 0); }, 0); };
-          function packRow(icon, label, nleft, amtCents, ptype) {
-            var id = creatorKey + "-allpack-" + ptype;
+          var nPh = paidPosts.filter(function (p) { return p.media_type !== "video"; }).length;
+          var nVd = paidPosts.filter(function (p) { return p.media_type === "video"; }).length;
+          var nAll = paidPosts.length;
+          var fmtC = function (c) { return "$" + (c / 100).toFixed(2); };
+          var other = CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false && x.avatarUrl; })[0] || CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false; })[0];
+          var crossBump = other ? { label: L("Espia a ", "Peek at ", "Mira a ") + other.name + L(" também", " too", " también"), sub: L("prévia quente de outra modelo · 5 fotos", "a taste of another model · 5 photos", "otra modelo · 5 fotos"), amount: 990, target: { creatorKey: other.id, n: 5, ptype: "image" } } : null;
+          var KITS = [];
+          if (nPh) KITS.push({ icon: I.photo, key: "fotos", title: "🔥 " + L("Kit Fotos", "Photo Kit", "Kit Fotos"), sub: nPh + " " + L("fotos", "photos", "fotos") + " · " + L("liberado na hora · 30 dias", "instant · 30 days", "al instante · 30 días"), amount: 990, n: nPh, ptype: "image",
+            bump: nVd ? { label: L("Adiciona os ", "Add the ", "Agrega los ") + nVd + " " + L("vídeos", "videos", "videos"), sub: L("completa a coleção dela", "complete her collection", "completa su colección"), amount: 700, target: { creatorKey: creatorKey, n: nVd, ptype: "video" } } : crossBump });
+          if (nVd) KITS.push({ icon: I.video, key: "videos", title: "🎥 " + L("Kit Vídeos", "Video Kit", "Kit Videos"), sub: nVd + " " + L("vídeos", "videos", "videos") + " · " + L("sem corte · 30 dias", "uncut · 30 days", "sin cortes · 30 días"), amount: 1490, n: nVd, ptype: "video",
+            bump: nPh ? { label: L("Adiciona as ", "Add the ", "Agrega las ") + nPh + " " + L("fotos", "photos", "fotos"), sub: L("pague uma vez, leve tudo", "pay once, take it all", "paga una vez, llévalo todo"), amount: 500, target: { creatorKey: creatorKey, n: nPh, ptype: "image" } } : crossBump });
+          if (nPh && nVd) KITS.push({ icon: I.star, key: "tudo", title: "👑 " + L("Kit Completo · 30 dias", "Full Kit · 30 days", "Kit Completo · 30 días"), sub: nPh + " " + L("fotos", "photos", "fotos") + " + " + nVd + " " + L("vídeos", "videos", "videos") + " · " + L("tudo dela", "all of her", "todo de ella"), amount: 1990, n: nAll, ptype: null, badge: L("Mais popular", "Most popular", "Más popular"), anchor: 2480, bump: crossBump });
+          function kitRow(k) {
+            var id = creatorKey + "-kit-" + k.key;
             var owned = state.purchased[id];
+            var anchor = k.anchor ? '<span style="text-decoration:line-through;color:var(--faint);font-size:0.8rem;margin-right:0.35rem">' + fmtC(k.anchor) + '</span>' : '';
+            var badge = k.badge ? '<span class="lr-badge">' + k.badge + '</span>' : '';
             return '<div class="ladder-row">' +
-              '<div class="lr-icon">' + icon + '</div>' +
-              '<div class="lr-main"><div class="lr-title">' + label + '</div><div class="lr-sub">' + nleft + ' ' + (ptype === 'video' ? L('vídeos', 'videos', 'videos') : L('fotos', 'photos', 'fotos')) + ' · ' + L('liberado na hora · 30 dias de acesso', 'instant access · 30 days', 'acceso al instante · 30 días') + '</div></div>' +
-              '<div class="lr-price">' + usd(Math.round(amtCents / 100)) + '</div>' +
-              '<div class="lr-buy">' + (owned ? '<button class="btn btn-good btn-sm" disabled>' + I.check + '</button>' : '<button class="btn btn-primary btn-sm" data-realpack="' + ptype + '" data-n="' + nleft + '" data-amt="' + amtCents + '" data-id="' + id + '" data-label="' + escHtml(label) + '">' + L("Comprar", "Buy", "Comprar") + '</button>') + '</div></div>';
+              '<div class="lr-icon">' + k.icon + '</div>' +
+              '<div class="lr-main"><div class="lr-title">' + k.title + badge + '</div><div class="lr-sub">' + k.sub + '</div></div>' +
+              '<div class="lr-price">' + anchor + fmtC(k.amount) + '</div>' +
+              '<div class="lr-buy">' + (owned ? '<button class="btn btn-good btn-sm" disabled>' + I.check + '</button>' : '<button class="btn btn-primary btn-sm" data-kit="' + k.key + '">' + L("Pegar", "Get", "Tomar") + '</button>') + '</div></div>';
           }
-          var rows = "";
-          if (ph.length) { var pc = Math.max(900, Math.round(sumC(ph) * 0.6)); rows += packRow(I.photo, L("Todas as fotos", "All photos", "Todas las fotos") + " (" + ph.length + ")", ph.length, pc, "image"); }
-          if (vd.length) { var vc = Math.max(1500, Math.round(sumC(vd) * 0.6)); rows += packRow(I.video, L("Todos os vídeos", "All videos", "Todos los videos") + " (" + vd.length + ")", vd.length, vc, "video"); }
-          realWrap.innerHTML = rows ? '<div class="ladder">' + rows + '</div>' : '<p class="muted-note">' + L("Em breve.", "Coming soon.", "Pronto.") + '</p>';
-          realWrap.querySelectorAll("[data-realpack]").forEach(function (btn) {
+          realWrap.innerHTML = KITS.length ? '<div class="ladder">' + KITS.map(kitRow).join("") + '</div>' : '<p class="muted-note">' + L("Em breve.", "Coming soon.", "Pronto.") + '</p>';
+          realWrap.querySelectorAll("[data-kit]").forEach(function (btn) {
             btn.onclick = function () {
-              purchaseModal({ id: btn.getAttribute("data-id"), title: btn.getAttribute("data-label"), price: Math.round(+btn.getAttribute("data-amt") / 100), icon: btn.getAttribute("data-realpack") === "video" ? "video" : "tile", creator: currentCreatorName(), realPack: { creatorKey: creatorKey, n: +btn.getAttribute("data-n"), amount: +btn.getAttribute("data-amt"), ptype: btn.getAttribute("data-realpack") } });
+              var k = KITS.filter(function (x) { return x.key === btn.getAttribute("data-kit"); })[0]; if (!k) return;
+              purchaseModal({ id: creatorKey + "-kit-" + k.key, title: k.title.replace(/^\S+\s/, ""), titleSub: k.sub, priceCents: k.amount, creator: currentCreatorName(), icon: k.ptype === "video" ? "video" : "tile", realPack: { creatorKey: creatorKey, n: k.n, amount: k.amount, ptype: k.ptype }, bump: k.bump });
             };
           });
         }
