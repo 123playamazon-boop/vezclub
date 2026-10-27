@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vezclub · Seja uma criadora</title>
+<meta name="description" content="Você grava. Nossa equipe em Miami e nossa IA transformam em renda. Candidate-se para ser uma criadora Vezclub.">
+<meta property="og:title" content="Vezclub · Seja uma criadora">
+<meta property="og:description" content="Você grava. A gente faz o resto. Distribuição, vendas, IA e pagamentos — você só aparece.">
+<meta property="og:type" content="website">
+<meta name="robots" content="index,follow">
+<style>
+  :root{
+    --bg:#0a0a0c; --bg2:#101014; --card:#15151b; --line:#24242e;
+    --ink:#f4f3f7; --mut:#a3a0b0; --mut2:#76737f;
+    --brand:#ff2d6f; --brand2:#ff6a3d; --gold:#f5c451;
+    --ok:#39d98a;
+    --rad:18px; --max:1080px;
+    --grad:linear-gradient(135deg,var(--brand),var(--brand2));
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  h1,h2,h3{line-height:1.08;letter-spacing:-.02em;font-weight:800}
+  h1{font-size:clamp(2.1rem,6.2vw,4.1rem)}
+  h2{font-size:clamp(1.7rem,4.4vw,2.9rem);margin-bottom:.4em}
+  h3{font-size:1.18rem;font-weight:700}
+  p{color:var(--mut)}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+  .serif{font-family:"Georgia","Times New Roman",serif}
+  .grad-txt{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  section{padding:68px 0;position:relative}
+  .eyebrow{display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin-bottom:14px}
+
+  /* topbar */
+  .top{position:sticky;top:0;z-index:50;background:rgba(10,10,12,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .top .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .logo{font-weight:900;font-size:1.35rem;letter-spacing:-.03em}
+  .logo b{color:var(--brand)}
+  .top-r{display:flex;align-items:center;gap:12px}
+  .lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .lang button{background:none;border:0;color:var(--mut);padding:6px 11px;font-size:.78rem;font-weight:700;cursor:pointer}
+  .lang button.on{background:var(--ink);color:#000}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;
+    font-weight:800;font-size:1rem;padding:15px 26px;border-radius:999px;background:var(--grad);color:#fff;
+    box-shadow:0 10px 30px -8px rgba(255,45,111,.55);transition:transform .15s ease,box-shadow .15s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 16px 38px -8px rgba(255,45,111,.65)}
+  .btn.sm{padding:9px 18px;font-size:.86rem}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);box-shadow:none}
+
+  /* hero */
+  .hero{padding:72px 0 56px;background:
+     radial-gradient(900px 440px at 80% -5%,rgba(255,45,111,.22),transparent 60%),
+     radial-gradient(760px 420px at 0% 15%,rgba(255,106,61,.14),transparent 55%)}
+  .hero h1{max-width:14ch}
+  .hero .sub{font-size:clamp(1.05rem,2.2vw,1.3rem);color:var(--mut);max-width:42ch;margin:22px 0 14px}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:26px}
+  .trust{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px;color:var(--mut2);font-size:.86rem}
+  .trust span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+
+  /* stat strip */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:46px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:20px 16px;text-align:center}
+  .stat b{display:block;font-size:clamp(1.5rem,3.4vw,2.2rem);font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat small{color:var(--mut2);font-size:.76rem;line-height:1.35;display:block;margin-top:4px}
+
+  /* generic cards */
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:24px}
+  .card .ic{width:42px;height:42px;border-radius:12px;background:rgba(255,45,111,.12);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:14px}
+  .card h3{margin-bottom:7px}
+  .card p{font-size:.95rem}
+
+  .pain .card{border-left:3px solid var(--brand)}
+  .pain .card h3{font-size:1.02rem;font-weight:700}
+
+  /* how it works */
+  .steps{counter-reset:s}
+  .step{display:flex;gap:18px;padding:22px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:0}
+  .step .n{counter-increment:s;flex:0 0 46px;height:46px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.15rem}
+  .step .n::before{content:counter(s)}
+  .engine{background:linear-gradient(135deg,rgba(255,45,111,.1),rgba(255,106,61,.06));border:1px solid rgba(255,45,111,.3);border-radius:var(--rad);padding:30px;text-align:center;margin-top:30px}
+  .engine .big{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:900;margin:6px 0}
+
+  /* earnings */
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:10px}
+  .tier{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:26px 22px;text-align:center}
+  .tier.hot{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand),0 20px 50px -20px rgba(255,45,111,.5);position:relative}
+  .tier.hot::after{content:attr(data-tag);position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--grad);font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:999px;white-space:nowrap}
+  .tier .amt{font-size:clamp(1.7rem,4vw,2.3rem);font-weight:900;margin:8px 0}
+  .tier small{color:var(--mut2);font-size:.82rem}
+  .calc{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:28px;margin-top:22px}
+  .calc input[type=range]{width:100%;accent-color:var(--brand);margin:16px 0}
+  .calc .out{font-size:clamp(1.8rem,5vw,2.8rem);font-weight:900}
+  .calc .row{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;color:var(--mut)}
+
+  /* value stack */
+  .stack{max-width:620px;margin:0 auto}
+  .stack .li{display:flex;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px dashed var(--line)}
+  .stack .li span:first-child{color:var(--ink)}
+  .stack .li span:last-child{color:var(--mut2);text-decoration:line-through;white-space:nowrap}
+  .stack .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;padding-top:16px;border-top:2px solid var(--brand)}
+  .stack .tot b{font-size:1.9rem;font-weight:900}
+
+  /* guarantee */
+  .guar{background:linear-gradient(135deg,rgba(57,217,138,.08),transparent);border:1px solid rgba(57,217,138,.35);border-radius:var(--rad);padding:34px;text-align:center}
+  .guar .seal{width:74px;height:74px;border-radius:50%;border:3px solid var(--ok);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--ok);margin:0 auto 14px;font-size:.9rem;text-align:center;line-height:1}
+
+  /* faq */
+  details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 20px;margin-bottom:10px}
+  details summary{cursor:pointer;padding:16px 0;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";font-size:1.4rem;color:var(--brand);font-weight:400}
+  details[open] summary::after{content:"\2013"}
+  details p{padding:0 0 16px;font-size:.95rem}
+
+  /* form */
+  .formwrap{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:30px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:.85rem;font-weight:700;margin-bottom:6px}
+  .field input,.field select{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--ink);font-size:1rem;font-family:inherit}
+  .field input:focus,.field select:focus{outline:0;border-color:var(--brand)}
+  .check{display:flex;gap:10px;align-items:flex-start;font-size:.88rem;color:var(--mut)}
+  .check input{margin-top:3px;flex:0 0 auto;width:18px;height:18px;accent-color:var(--brand)}
+  .formnote{font-size:.78rem;color:var(--mut2);margin-top:14px;text-align:center}
+  .okmsg{display:none;text-align:center;padding:20px}
+  .okmsg .seal{width:64px;height:64px;border-radius:50%;background:rgba(57,217,138,.15);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 14px}
+
+  /* sticky mobile cta */
+  .sticky{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(10,10,12,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:12px 16px;display:none;gap:10px}
+  .sticky .btn{flex:1}
+  .wa{position:fixed;right:16px;bottom:88px;z-index:55;width:54px;height:54px;border-radius:50%;background:#25d366;display:none;align-items:center;justify-content:center;box-shadow:0 10px 26px -6px rgba(37,211,102,.6)}
+  .wa svg{width:30px;height:30px;fill:#fff}
+
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--mut2);font-size:.82rem}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+
+  @media(max-width:820px){
+    .g2,.g3,.tiers{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:640px){
+    section{padding:48px 0}
+    .sticky{display:flex}
+    .wa{display:flex}
+    body{padding-bottom:76px}
+    .top .btn{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="logo">Vez<b>club</b></div>
+    <div class="top-r">
+      <div class="lang" id="lang">
+        <button data-l="pt" class="on">PT</button>
+        <button data-l="en">EN</button>
+      </div>
+      <a href="#candidatar" class="btn sm" data-i="nav_cta">Candidatar-se</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow" data-i="hero_eye">Captação de criadoras · Vagas limitadas</span>
+    <h1 data-i="hero_h1">Você grava. <span class="grad-txt">A gente transforma em renda.</span></h1>
+    <p class="sub" data-i="hero_sub">Uma equipe em Miami e uma IA proprietária cuidam de distribuição, vendas e pagamentos. Você só aparece — sem editar, sem postar todo dia, sem aparecer pra ninguém que você não queira.</p>
+    <div class="hero-cta">
+      <a href="#candidatar" class="btn" data-i="hero_cta">Quero me candidatar →</a>
+      <a href="#como" class="btn ghost" data-i="hero_cta2">Como funciona</a>
+    </div>
+    <div class="trust">
+      <span><i class="dot"></i><span data-i="t1">100% discreto</span></span>
+      <span><i class="dot"></i><span data-i="t2">$0 de entrada</span></span>
+      <span><i class="dot"></i><span data-i="t3">Você mantém o controle</span></span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>$25bi+</b><small data-i="s1">economia de criadores em 2024</small></div>
+      <div class="stat"><b>377mi</b><small data-i="s2">fãs pagantes no mundo</small></div>
+      <div class="stat"><b>$480bi</b><small data-i="s3">projeção do mercado até 2027</small></div>
+      <div class="stat"><b>24/7</b><small data-i="s4">equipe vendendo por você</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- PAIN -->
+<section class="pain" id="dores">
+  <div class="wrap">
+    <span class="eyebrow" data-i="p_eye">A real do jogo</span>
+    <h2 data-i="p_h2">Criar conteúdo sozinha é um segundo emprego não remunerado</h2>
+    <div class="grid g3" style="margin-top:26px">
+      <div class="card"><h3 data-i="p1t">Postar todo dia e ver pouco retorno</h3><p data-i="p1b">Você produz sem parar, o algoritmo entrega pra poucos e o faturamento não acompanha o esforço.</p></div>
+      <div class="card"><h3 data-i="p2t">Responder fã é um trabalho em si</h3><p data-i="p2b">As maiores vendas vêm da conversa — e ninguém consegue responder centenas de mensagens e ainda ter vida.</p></div>
+      <div class="card"><h3 data-i="p3t">Não saber precificar</h3><p data-i="p3b">Cobra pouco e trabalha de graça; cobra alto sem estrutura e não vende. Falta quem saiba o número certo.</p></div>
+      <div class="card"><h3 data-i="p4t">Medo de exposição</h3><p data-i="p4b">O receio de alguém conhecido ver trava mais gente do que a timidez. Sem proteção, o risco pesa.</p></div>
+      <div class="card"><h3 data-i="p5t">Edição e tráfego são caros</h3><p data-i="p5b">Editor, gestor de tráfego, social media: uma equipe custa milhares por mês antes de você faturar o primeiro dólar.</p></div>
+      <div class="card"><h3 data-i="p6t">Um público só, num idioma só</h3><p data-i="p6b">Seu conteúdo poderia vender em 3 continentes. Preso num idioma, você deixa a maior parte do dinheiro na mesa.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section id="como" style="background:var(--bg2)">
+  <div class="wrap">
+    <span class="eyebrow" data-i="h_eye">Como funciona</span>
+    <h2 data-i="h_h2">Você faz uma parte. A gente faz todo o resto.</h2>
+    <div class="steps" style="margin-top:22px">
+      <div class="step"><div class="n"></div><div><h3 data-i="h1t">Você grava</h3><p data-i="h1b">Do seu jeito, no seu tempo, no seu celular. Sem roteiro de agência, sem set de filmagem. A gente te orienta no que performa.</p></div></div>
+      <div class="step"><div class="n"></div><div><h3 data-i="h2t">Nossa IA multiplica</h3><p data-i="h2b">Nosso motor transforma o que você grava em dezenas de peças, cortes e variações prontas pra distribuir.</p></div></div>
+      <div class="step"><div class="n"></div><div><h3 data-i="h3t">A equipe distribui e vende</h3><p data-i="h3b">Crescimento no Instagram, Reels, venda no chat e precificação — cuidado por gente que faz isso o dia inteiro.</p></div></div>
+      <div class="step"><div class="n"></div><div><h3 data-i="h4t">Você recebe</h3><p data-i="h4b">Pacotes, assinaturas e outras fontes caem numa dashboard transparente. Você acompanha tudo em tempo real.</p></div></div>
+    </div>
+    <div class="engine">
+      <span class="eyebrow" data-i="e_eye">Vez Engine · IA proprietária</span>
+      <div class="big">Você grava 10. <span class="grad-txt">Nossa IA entrega 100+.</span></div>
+      <p data-i="e_b" style="max-width:52ch;margin:0 auto">Tradução automática pra alcance global, cortes infinitos e distribuição nos canais certos. O mesmo esforço rendendo várias vezes mais.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="fazemos">
+  <div class="wrap">
+    <span class="eyebrow" data-i="sv_eye">O que a Vezclub assume por você</span>
+    <h2 data-i="sv_h2">Uma estrutura completa — sem você contratar ninguém</h2>
+    <div class="grid g3" style="margin-top:26px">
+      <div class="card"><div class="ic">📈</div><h3 data-i="sv1t">Crescimento no Instagram</h3><p data-i="sv1b">Estratégia de perfil e conteúdo pra atrair o público certo, que compra.</p></div>
+      <div class="card"><div class="ic">🎬</div><h3 data-i="sv2t">Produção de Reels e cortes</h3><p data-i="sv2b">Edição e variações a partir do que você grava, prontas pra distribuir.</p></div>
+      <div class="card"><div class="ic">💬</div><h3 data-i="sv3t">Vendas no chat</h3><p data-i="sv3b">Equipe treinada convertendo conversa em venda, 24 horas, por você.</p></div>
+      <div class="card"><div class="ic">🏷️</div><h3 data-i="sv4t">Precificação inteligente</h3><p data-i="sv4b">Pacotes e preços calibrados pra vender volume sem queimar seu valor.</p></div>
+      <div class="card"><div class="ic">📊</div><h3 data-i="sv5t">Dashboard transparente</h3><p data-i="sv5b">Você vê cada venda, cada pacote e cada pagamento em tempo real.</p></div>
+      <div class="card"><div class="ic">🛡️</div><h3 data-i="sv6t">Proteção e discrição</h3><p data-i="sv6b">Controle de quem vê, bloqueio por região e opção de anonimato. Você decide a exposição.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- EARNINGS -->
+<section id="ganhos" style="background:var(--bg2)">
+  <div class="wrap">
+    <span class="eyebrow" data-i="g_eye">Potencial de ganhos</span>
+    <h2 data-i="g_h2">Quanto dá pra faturar</h2>
+    <p data-i="g_sub" style="max-width:60ch">Faixas reais que criadoras alcançam no mercado, conforme dedicação e crescimento. Não é promessa de renda — é o potencial do modelo quando a estrutura trabalha com você.</p>
+    <div class="tiers" style="margin-top:28px">
+      <div class="tier"><small data-i="g1l">Começando</small><div class="amt">$100–1k</div><small data-i="g1b">/mês · primeiros passos, público pequeno</small></div>
+      <div class="tier hot" data-tag="comum"><small data-i="g2l">Em ritmo</small><div class="amt">$1k–10k</div><small data-i="g2b">/mês · constância + estrutura rodando</small></div>
+      <div class="tier"><small data-i="g3l">Escalando</small><div class="amt">$10k+</div><small data-i="g3b">/mês · base fiel e distribuição global</small></div>
+    </div>
+
+    <div class="calc">
+      <div class="row"><span data-i="c_lbl">Fãs pagantes</span><span id="cf">500</span></div>
+      <input type="range" id="crange" min="50" max="5000" step="50" value="500">
+      <div class="row"><span data-i="c_est">Estimativa de receita mensal</span></div>
+      <div class="out grad-txt" id="cout">$5.000</div>
+      <small style="color:var(--mut2)" data-i="c_note">Estimativa ilustrativa a ~$10 por fã pagante/mês. Resultados variam por nicho, constância e oferta.</small>
+    </div>
+  </div>
+</section>
+
+<!-- VALUE STACK -->
+<section id="valor">
+  <div class="wrap">
+    <span class="eyebrow" data-i="v_eye">O que isso custaria sozinha</span>
+    <h2 data-i="v_h2">A equipe que a Vezclub te dá de graça</h2>
+    <div class="stack" style="margin-top:22px">
+      <div class="li"><span data-i="v1">Editor de vídeo</span><span>$1.200/mês</span></div>
+      <div class="li"><span data-i="v2">Gestor de tráfego</span><span>$1.500/mês</span></div>
+      <div class="li"><span data-i="v3">Atendimento de chat 24/7</span><span>$900/mês</span></div>
+      <div class="li"><span data-i="v4">Social media</span><span>$800/mês</span></div>
+      <div class="li"><span data-i="v5">Ferramenta de IA + tradução</span><span>$400/mês</span></div>
+      <div class="tot"><span data-i="v_tot">Seu custo de entrada</span><b class="grad-txt">$0</b></div>
+    </div>
+    <p style="text-align:center;margin-top:16px" data-i="v_b">A gente só ganha quando você ganha. Sem mensalidade, sem taxa de entrada, sem dívida com a Vezclub.</p>
+  </div>
+</section>
+
+<!-- GUARANTEE -->
+<section style="background:var(--bg2)">
+  <div class="wrap" style="max-width:720px">
+    <div class="guar">
+      <div class="seal">30<br>DIAS</div>
+      <h2 data-i="gu_h2">Garantia de 30 dias</h2>
+      <p data-i="gu_b">Se em 30 dias a estrutura não entregar o combinado, você não deve nada à Vezclub e sai com tudo o que produziu. O risco é nosso, não seu.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY -->
+<section>
+  <div class="wrap grid g2" style="align-items:center">
+    <div>
+      <span class="eyebrow" data-i="pr_eye">Privacidade em primeiro lugar</span>
+      <h2 data-i="pr_h2">Você decide quem vê o quê</h2>
+      <p data-i="pr_b" style="margin-bottom:14px">Bloqueio de conteúdo por país e região pra não aparecer pra quem você não quer. Opção de anonimato e máscara. Controle total sobre a sua imagem — a exposição é escolha sua, nunca imposição.</p>
+      <a href="#candidatar" class="btn" data-i="pr_cta">Quero essa estrutura →</a>
+    </div>
+    <div class="grid" style="gap:12px">
+      <div class="card"><h3 data-i="pr1t">🌎 Bloqueio por região</h3><p data-i="pr1b">Esconda seu perfil de países ou estados específicos.</p></div>
+      <div class="card"><h3 data-i="pr2t">🎭 Anonimato opcional</h3><p data-i="pr2b">Trabalhe com máscara ou sem mostrar o rosto, se preferir.</p></div>
+      <div class="card"><h3 data-i="pr3t">🔒 Seus dados protegidos</h3><p data-i="pr3b">Nada é publicado sem a sua autorização. Ponto.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:var(--bg2)">
+  <div class="wrap" style="max-width:760px">
+    <span class="eyebrow" data-i="f_eye">Perguntas frequentes</span>
+    <h2 data-i="f_h2">O que as criadoras mais perguntam</h2>
+    <div style="margin-top:24px">
+      <details open><summary data-i="f1q">Preciso mostrar o rosto?</summary><p data-i="f1a">Não. Você pode trabalhar com anonimato, máscara ou sem aparecer, e ainda bloquear seu conteúdo por região. A exposição é 100% sua escolha.</p></details>
+      <details><summary data-i="f2q">Quanto custa pra entrar?</summary><p data-i="f2a">Nada. Sem mensalidade e sem taxa de entrada. A Vezclub só ganha uma porcentagem quando você fatura — nossos incentivos estão alinhados.</p></details>
+      <details><summary data-i="f3q">Preciso ter muitos seguidores?</summary><p data-i="f3a">Não. A gente trabalha tanto com quem está começando quanto com perfis já estabelecidos. O que conta é a vontade de crescer com constância.</p></details>
+      <details><summary data-i="f4q">Quanto tempo preciso dedicar?</summary><p data-i="f4a">O suficiente pra gravar o conteúdo base. A IA multiplica e a equipe distribui — por isso você rende sem viver grudada no celular.</p></details>
+      <details><summary data-i="f5q">Que tipo de conteúdo é esse?</summary><p data-i="f5a">É uma plataforma para criadoras adultas (18+). No formulário você indica sua experiência e a gente alinha tudo com transparência antes de qualquer passo.</p></details>
+      <details><summary data-i="f6q">Como eu recebo?</summary><p data-i="f6a">Numa dashboard transparente, com saques conforme a região. Você vê cada venda em tempo real.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- APPLY -->
+<section id="candidatar">
+  <div class="wrap grid g2" style="align-items:start;gap:34px">
+    <div>
+      <span class="eyebrow" data-i="a_eye">Candidatura</span>
+      <h2 data-i="a_h2">Dê o primeiro passo</h2>
+      <p data-i="a_b" style="margin-bottom:18px">Preencha em 1 minuto. Nossa equipe analisa sua candidatura e entra em contato pra te explicar tudo e tirar suas dúvidas — sem compromisso.</p>
+      <div class="grid" style="gap:10px">
+        <div class="card" style="padding:16px"><h3 style="font-size:1rem" data-i="a_s1">✓ Sem custo pra se candidatar</h3></div>
+        <div class="card" style="padding:16px"><h3 style="font-size:1rem" data-i="a_s2">✓ Conversa 100% confidencial</h3></div>
+        <div class="card" style="padding:16px"><h3 style="font-size:1rem" data-i="a_s3">✓ Você decide se quer seguir depois de entender tudo</h3></div>
+      </div>
+    </div>
+
+    <div class="formwrap">
+      <form id="appform" novalidate>
+        <div class="field">
+          <label data-i="l_name">Nome ou @ do Instagram</label>
+          <input name="name" id="f_name" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label data-i="l_insta">Seu Instagram</label>
+          <input name="instagram" id="f_insta" placeholder="@seuperfil">
+        </div>
+        <div class="field">
+          <label data-i="l_contact">WhatsApp ou e-mail</label>
+          <input name="contact" id="f_contact" required>
+        </div>
+        <div class="field">
+          <label data-i="l_exp">Já cria conteúdo adulto?</label>
+          <select name="experience" id="f_exp">
+            <option value="" data-i="l_exp0">Selecione</option>
+            <option value="sim" data-i="l_exp1">Sim, já crio</option>
+            <option value="nao" data-i="l_exp2">Não, mas tenho interesse</option>
+            <option value="talvez" data-i="l_exp3">Quero entender melhor antes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="f_age" required><span data-i="l_age">Confirmo que tenho 18 anos ou mais.</span></label>
+        </div>
+        <button type="submit" class="btn" style="width:100%" id="f_submit" data-i="l_submit">Enviar candidatura →</button>
+        <p class="formnote" data-i="l_note">Ao enviar, você autoriza a Vezclub a entrar em contato. Seus dados são confidenciais e nunca publicados.</p>
+      </form>
+      <div class="okmsg" id="okmsg">
+        <div class="seal">✓</div>
+        <h3 data-i="ok_h">Candidatura recebida!</h3>
+        <p data-i="ok_b">Nossa equipe vai analisar e entrar em contato pelo canal que você informou. Fica de olho no WhatsApp/e-mail.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="logo">Vez<b>club</b></div>
+    <div data-i="foot">© <span id="yr"></span> Vezclub · Conteúdo para maiores de 18 anos · Todos os direitos reservados</div>
+  </div>
+</footer>
+
+<!-- sticky mobile -->
+<div class="sticky">
+  <a href="#candidatar" class="btn" data-i="sticky_cta">Quero me candidatar →</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
+  var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+  var sb=null;
+  try{ sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false}}); }catch(e){}
+
+  document.getElementById("yr").textContent=new Date().getFullYear();
+
+  /* ---- i18n ---- */
+  var I={
+    nav_cta:["Candidatar-se","Apply"],
+    hero_eye:["Captação de criadoras · Vagas limitadas","Creator recruiting · Limited spots"],
+    hero_h1:['Você grava. <span class="grad-txt">A gente transforma em renda.</span>','You film. <span class="grad-txt">We turn it into income.</span>'],
+    hero_sub:["Uma equipe em Miami e uma IA proprietária cuidam de distribuição, vendas e pagamentos. Você só aparece — sem editar, sem postar todo dia, sem aparecer pra ninguém que você não queira.","A Miami-based team and a proprietary AI handle distribution, sales and payments. You just show up — no editing, no daily posting, and never seen by anyone you don't want to."],
+    hero_cta:["Quero me candidatar →","I want to apply →"],
+    hero_cta2:["Como funciona","How it works"],
+    t1:["100% discreto","100% discreet"], t2:["$0 de entrada","$0 to start"], t3:["Você mantém o controle","You stay in control"],
+    s1:["economia de criadores em 2024","creator economy in 2024"],
+    s2:["fãs pagantes no mundo","paying fans worldwide"],
+    s3:["projeção do mercado até 2027","projected market by 2027"],
+    s4:["equipe vendendo por você","team selling for you"],
+    p_eye:["A real do jogo","The real talk"],
+    p_h2:["Criar conteúdo sozinha é um segundo emprego não remunerado","Creating alone is an unpaid second job"],
+    p1t:["Postar todo dia e ver pouco retorno","Posting daily, seeing little back"],
+    p1b:["Você produz sem parar, o algoritmo entrega pra poucos e o faturamento não acompanha o esforço.","You produce nonstop, the algorithm reaches few, and revenue never matches the effort."],
+    p2t:["Responder fã é um trabalho em si","Replying to fans is a job in itself"],
+    p2b:["As maiores vendas vêm da conversa — e ninguém consegue responder centenas de mensagens e ainda ter vida.","The biggest sales come from chat — and no one can answer hundreds of messages and still have a life."],
+    p3t:["Não saber precificar","Not knowing how to price"],
+    p3b:["Cobra pouco e trabalha de graça; cobra alto sem estrutura e não vende. Falta quem saiba o número certo.","Charge too little and you work for free; charge high with no structure and you don't sell. You need someone who knows the right number."],
+    p4t:["Medo de exposição","Fear of exposure"],
+    p4b:["O receio de alguém conhecido ver trava mais gente do que a timidez. Sem proteção, o risco pesa.","The fear of someone you know seeing it stops more people than shyness does. Without protection, the risk is heavy."],
+    p5t:["Edição e tráfego são caros","Editing and ads are expensive"],
+    p5b:["Editor, gestor de tráfego, social media: uma equipe custa milhares por mês antes de você faturar o primeiro dólar.","Editor, media buyer, social manager: a team costs thousands a month before you earn your first dollar."],
+    p6t:["Um público só, num idioma só","One audience, one language"],
+    p6b:["Seu conteúdo poderia vender em 3 continentes. Preso num idioma, você deixa a maior parte do dinheiro na mesa.","Your content could sell on 3 continents. Stuck in one language, you leave most of the money on the table."],
+    h_eye:["Como funciona","How it works"],
+    h_h2:["Você faz uma parte. A gente faz todo o resto.","You do one part. We do everything else."],
+    h1t:["Você grava","You film"],
+    h1b:["Do seu jeito, no seu tempo, no seu celular. Sem roteiro de agência, sem set de filmagem. A gente te orienta no que performa.","Your way, your time, on your phone. No agency scripts, no film set. We guide you on what performs."],
+    h2t:["Nossa IA multiplica","Our AI multiplies"],
+    h2b:["Nosso motor transforma o que você grava em dezenas de peças, cortes e variações prontas pra distribuir.","Our engine turns what you film into dozens of pieces, clips and variations ready to distribute."],
+    h3t:["A equipe distribui e vende","The team distributes and sells"],
+    h3b:["Crescimento no Instagram, Reels, venda no chat e precificação — cuidado por gente que faz isso o dia inteiro.","Instagram growth, Reels, chat sales and pricing — handled by people who do it all day."],
+    h4t:["Você recebe","You get paid"],
+    h4b:["Pacotes, assinaturas e outras fontes caem numa dashboard transparente. Você acompanha tudo em tempo real.","Packs, subscriptions and other sources land in a transparent dashboard. You track everything in real time."],
+    e_eye:["Vez Engine · IA proprietária","Vez Engine · proprietary AI"],
+    e_b:["Tradução automática pra alcance global, cortes infinitos e distribuição nos canais certos. O mesmo esforço rendendo várias vezes mais.","Automatic translation for global reach, endless clips and distribution on the right channels. The same effort paying several times more."],
+    sv_eye:["O que a Vezclub assume por você","What Vezclub handles for you"],
+    sv_h2:["Uma estrutura completa — sem você contratar ninguém","A full team — without hiring anyone"],
+    sv1t:["Crescimento no Instagram","Instagram growth"], sv1b:["Estratégia de perfil e conteúdo pra atrair o público certo, que compra.","Profile and content strategy to attract the right audience that buys."],
+    sv2t:["Produção de Reels e cortes","Reels & clip production"], sv2b:["Edição e variações a partir do que você grava, prontas pra distribuir.","Editing and variations from what you film, ready to distribute."],
+    sv3t:["Vendas no chat","Chat sales"], sv3b:["Equipe treinada convertendo conversa em venda, 24 horas, por você.","A trained team turning chat into sales, 24/7, for you."],
+    sv4t:["Precificação inteligente","Smart pricing"], sv4b:["Pacotes e preços calibrados pra vender volume sem queimar seu valor.","Packs and prices tuned to sell volume without burning your value."],
+    sv5t:["Dashboard transparente","Transparent dashboard"], sv5b:["Você vê cada venda, cada pacote e cada pagamento em tempo real.","You see every sale, pack and payment in real time."],
+    sv6t:["Proteção e discrição","Protection & discretion"], sv6b:["Controle de quem vê, bloqueio por região e opção de anonimato. Você decide a exposição.","Control who sees you, block by region, stay anonymous. You decide your exposure."],
+    g_eye:["Potencial de ganhos","Earning potential"],
+    g_h2:["Quanto dá pra faturar","How much you can make"],
+    g_sub:["Faixas reais que criadoras alcançam no mercado, conforme dedicação e crescimento. Não é promessa de renda — é o potencial do modelo quando a estrutura trabalha com você.","Real ranges creators reach in the market, depending on dedication and growth. Not an income promise — it's the model's potential when the structure works with you."],
+    g1l:["Começando","Starting"], g1b:["/mês · primeiros passos, público pequeno","/mo · first steps, small audience"],
+    g2l:["Em ritmo","In rhythm"], g2b:["/mês · constância + estrutura rodando","/mo · consistency + structure running"],
+    g3l:["Escalando","Scaling"], g3b:["/mês · base fiel e distribuição global","/mo · loyal base and global distribution"],
+    c_lbl:["Fãs pagantes","Paying fans"],
+    c_est:["Estimativa de receita mensal","Estimated monthly revenue"],
+    c_note:["Estimativa ilustrativa a ~$10 por fã pagante/mês. Resultados variam por nicho, constância e oferta.","Illustrative estimate at ~$10 per paying fan/mo. Results vary by niche, consistency and offer."],
+    v_eye:["O que isso custaria sozinha","What this would cost alone"],
+    v_h2:["A equipe que a Vezclub te dá de graça","The team Vezclub gives you free"],
+    v1:["Editor de vídeo","Video editor"], v2:["Gestor de tráfego","Media buyer"], v3:["Atendimento de chat 24/7","24/7 chat support"], v4:["Social media","Social media manager"], v5:["Ferramenta de IA + tradução","AI tool + translation"],
+    v_tot:["Seu custo de entrada","Your cost to start"],
+    v_b:["A gente só ganha quando você ganha. Sem mensalidade, sem taxa de entrada, sem dívida com a Vezclub.","We only earn when you earn. No monthly fee, no entry cost, no debt to Vezclub."],
+    gu_h2:["Garantia de 30 dias","30-day guarantee"],
+    gu_b:["Se em 30 dias a estrutura não entregar o combinado, você não deve nada à Vezclub e sai com tudo o que produziu. O risco é nosso, não seu.","If in 30 days the structure doesn't deliver what we agreed, you owe Vezclub nothing and leave with everything you produced. The risk is ours, not yours."],
+    pr_eye:["Privacidade em primeiro lugar","Privacy first"],
+    pr_h2:["Você decide quem vê o quê","You decide who sees what"],
+    pr_b:["Bloqueio de conteúdo por país e região pra não aparecer pra quem você não quer. Opção de anonimato e máscara. Controle total sobre a sua imagem — a exposição é escolha sua, nunca imposição.","Block content by country and region so you don't appear to people you don't want. Anonymity and mask options. Full control over your image — exposure is your choice, never forced."],
+    pr_cta:["Quero essa estrutura →","I want this structure →"],
+    pr1t:["🌎 Bloqueio por região","🌎 Block by region"], pr1b:["Esconda seu perfil de países ou estados específicos.","Hide your profile from specific countries or states."],
+    pr2t:["🎭 Anonimato opcional","🎭 Optional anonymity"], pr2b:["Trabalhe com máscara ou sem mostrar o rosto, se preferir.","Work with a mask or without showing your face, if you prefer."],
+    pr3t:["🔒 Seus dados protegidos","🔒 Your data protected"], pr3b:["Nada é publicado sem a sua autorização. Ponto.","Nothing is published without your approval. Period."],
+    f_eye:["Perguntas frequentes","FAQ"],
+    f_h2:["O que as criadoras mais perguntam","What creators ask most"],
+    f1q:["Preciso mostrar o rosto?","Do I have to show my face?"],
+    f1a:["Não. Você pode trabalhar com anonimato, máscara ou sem aparecer, e ainda bloquear seu conteúdo por região. A exposição é 100% sua escolha.","No. You can work anonymously, with a mask, or without appearing, and block your content by region. Exposure is 100% your choice."],
+    f2q:["Quanto custa pra entrar?","How much does it cost to join?"],
+    f2a:["Nada. Sem mensalidade e sem taxa de entrada. A Vezclub só ganha uma porcentagem quando você fatura — nossos incentivos estão alinhados.","Nothing. No monthly fee, no entry cost. Vezclub only earns a percentage when you earn — our incentives are aligned."],
+    f3q:["Preciso ter muitos seguidores?","Do I need a big following?"],
+    f3a:["Não. A gente trabalha tanto com quem está começando quanto com perfis já estabelecidos. O que conta é a vontade de crescer com constância.","No. We work with both beginners and established profiles. What counts is the willingness to grow consistently."],
+    f4q:["Quanto tempo preciso dedicar?","How much time do I need?"],
+    f4a:["O suficiente pra gravar o conteúdo base. A IA multiplica e a equipe distribui — por isso você rende sem viver grudada no celular.","Enough to film the base content. The AI multiplies and the team distributes — so you earn without living glued to your phone."],
+    f5q:["Que tipo de conteúdo é esse?","What kind of content is this?"],
+    f5a:["É uma plataforma para criadoras adultas (18+). No formulário você indica sua experiência e a gente alinha tudo com transparência antes de qualquer passo.","It's a platform for adult (18+) creators. In the form you indicate your experience and we align everything transparently before any step."],
+    f6q:["Como eu recebo?","How do I get paid?"],
+    f6a:["Numa dashboard transparente, com saques conforme a região. Você vê cada venda em tempo real.","Through a transparent dashboard, with withdrawals by region. You see every sale in real time."],
+    a_eye:["Candidatura","Application"],
+    a_h2:["Dê o primeiro passo","Take the first step"],
+    a_b:["Preencha em 1 minuto. Nossa equipe analisa sua candidatura e entra em contato pra te explicar tudo e tirar suas dúvidas — sem compromisso.","Fill it in 1 minute. Our team reviews your application and reaches out to explain everything and answer your questions — no commitment."],
+    a_s1:["✓ Sem custo pra se candidatar","✓ Free to apply"],
+    a_s2:["✓ Conversa 100% confidencial","✓ 100% confidential conversation"],
+    a_s3:["✓ Você decide se quer seguir depois de entender tudo","✓ You decide whether to continue after understanding it all"],
+    l_name:["Nome ou @ do Instagram","Name or Instagram @"],
+    l_insta:["Seu Instagram","Your Instagram"],
+    l_contact:["WhatsApp ou e-mail","WhatsApp or email"],
+    l_exp:["Já cria conteúdo adulto?","Do you already create adult content?"],
+    l_exp0:["Selecione","Select"], l_exp1:["Sim, já crio","Yes, I already do"], l_exp2:["Não, mas tenho interesse","No, but I'm interested"], l_exp3:["Quero entender melhor antes","I want to understand more first"],
+    l_age:["Confirmo que tenho 18 anos ou mais.","I confirm I am 18 or older."],
+    l_submit:["Enviar candidatura →","Send application →"],
+    l_note:["Ao enviar, você autoriza a Vezclub a entrar em contato. Seus dados são confidenciais e nunca publicados.","By submitting, you authorize Vezclub to contact you. Your data is confidential and never published."],
+    ok_h:["Candidatura recebida!","Application received!"],
+    ok_b:["Nossa equipe vai analisar e entrar em contato pelo canal que você informou. Fica de olho no WhatsApp/e-mail.","Our team will review it and reach out through the channel you gave. Keep an eye on your WhatsApp/email."],
+    sticky_cta:["Quero me candidatar →","I want to apply →"],
+    foot:['© <span id="yr2"></span> Vezclub · Conteúdo para maiores de 18 anos · Todos os direitos reservados','© <span id="yr2"></span> Vezclub · Adult content 18+ · All rights reserved']
+  };
+
+  var lang="pt";
+  function detectLang(){
+    var p=new URLSearchParams(location.search).get("lang");
+    if(p==="en"||p==="pt") return p;
+    try{ if((navigator.language||"").toLowerCase().indexOf("pt")!==0) return "en"; }catch(e){}
+    return "pt";
+  }
+  function applyLang(l){
+    lang=l;
+    document.documentElement.lang=l;
+    var idx=l==="en"?1:0;
+    document.querySelectorAll("[data-i]").forEach(function(el){
+      var k=el.getAttribute("data-i"); if(!I[k])return;
+      var v=I[k][idx]; if(v==null)return;
+      if(v.indexOf("<")>=0) el.innerHTML=v; else el.textContent=v;
+    });
+    document.querySelectorAll("#lang button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-l")===l); });
+    var yr=new Date().getFullYear(); var y2=document.getElementById("yr2"); if(y2)y2.textContent=yr;
+    calc();
+    try{ var u=new URL(location); u.searchParams.set("lang",l); history.replaceState(null,"",u); }catch(e){}
+  }
+  document.getElementById("lang").addEventListener("click",function(e){
+    var b=e.target.closest("button[data-l]"); if(b) applyLang(b.getAttribute("data-l"));
+  });
+
+  /* ---- calculator ---- */
+  function fmt(n){ return (lang==="en"?"$":"$")+Math.round(n).toLocaleString(lang==="en"?"en-US":"pt-BR"); }
+  function calc(){
+    var r=document.getElementById("crange"); if(!r)return;
+    var fans=+r.value;
+    document.getElementById("cf").textContent=fans.toLocaleString(lang==="en"?"en-US":"pt-BR");
+    document.getElementById("cout").textContent=fmt(fans*10);
+  }
+  document.getElementById("crange").addEventListener("input",calc);
+
+  /* ---- form ---- */
+  var region=(function(){ try{ return (navigator.language||"").toLowerCase().indexOf("pt")===0?"br":"us"; }catch(e){ return "us"; } })();
+  document.getElementById("appform").addEventListener("submit",function(ev){
+    ev.preventDefault();
+    var name=document.getElementById("f_name").value.trim();
+    var contact=document.getElementById("f_contact").value.trim();
+    var age=document.getElementById("f_age").checked;
+    if(!name||!contact){ alert(lang==="en"?"Please fill name and contact.":"Preencha nome e contato."); return; }
+    if(!age){ alert(lang==="en"?"Please confirm you are 18+.":"Confirme que tem 18 anos ou mais."); return; }
+    var btn=document.getElementById("f_submit");
+    btn.disabled=true; btn.textContent=lang==="en"?"Sending...":"Enviando...";
+    var payload={
+      name:name,
+      instagram:document.getElementById("f_insta").value.trim(),
+      contact:contact,
+      experience:document.getElementById("f_exp").value,
+      age_ok:true, lang:lang, region:region, source:"modelos-landing"
+    };
+    function done(ok){
+      if(ok){
+        document.getElementById("appform").style.display="none";
+        document.getElementById("okmsg").style.display="block";
+      }else{
+        btn.disabled=false; btn.textContent=I.l_submit[lang==="en"?1:0];
+        alert(lang==="en"?"Something went wrong. Please try again or contact us.":"Algo deu errado. Tente de novo ou fale com a gente.");
+      }
+    }
+    if(!sb){ done(false); return; }
+    sb.from("creator_applications").insert(payload).then(function(res){
+      done(!res.error);
+      if(res.error) console.log("insert error",res.error);
+    }).catch(function(){ done(false); });
+  });
+
+  applyLang(detectLang());
+})();
+</script>
+</body>
+</html>
