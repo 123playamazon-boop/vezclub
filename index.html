@@ -1959,9 +1959,9 @@
         '<button class="btn btn-primary" data-sub="' + c.id + '">Entrar no ' + c.offerName + '</button></div>';
     } else if (!c.hasSub) {
       html += '<div class="pf-cta-bar show"><div class="cta-info">' +
-        '<div class="cta-price">' + L("Pacotes prontos", "Packs ready", "Paquetes listos") + '</div>' +
+        '<div class="cta-price">' + L("A partir de ", "From ", "Desde ") + money(RG().kit.fotos) + '</div>' +
         '<div class="cta-sub">' + L("Pague uma vez · seu por 30 dias", "Pay once · yours for 30 days", "Paga una vez · tuyo por 30 días") + '</div></div>' +
-        '<button class="btn btn-primary" onclick="var e=document.getElementById(\'pf-packs-real-wrap\');if(e)e.scrollIntoView({behavior:\'smooth\'})">' + L("Ver pacotes", "See packs", "Ver paquetes") + '</button></div>';
+        '<button class="btn btn-primary" onclick="var e=document.getElementById(\'pf-packs-real-wrap\');if(e)e.scrollIntoView({behavior:\'smooth\',block:\'start\'})">' + L("Pegar pacote", "Get a pack", "Tomar paquete") + '</button></div>';
     }
 
     app.innerHTML = html;
