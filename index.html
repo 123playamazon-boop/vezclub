@@ -3406,7 +3406,7 @@
     var persona = AI_PERSONAS[cid] || {};
     var greeting = persona.greeting || "oi 🌙";
     var first = (c.name || "").split(" ")[0];
-    var bal = 0;
+    var bal = 0, tick = null, pending = 0;
     function fmt(sec) { sec = Math.max(0, sec | 0); var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
 
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
@@ -3421,14 +3421,24 @@
     var body = document.getElementById("chat-body");
     var timeEl = document.getElementById("ch-time");
     function setBal(sec) { bal = Math.max(0, sec | 0); timeEl.textContent = "⏱ " + fmt(bal); }
+    function flush() { if (pending > 0) { var pp = pending; pending = 0; sb.rpc("chat_consume", { p_seconds: pp }).then(function (r) { if (r && typeof r.data === "number" && r.data < bal) setBal(r.data); }); } }
+    function startClock() {
+      if (tick) return;
+      tick = setInterval(function () {
+        if (!document.body.contains(timeEl)) { clearInterval(tick); tick = null; flush(); return; }
+        if (bal <= 0) { clearInterval(tick); tick = null; flush(); showBuy(); return; }
+        bal -= 1; setBal(bal); pending += 1;
+        if (pending >= 20) flush();
+      }, 1000);
+    }
     function her(t) { body.insertAdjacentHTML("beforeend", '<div class="bub her">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function me(t) { body.insertAdjacentHTML("beforeend", '<div class="bub me">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
 
     function showBuy() {
-      var pkgs = [{ min: 15, price: 19 }, { min: 30, price: 29 }, { min: 60, price: 49 }];
+      var pkgs = [{ min: 10, price: 9.9 }, { min: 20, price: 17.9 }, { min: 30, price: 24.9 }, { min: 60, price: 44.9 }];
       var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">Seu tempo com a ' + escHtml(first) + ' acabou</div><div class="muted-note" style="margin-bottom:.9rem">Recarregue pra continuar a conversa.</div>';
-      pkgs.forEach(function (p) { h += '<button class="btn btn-primary btn-block" data-buytime="' + p.min + '" data-price="' + p.price + '" style="margin-bottom:.5rem">' + p.min + ' min · ' + usd(p.price) + '</button>'; });
+      pkgs.forEach(function (p) { h += '<button class="btn btn-primary btn-block" data-buytime="' + p.min + '" data-price="' + p.price + '" style="margin-bottom:.5rem">' + p.min + ' min · $' + p.price.toFixed(2) + '</button>'; });
       h += '</div>';
       body.innerHTML = h;
       body.querySelectorAll("[data-buytime]").forEach(function (b) {
@@ -3438,7 +3448,7 @@
 
     sb.from("chat_credits").select("seconds_balance").maybeSingle().then(function (cr) {
       setBal((cr.data && cr.data.seconds_balance) || 0);
-      if (bal <= 0) showBuy();
+      if (bal <= 0) showBuy(); else startClock();
     });
     sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) {
       if (!tr.data) { her(greeting); return; }
@@ -3470,6 +3480,7 @@
           note("(não consegui responder agora)"); return;
         }
         her(d.reply);
+        if (!tick && bal > 0) startClock();
         if (d.gift && d.gift.url) { setTimeout(function () { if (d.gift.caption) her(d.gift.caption); body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:4px;max-width:72%"><img src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block"></div>'); body.scrollTop = body.scrollHeight; }, 800); }
         if (typeof d.balance === "number") setBal(d.balance);
         try { document.getElementById("chat-text").focus(); } catch (_) {}
