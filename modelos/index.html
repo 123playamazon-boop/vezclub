@@ -9,6 +9,9 @@
 <meta property="og:description" content="Você grava. A gente faz o resto. Primeiro conteúdo no ar em 7 dias.">
 <meta property="og:type" content="website">
 <meta name="robots" content="index,follow">
+<script type="text/javascript">
+  (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","z1yuhk961m");
+</script>
 <style>
   :root{
     --bg:#fcfbfd; --bg2:#f5f2f7; --card:#ffffff; --line:#ece9f1; --line2:#e2dfe9;
@@ -573,7 +576,7 @@
     var payload={ name:name, instagram:document.getElementById("f_insta").value.trim(), contact:contact,
       experience:document.getElementById("f_exp").value, age_ok:true, lang:lang, region:region, source:"modelos-landing" };
     function done(ok){
-      if(ok){ document.getElementById("appform").style.display="none"; document.getElementById("okmsg").style.display="block"; }
+      if(ok){ document.getElementById("appform").style.display="none"; document.getElementById("okmsg").style.display="block"; try{ if(window.clarity){ clarity("set","candidatura","enviada"); clarity("event","candidatura_criadora"); } }catch(e){} }
       else{ btn.disabled=false; btn.textContent=I.l_submit[lang==="en"?1:0]; alert(lang==="en"?"Something went wrong. Please try again or contact us.":"Algo deu errado. Tente de novo ou fale com a gente."); }
     }
     if(!sb){ done(false); return; }
