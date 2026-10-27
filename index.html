@@ -2401,8 +2401,8 @@
         field("Quando avisar", '<select id="wh-mode"><option value="on_lead">Só quando tem candidatura</option><option value="always">Sempre (resumo mesmo com zero)</option></select>') +
       '</div>' +
       field("Link do Pushcut (webhook)", '<input id="wh-url" placeholder="https://api.pushcut.io/.../notifications/...">') +
-      '</div><div class="ob-actions"><button class="btn btn-primary" id="wh-add">' + I.plus + ' Adicionar notificação</button></div>' +
-      '<p class="muted-note" style="margin-top:0.6rem">No app Pushcut: aba <b>Notifications</b> → crie uma → <b>Copy Webhook URL</b> → cola aqui.</p></div>';
+      '</div><div class="ob-actions"><button class="btn btn-ghost" id="wh-test-form">Testar link</button><button class="btn btn-primary" id="wh-add">' + I.plus + ' Salvar notificação</button></div>' +
+      '<p class="muted-note" style="margin-top:0.6rem">Cole o link, clique <b>Testar</b> pra ver chegar no celular, depois <b>Salvar</b>. Repita pra cada pessoa do time — todas ficam salvas na lista acima.</p></div>';
 
     html += '<div class="stat-grid">' +
       statId(I.chart, "GMV (vendas totais)", "ad-gmv", "tudo que entrou") +
@@ -3102,6 +3102,13 @@
     } catch (e) { toast("Não consegui enviar o teste."); }
   }
   function wireWebhookAdd() {
+    var tbtn = document.getElementById("wh-test-form");
+    if (tbtn) tbtn.onclick = function () {
+      var url = (document.getElementById("wh-url").value || "").trim();
+      var label = (document.getElementById("wh-label").value || "").trim() || "teste";
+      if (!url) { toast("Cole o link do Pushcut primeiro."); return; }
+      whTest({ url: url, label: label });
+    };
     var btn = document.getElementById("wh-add"); if (!btn) return;
     btn.onclick = function () {
       var label = (document.getElementById("wh-label").value || "").trim();
