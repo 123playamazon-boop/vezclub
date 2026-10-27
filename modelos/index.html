@@ -529,7 +529,7 @@
     document.querySelectorAll("#lang button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-l")===l); });
     var yr=new Date().getFullYear(); var y=document.getElementById("yr"); if(y)y.textContent=yr; var y2=document.getElementById("yr2"); if(y2)y2.textContent=yr;
     var wa=document.getElementById("wa");
-    if(wa){ var msg=l==="en"?"Hi! I just applied to Vezclub ✨ can you tell me the next steps?":"Oi! Acabei de me candidatar na Vezclub ✨ pode me passar os próximos passos?"; wa.href="https://wa.me/13056849224?text="+encodeURIComponent(msg); }
+    if(wa){ var msg=l==="en"?"Hi! I just applied to Vezclub \u2728 can you tell me the next steps?":"Oi! Acabei de me candidatar na Vezclub \u2728 pode me passar os próximos passos?"; wa.href="https://wa.me/13056849224?text="+encodeURIComponent(msg); }
     calc();
     try{ var u=new URL(location); u.searchParams.set("lang",l); history.replaceState(null,"",u); }catch(e){}
   }
