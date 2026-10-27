@@ -2413,6 +2413,10 @@
       '</div><div class="ob-actions"><button class="btn btn-ghost" id="wh-test-form">Testar link</button><button class="btn btn-primary" id="wh-add">' + I.plus + ' Salvar notificação</button></div>' +
       '<p class="muted-note" style="margin-top:0.6rem">Cole o link, clique <b>Testar</b> pra ver chegar no celular, depois <b>Salvar</b>. Repita pra cada pessoa do time — todas ficam salvas na lista acima.</p></div>';
 
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Chat de IA · persona, ritmo e presentes</h3><span class="hint">por modelo</span></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Cada modelo tem o próprio tom, ritmo de presentes e fotos. Edite aqui pra cada uma falar diferente (duas modelos nunca respondem igual).</p>' +
+      '<div id="persona-list"><p class="muted-note">Carregando…</p></div></div>';
+
     html += '<div class="stat-grid">' +
       statId(I.chart, "GMV (vendas totais)", "ad-gmv", "tudo que entrou") +
       statId(I.money, "Comissão da plataforma", "ad-comm", "80% — tráfego + operação") +
@@ -2474,6 +2478,7 @@
     loadApplications();
     loadWebhooks();
     wireWebhookAdd();
+    loadPersonaAdmin();
     loadKycReview();
     loadAdminMoney();
     loadAiAdmin();
@@ -3143,6 +3148,87 @@
         toast("Notificação adicionada!"); loadWebhooks();
       });
     };
+  }
+
+  function loadPersonaAdmin() {
+    var box = document.getElementById("persona-list"); if (!box || !sb) return;
+    sb.from("chat_personas").select("*").order("display_name", { ascending: true }).then(function (r) {
+      var b = document.getElementById("persona-list"); if (!b) return;
+      if (r.error) { b.innerHTML = '<p class="muted-note">Erro: ' + escHtml(r.error.message) + '</p>'; return; }
+      var rows = r.data || [];
+      if (!rows.length) { b.innerHTML = '<p class="muted-note">Nenhuma persona de chat ainda.</p>'; return; }
+      b.innerHTML = '<div class="apps-list">' + rows.map(personaRow).join("") + '</div>';
+      wirePersonaEditors(b, rows);
+    });
+  }
+  function personaRow(p) {
+    var det = "pa-" + p.creator_key;
+    var gifts = (Array.isArray(p.gift_images) ? p.gift_images : []);
+    var thumbs = gifts.map(function (g, i) {
+      return '<div style="position:relative;display:inline-block;margin:3px"><img src="' + mediaUrl(g.path) + '" style="width:58px;height:58px;object-fit:cover;border-radius:9px;border:1px solid var(--line)"><button data-giftdel="' + p.creator_key + '|' + i + '" title="Remover" style="position:absolute;top:-7px;right:-7px;background:#111;color:#fff;border:0;border-radius:50%;width:20px;height:20px;line-height:1;cursor:pointer">×</button></div>';
+    }).join("");
+    return '<div class="app-item"><div class="app-row">' +
+      '<div class="app-info"><div class="app-name">' + escHtml(p.display_name) + ' <small class="muted-note">' + escHtml(p.creator_key) + '</small></div><div class="app-meta">presente a cada ' + (p.gift_every || 4) + ' msgs · ' + gifts.length + ' foto(s)</div></div>' +
+      '<div class="app-actions"><button class="btn btn-ghost btn-sm" data-paedit="' + det + '">Editar</button></div>' +
+      '</div>' +
+      '<div class="app-det" id="' + det + '" style="display:none">' +
+        field("Tom / personalidade (como ela fala, o que curte, como conquista)", '<textarea id="pa-sys-' + p.creator_key + '" rows="9" style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:0.6rem;color:var(--fg);font-family:inherit;font-size:0.88rem">' + escHtml(p.system_prompt || "") + '</textarea>') +
+        field("Primeira mensagem (saudação)", '<input id="pa-greet-' + p.creator_key + '" value="' + escHtml(p.greeting || "") + '">') +
+        field("Mandar presente a cada N mensagens", '<input id="pa-every-' + p.creator_key + '" type="number" min="1" value="' + (p.gift_every || 4) + '" style="max-width:120px">') +
+        '<div class="muted-note" style="margin:.4rem 0 .2rem">Fotos de presente:</div><div>' + (thumbs || '<span class="muted-note">nenhuma</span>') + '</div>' +
+        '<label class="btn btn-ghost btn-sm" style="margin-top:.5rem;display:inline-block;cursor:pointer">+ Adicionar foto<input type="file" accept="image/*" data-giftadd="' + p.creator_key + '" hidden></label>' +
+        '<div class="ob-actions" style="margin-top:.7rem"><button class="btn btn-primary" data-pasave="' + p.creator_key + '">Salvar persona</button></div>' +
+      '</div>' +
+    '</div>';
+  }
+  function wirePersonaEditors(b, rows) {
+    b.querySelectorAll("[data-paedit]").forEach(function (btn) {
+      btn.onclick = function () { var d = document.getElementById(btn.getAttribute("data-paedit")); if (d) { var open = d.style.display !== "none"; d.style.display = open ? "none" : "block"; btn.textContent = open ? "Editar" : "Fechar"; } };
+    });
+    b.querySelectorAll("[data-pasave]").forEach(function (btn) {
+      btn.onclick = function () {
+        var k = btn.getAttribute("data-pasave");
+        var sysv = (document.getElementById("pa-sys-" + k) || {}).value || "";
+        var gv = (document.getElementById("pa-greet-" + k) || {}).value || "";
+        var ev = parseInt((document.getElementById("pa-every-" + k) || {}).value, 10) || 4;
+        btn.disabled = true;
+        sb.from("chat_personas").update({ system_prompt: sysv, greeting: gv, gift_every: ev }).eq("creator_key", k).then(function (r) {
+          btn.disabled = false;
+          if (r.error) { toast("Erro: " + r.error.message); return; }
+          toast("Persona salva!"); loadPersonaAdmin();
+        });
+      };
+    });
+    b.querySelectorAll("[data-giftdel]").forEach(function (btn) {
+      btn.onclick = function () {
+        var parts = btn.getAttribute("data-giftdel").split("|"); var k = parts[0], idx = +parts[1];
+        var row = rows.find(function (x) { return x.creator_key === k; }); if (!row) return;
+        var gl = (Array.isArray(row.gift_images) ? row.gift_images.slice() : []); gl.splice(idx, 1);
+        sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) {
+          if (r.error) { toast("Erro: " + r.error.message); return; }
+          toast("Presente removido."); loadPersonaAdmin();
+        });
+      };
+    });
+    b.querySelectorAll("[data-giftadd]").forEach(function (inp) {
+      inp.onchange = function () {
+        var f = inp.files[0]; if (!f) return;
+        var k = inp.getAttribute("data-giftadd");
+        var ext = (f.name.split(".").pop() || "webp").toLowerCase();
+        var path = k + "/gift-" + Date.now() + "." + ext;
+        toast("Enviando foto…");
+        sb.storage.from("avatars").upload(path, f, { upsert: true, contentType: f.type }).then(function (u) {
+          if (u.error) { toast("Erro no upload: " + u.error.message); return; }
+          var row = rows.find(function (x) { return x.creator_key === k; });
+          var gl = (row && Array.isArray(row.gift_images)) ? row.gift_images.slice() : [];
+          gl.push({ path: path, caption: "tenho um presente pra você 🙈" });
+          sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) {
+            if (r.error) { toast("Erro: " + r.error.message); return; }
+            toast("Foto de presente adicionada!"); loadPersonaAdmin();
+          });
+        });
+      };
+    });
   }
 
   /* ---- admin: AI models (owner-only) ---- */
