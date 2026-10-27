@@ -1019,18 +1019,20 @@
     return { subs: subs, likes: likes };
   }
   function buildCreatorFromDb(row) {
-    if (DEMO[row.key]) { var d = DEMO[row.key]; d.ai = !!row.is_ai; if (row.avatar_path) d.avatarUrl = mediaUrl(row.avatar_path); if (row.cover_path) d.coverUrl = mediaUrl(row.cover_path); return d; }
+    if (DEMO[row.key]) { var d = DEMO[row.key]; d.ai = !!row.is_ai; d.hasChat = (row.has_chat !== false); d.hasSub = (row.has_subscription !== false); if (row.avatar_path) d.avatarUrl = mediaUrl(row.avatar_path); if (row.cover_path) d.coverUrl = mediaUrl(row.cover_path); return d; }
     var color = [row.color1 || "#2f6bff", row.color2 || "#7a3cff"];
     var vs = vanityStats(row.key);
     var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: row.tag || "", color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: row.hook || "", story: row.hook || "", interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: row.hook || "Entra no meu mundo.", stack: ["Meu feed completo", "Conteúdo novo toda semana", "Chat direto comigo", "Desconto em tudo"], bonus: ["Pack de boas-vindas"], guarantee: "7 dias de garantia.", left: 20, fans: [] };
     if (row.avatar_path) c.avatarUrl = mediaUrl(row.avatar_path);
     if (row.cover_path) c.coverUrl = mediaUrl(row.cover_path);
+    c.hasChat = (row.has_chat !== false);
+    c.hasSub = (row.has_subscription !== false);
     c.tiles = mkTiles(c.id, c.color);
     return c;
   }
   function loadCreators(cb) {
     if (!sb) { if (cb) cb(); return; }
-    sb.from("creators").select("key,display_name,handle,tag,sub_price_cents,is_ai,online,hook,color1,color2,avatar_path,cover_path").then(function (r) {
+    sb.from("creators").select("key,display_name,handle,tag,sub_price_cents,is_ai,online,hook,color1,color2,avatar_path,cover_path,has_chat,has_subscription").then(function (r) {
       if (!r.error && r.data && r.data.length) {
         r.data.sort(function (a, b) { return (a.is_ai ? 1 : 0) - (b.is_ai ? 1 : 0); });
         CREATORS = r.data.map(buildCreatorFromDb);
@@ -1693,7 +1695,9 @@
         }).join("");
       }
       var ribbon = c.left <= 8 ? '<div class="ribbon warn">' + I.bolt + 'Últimas vagas</div>' : (c.subs >= 1700 ? '<div class="ribbon">Em alta</div>' : "");
-      var status = c.online
+      var status = !c.hasChat
+        ? '<div class="cc-status on"><span class="live-dot"></span>' + L("Online · conteúdo novo", "Online · new content", "Online · contenido nuevo") + '</div>'
+        : c.online
         ? '<div class="cc-status on"><span class="live-dot"></span>Online · responde em ' + c.responds + '</div>'
         : '<div class="cc-status off">' + I.clock + ' Responde em ~' + c.responds + '</div>';
       html += '<div class="creator-card" data-creator="' + c.id + '" data-online="' + (c.online ? "1" : "0") + '" data-tags="' + escHtml((c.tag || "").toLowerCase()) + '" data-s="' + escHtml((c.name + " " + c.handle + " " + (c.tag || "") + " " + (c.hook || "")).toLowerCase()) + '">' +
@@ -1712,7 +1716,7 @@
     });
     html += '</div>';
     html += '<p class="muted-note" id="feed-empty" hidden style="text-align:center;padding:2rem">Nenhuma criadora encontrada.</p>';
-    html += '<button class="chat-fab" data-chat-fab="1" aria-label="Mensagens">' + I.chatic + '</button>';
+    if (CREATORS.some(function (x) { return x.hasChat; })) html += '<button class="chat-fab" data-chat-fab="1" aria-label="Mensagens">' + I.chatic + '</button>';
     app.innerHTML = html;
     startTicker();
     refreshFabBadge();
@@ -1804,7 +1808,7 @@
     html += '<div class="pf-cover" style="background:' + coverBg(c) + '">' + (c.online ? '<div class="pf-online"><span class="live"></span>online agora</div>' : '') + '</div>';
 
     // identity
-    html += '<div class="pf-top">' + avatar(c) + '<div class="pf-sub-btn">' + subBtn(false) + '</div></div>';
+    html += '<div class="pf-top">' + avatar(c) + (c.hasSub ? '<div class="pf-sub-btn">' + subBtn(false) + '</div>' : '') + '</div>';
     html += '<div class="pf-name">' + c.name + '<span class="verif">' + I.verif + '</span></div>';
     var pfBits = [c.handle];
     var pfLoc = [c.city, (c.age ? (c.age + ' ' + L("anos", "y/o", "años")) : "")].filter(Boolean).join(", ");
@@ -1813,8 +1817,12 @@
     html += '<div class="pf-handle">' + pfBits.join(' · ') + '</div>';
     html += '<div class="pf-hook">' + c.hook + '</div>';
     html += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), "assinantes") + st(nfmt(c.likes), "curtidas") + '</div>';
-    if (c.online) html += '<div class="pf-status"><span class="live-dot"></span>Online · responde em ' + c.responds + '</div>';
-    else html += '<div class="pf-status" style="color:var(--muted)">' + I.clock + ' Costuma responder em ' + c.responds + '</div>';
+    if (c.hasChat) {
+      if (c.online) html += '<div class="pf-status"><span class="live-dot"></span>Online · responde em ' + c.responds + '</div>';
+      else html += '<div class="pf-status" style="color:var(--muted)">' + I.clock + ' Costuma responder em ' + c.responds + '</div>';
+    } else {
+      html += '<div class="pf-status"><span class="live-dot"></span>' + L("Online · conteúdo novo toda semana", "Online · new content every week", "Online · contenido nuevo cada semana") + '</div>';
+    }
 
     // live ticker
     html += '<div class="ticker" id="live-ticker" style="margin-top:1rem"><span class="d"></span><span>' + tickerLine() + '</span></div>';
@@ -1822,6 +1830,7 @@
     // fan status (gamified loyalty)
     var fl = fanLevel(state.fanXP[c.id] || 0), fxp = state.fanXP[c.id] || 0, unr = state.unread[c.id] || 0;
     var msgBtn = '<button class="btn btn-primary btn-block" data-chat-open="' + c.id + '">' + I.chatic + ' Mandar mensagem' + (unr ? ' · ' + unr + ' nova' + (unr > 1 ? 's' : '') : '') + '</button>';
+    if (c.hasChat) {
     if (subbed || fxp > 0) {
       html += '<div class="pf-section"><div class="fan-status">' +
         '<div class="fs-top"><span class="fan-badge" style="background:' + grad(fl.cur.color) + '">Fã ' + fl.cur.name + '</span><span class="fs-pct">Você está no <b>top ' + fl.cur.pct + '</b> dos fãs dela</span></div>' +
@@ -1831,6 +1840,7 @@
         '</div></div>';
     } else {
       html += '<div class="pf-section">' + msgBtn + '</div>';
+    }
     }
 
     // about
@@ -1846,7 +1856,7 @@
     // grand slam offer (Hormozi: stack com valor + âncora + reversão de risco)
     var perDay = (c.subPrice / 30).toFixed(2).replace(".", ",");
     var taken = 300 - c.left, fillPct = Math.round(taken / 300 * 100);
-    html += '<div class="pf-section"><div class="offer"><div class="offer-pad">' +
+    if (c.hasSub) html += '<div class="pf-section"><div class="offer"><div class="offer-pad">' +
       '<div class="offer-name">' + c.offerName + '</div>' +
       '<div class="offer-line">' + c.offerLine + '</div>' +
       '<ul class="offer-stack">' +
@@ -1877,7 +1887,7 @@
         '<ul class="sub-perks">' + perks + '</ul>' + btn +
         '</div>';
     }
-    html += '<div class="pf-section"><div class="pf-h">' + I.star + ' ' + L("Quer mais? Suba de nível", "Want more? Level up", "¿Quieres más? Sube de nivel") + '</div>' +
+    if (c.hasSub) html += '<div class="pf-section"><div class="pf-h">' + I.star + ' ' + L("Quer mais? Suba de nível", "Want more? Level up", "¿Quieres más? Sube de nivel") + '</div>' +
       '<div class="fans-grid">' + tierCard("vip", vipAmt, false) + tierCard("intimo", intAmt, true) + '</div></div>';
 
     // daily drop (appointment + alert)
@@ -1890,15 +1900,20 @@
       '</div></div>';
 
     // packs ladders — only shown when the creator has paid content (gated in loadBuyerContent)
-    html += '<div id="pf-packs" hidden>';
-    html += '<div class="pf-section" style="margin-top:2.6rem;border-top:1px solid var(--line);padding-top:1.6rem"><div class="pf-h">' + L("Prefere comprar avulso?", "Prefer to buy individually?", "¿Prefieres comprar por separado?") + '</div><p class="muted-note" style="margin-top:-0.4rem">' + L("A assinatura já inclui tudo. Mas você também pode levar itens avulsos:", "The subscription already includes everything. But you can also grab individual items:", "La suscripción ya incluye todo. Pero también puedes llevar ítems sueltos:") + '</p></div>';
-    html += '<div class="pf-section"><div class="pf-h">' + I.photo + ' Packs de foto</div><div class="ladder">' +
-      PHOTO_LADDER.map(function (p) { return ladderRow(I.photo, "Pack " + p.n + " fotos", p.n <= 5 ? "Isca · começa por aqui" : "~" + usd(+(p.usd / p.n).toFixed(2)) + " por foto", p.usd, c.id, "pack-" + p.n, p.n === 100 ? "Melhor custo" : p.n === 30 ? "Mais popular" : "", p.n, "image"); }).join("") + '</div></div>';
-    html += '<div class="pf-section"><div class="pf-h">' + I.video + ' Packs de vídeo</div><div class="ladder">' +
-      VIDEO_PACKS.map(function (p, i) { return ladderRow(I.video, p.label, "Conteúdo em vídeo", p.usd, c.id, "vid-" + i, "", p.n, "video"); }).join("") + '</div></div>';
-    html += '<div class="pf-section"><div class="pf-h">' + I.call + ' Chamada de vídeo</div><div class="ladder">' +
-      CALLS.map(function (p, i) { return ladderRow(I.call, p.label, "Momento 1-a-1, só nosso", p.usd, c.id, "call-" + i); }).join("") + '</div></div>';
-    html += '</div>'; // /#pf-packs
+    if (c.hasSub) {
+      html += '<div id="pf-packs" hidden>';
+      html += '<div class="pf-section" style="margin-top:2.6rem;border-top:1px solid var(--line);padding-top:1.6rem"><div class="pf-h">' + L("Prefere comprar avulso?", "Prefer to buy individually?", "¿Prefieres comprar por separado?") + '</div><p class="muted-note" style="margin-top:-0.4rem">' + L("A assinatura já inclui tudo. Mas você também pode levar itens avulsos:", "The subscription already includes everything. But you can also grab individual items:", "La suscripción ya incluye todo. Pero también puedes llevar ítems sueltos:") + '</p></div>';
+      html += '<div class="pf-section"><div class="pf-h">' + I.photo + ' Packs de foto</div><div class="ladder">' +
+        PHOTO_LADDER.map(function (p) { return ladderRow(I.photo, "Pack " + p.n + " fotos", p.n <= 5 ? "Isca · começa por aqui" : "~" + usd(+(p.usd / p.n).toFixed(2)) + " por foto", p.usd, c.id, "pack-" + p.n, p.n === 100 ? "Melhor custo" : p.n === 30 ? "Mais popular" : "", p.n, "image"); }).join("") + '</div></div>';
+      html += '<div class="pf-section"><div class="pf-h">' + I.video + ' Packs de vídeo</div><div class="ladder">' +
+        VIDEO_PACKS.map(function (p, i) { return ladderRow(I.video, p.label, "Conteúdo em vídeo", p.usd, c.id, "vid-" + i, "", p.n, "video"); }).join("") + '</div></div>';
+      if (c.hasChat) html += '<div class="pf-section"><div class="pf-h">' + I.call + ' Chamada de vídeo</div><div class="ladder">' +
+        CALLS.map(function (p, i) { return ladderRow(I.call, p.label, "Momento 1-a-1, só nosso", p.usd, c.id, "call-" + i); }).join("") + '</div></div>';
+      html += '</div>'; // /#pf-packs
+    } else {
+      // pack-only creator (AI / no subscription): real packs sized to actual content, injected by loadBuyerContent
+      html += '<div class="pf-section" id="pf-packs-real-wrap" style="margin-top:2.4rem;border-top:1px solid var(--line);padding-top:1.6rem"><div class="pf-h">' + I.photo + ' ' + L("Pacotes disponíveis", "Available packs", "Paquetes disponibles") + '</div><p class="muted-note" style="margin-top:-0.4rem">' + L("Leve o pacote completo ou compre item por item acima. Você recebe exatamente o que está aqui — sem assinatura, sem mensalidade.", "Grab the full pack or buy item by item above. You get exactly what is here — no subscription, no monthly fee.", "Lleva el paquete completo o compra ítem por ítem arriba. Recibes exactamente lo que está aquí — sin suscripción.") + '</p><div id="pf-packs-real"><p class="muted-note">' + L("Carregando pacotes…", "Loading packs…", "Cargando paquetes…") + '</p></div></div>';
+    }
 
     // fans
     var _pool = TESTIMONIALS[lang] || TESTIMONIALS.pt;
@@ -1909,19 +1924,30 @@
       '</div><p class="muted-note">Comentários ilustrativos de exemplo.</p></div>';
 
     // final cta
-    html += '<div class="pf-final"><h3>Eu quero você aqui comigo, todo dia.</h3><p>Minha atenção, meu chat e tudo que eu não mostro em mais lugar nenhum — só pra você.</p>' +
-      (subbed ? '<button class="btn btn-good" disabled>' + I.check + ' Você já está comigo</button>'
-              : '<button class="btn btn-primary" data-sub="' + c.id + '">Entrar no ' + c.offerName + ' · ' + usd(c.subPrice) + '/mês</button>') +
-      '</div>';
+    if (c.hasSub) {
+      html += '<div class="pf-final"><h3>Eu quero você aqui comigo, todo dia.</h3><p>Minha atenção, meu chat e tudo que eu não mostro em mais lugar nenhum — só pra você.</p>' +
+        (subbed ? '<button class="btn btn-good" disabled>' + I.check + ' Você já está comigo</button>'
+                : '<button class="btn btn-primary" data-sub="' + c.id + '">Entrar no ' + c.offerName + ' · ' + usd(c.subPrice) + '/mês</button>') +
+        '</div>';
+    } else {
+      html += '<div class="pf-final"><h3>' + L("Leve o que você quer — sem enrolação.", "Take what you want — no strings.", "Lleva lo que quieres — sin vueltas.") + '</h3><p>' + L("Pacote completo ou item por item. Você paga uma vez e é seu por 30 dias.", "Full pack or item by item. Pay once and it is yours for 30 days.", "Paquete completo o ítem por ítem. Pagas una vez y es tuyo por 30 días.") + '</p>' +
+        '<button class="btn btn-primary" onclick="var e=document.getElementById(\'pf-packs-real-wrap\');if(e)e.scrollIntoView({behavior:\'smooth\'})">' + L("Ver pacotes", "See packs", "Ver paquetes") + '</button>' +
+        '</div>';
+    }
 
     html += '</div>';
 
     // sticky mobile CTA (conversion)
-    if (!subbed) {
+    if (c.hasSub && !subbed) {
       html += '<div class="pf-cta-bar show"><div class="cta-info">' +
         '<div class="cta-price">' + usd(c.subPrice) + '/mês</div>' +
         '<div class="cta-sub">Acesso na hora · cancele quando quiser</div></div>' +
         '<button class="btn btn-primary" data-sub="' + c.id + '">Entrar no ' + c.offerName + '</button></div>';
+    } else if (!c.hasSub) {
+      html += '<div class="pf-cta-bar show"><div class="cta-info">' +
+        '<div class="cta-price">' + L("Pacotes prontos", "Packs ready", "Paquetes listos") + '</div>' +
+        '<div class="cta-sub">' + L("Pague uma vez · seu por 30 dias", "Pay once · yours for 30 days", "Paga una vez · tuyo por 30 días") + '</div></div>' +
+        '<button class="btn btn-primary" onclick="var e=document.getElementById(\'pf-packs-real-wrap\');if(e)e.scrollIntoView({behavior:\'smooth\'})">' + L("Ver pacotes", "See packs", "Ver paquetes") + '</button></div>';
     }
 
     app.innerHTML = html;
@@ -2396,7 +2422,7 @@
   function purchaseModal(opts) {
     var icon = opts.icon === "video" || opts.icon === "vid" ? I.video : opts.icon === "call" ? I.call : I.photo;
     var c = CREATORS.find(function (x) { return x.id === state.creatorId; });
-    var canBump = c && !state.subscribed[c.id];
+    var canBump = c && c.hasSub && !state.subscribed[c.id];
     var bumpHtml = canBump ? '<label class="bump"><input type="checkbox" id="bump-sub"><div><div class="bump-t">' + L("Destrava TUDO: vira assinante agora", "Unlock EVERYTHING: go member now", "Desbloquea TODO: hazte miembro ya") + '</div><div class="bump-s">' + L("+ pack de boas-vindas grátis e 20% off em tudo, pra sempre", "+ free welcome pack and 20% off everything, forever", "+ pack de bienvenida gratis y 20% off en todo, para siempre") + '</div></div><span class="bump-plus">+' + usd(c.subPrice) + '/' + L("mês","mo","mes") + '</span></label>' : "";
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal"><div class="modal-pad">' +
       '<h3>' + L("Falta um toque.", "One tap away.", "Falta un toque.") + '</h3><p class="m-sub">' + L("Acesso na hora, direto no seu perfil. Cancele quando quiser.", "Instant access, straight to your profile. Cancel anytime.", "Acceso al instante, directo en tu perfil. Cancela cuando quieras.") + '</p>' +
@@ -2629,8 +2655,10 @@
       var hasPaid = (pr.data || []).some(function (p) { return !p.is_free; });
       var packsEl = document.getElementById("pf-packs"); if (packsEl) packsEl.hidden = !hasPaid;
       var cObj = CREATORS.find(function (x) { return x.id === creatorKey; });
+      var hasSub = !(cObj && cObj.hasSub === false);
       var subPrice = cObj ? cObj.subPrice : 19;
-      var cta = subActive
+      var cta = !hasSub ? ''
+        : subActive
         ? '<div class="rc-sub on">' + I.check + '<span>Assinatura ativa · acesso a tudo até ' + fmtDate(subUntil) + '</span></div>'
         : '<div class="rc-sub"><div><b>Assine e veja tudo</b><div class="rc-sub-s">Acesso a todo o conteúdo dela por 30 dias</div></div><button class="btn btn-primary btn-sm" data-subscribe="' + creatorKey + '">' + usd(subPrice) + '/mês</button></div>';
       if (!pr.data.length) { b.innerHTML = cta + '<p class="muted-note" style="margin-top:0.7rem">Ainda não há conteúdo aprovado por aqui.</p>'; wireSub(b, creatorKey, subPrice); return; }
@@ -2643,7 +2671,7 @@
         var until = isFree ? '<div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div>'
           : (unlockMap[p.id] ? '<div class="rc-until">Acesso até ' + fmtDate(unlockMap[p.id]) + '</div>' : (subActive ? '<div class="rc-until">Incluído na assinatura</div>' : ''));
         var foot;
-        if (isFree) foot = '<div class="rc-foot">' + until + (subActive ? '' : '<button class="btn btn-primary btn-sm btn-block" data-subscribe="' + creatorKey + '" style="margin-top:0.45rem">' + L("Ver tudo · assine", "See all · subscribe", "Ver todo · suscríbete") + '</button>') + '</div>';
+        if (isFree) foot = '<div class="rc-foot">' + until + ((subActive || !hasSub) ? '' : '<button class="btn btn-primary btn-sm btn-block" data-subscribe="' + creatorKey + '" style="margin-top:0.45rem">' + L("Ver tudo · assine", "See all · subscribe", "Ver todo · suscríbete") + '</button>') + '</div>';
         else if (access) foot = '<div class="rc-foot">' + until + '</div>';
         else foot = '<div class="rc-foot"><button class="btn btn-primary btn-sm btn-block" data-unlock="' + p.id + '" data-price="' + price + '">Desbloquear ' + usd(price) + ' · 30 dias</button></div>';
         return '<div class="rc">' + media + '<div class="rc-cap">' + escHtml(p.caption || "") + '</div>' + foot + '</div>';
@@ -2656,6 +2684,33 @@
         };
       });
       wireSub(b, creatorKey, subPrice);
+      if (!hasSub) {
+        var realWrap = document.getElementById("pf-packs-real");
+        if (realWrap) {
+          var paidPosts = pr.data.filter(function (p) { return !p.is_free; });
+          var ph = paidPosts.filter(function (p) { return p.media_type !== "video"; });
+          var vd = paidPosts.filter(function (p) { return p.media_type === "video"; });
+          var sumC = function (arr) { return arr.reduce(function (a, p) { return a + (p.price_cents || 0); }, 0); };
+          function packRow(icon, label, nleft, amtCents, ptype) {
+            var id = creatorKey + "-allpack-" + ptype;
+            var owned = state.purchased[id];
+            return '<div class="ladder-row">' +
+              '<div class="lr-icon">' + icon + '</div>' +
+              '<div class="lr-main"><div class="lr-title">' + label + '</div><div class="lr-sub">' + L("Tudo de uma vez · 30 dias de acesso", "Everything at once · 30 days access", "Todo de una vez · 30 días de acceso") + '</div></div>' +
+              '<div class="lr-price">' + usd(Math.round(amtCents / 100)) + '</div>' +
+              '<div class="lr-buy">' + (owned ? '<button class="btn btn-good btn-sm" disabled>' + I.check + '</button>' : '<button class="btn btn-primary btn-sm" data-realpack="' + ptype + '" data-n="' + nleft + '" data-amt="' + amtCents + '" data-id="' + id + '" data-label="' + escHtml(label) + '">' + L("Comprar", "Buy", "Comprar") + '</button>') + '</div></div>';
+          }
+          var rows = "";
+          if (ph.length) { var pc = Math.max(900, Math.round(sumC(ph) * 0.6)); rows += packRow(I.photo, L("Todas as fotos", "All photos", "Todas las fotos") + " (" + ph.length + ")", ph.length, pc, "image"); }
+          if (vd.length) { var vc = Math.max(1500, Math.round(sumC(vd) * 0.6)); rows += packRow(I.video, L("Todos os vídeos", "All videos", "Todos los videos") + " (" + vd.length + ")", vd.length, vc, "video"); }
+          realWrap.innerHTML = rows ? '<div class="ladder">' + rows + '</div>' : '<p class="muted-note">' + L("Em breve.", "Coming soon.", "Pronto.") + '</p>';
+          realWrap.querySelectorAll("[data-realpack]").forEach(function (btn) {
+            btn.onclick = function () {
+              purchaseModal({ id: btn.getAttribute("data-id"), title: btn.getAttribute("data-label"), price: Math.round(+btn.getAttribute("data-amt") / 100), icon: btn.getAttribute("data-realpack") === "video" ? "video" : "tile", creator: currentCreatorName(), realPack: { creatorKey: creatorKey, n: +btn.getAttribute("data-n"), amount: +btn.getAttribute("data-amt"), ptype: btn.getAttribute("data-realpack") } });
+            };
+          });
+        }
+      }
       applyDynTranslation();
     });
   }
