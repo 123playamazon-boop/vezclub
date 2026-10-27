@@ -800,7 +800,6 @@
       <button data-role="creator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Me candidatar</span></button>
     </div>
     <div class="top-actions">
-      <span class="proto-pill">Protótipo</span>
       <select data-lang-sel class="lang-sel" aria-label="Idioma"><option value="pt">PT</option><option value="en">EN</option><option value="es">ES</option></select>
       <button class="icon-btn" id="theme-btn" aria-label="Alternar tema"><svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
     </div>
@@ -1658,9 +1657,7 @@
     });
   }
 
-  function protoNotice(txt) {
-    return '<div class="notice"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--warn)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>' + txt + '</div>';
-  }
+  function protoNotice(txt) { return ""; }
 
   /* ---------------- buyer: feed ---------------- */
   var feedLoaded = false;
@@ -2667,7 +2664,7 @@
     var subPrice = cObj ? cObj.subPrice : 19;
     sb.from("posts").select("id,caption,media_path,media_type,is_free").eq("creator_key", creatorKey).eq("status", "approved").eq("is_free", true).order("created_at", { ascending: false }).limit(12).then(function (pr) {
       var b = document.getElementById("rc-list"); if (!b) return;
-      var pw = document.getElementById("pf-packs-real"); if (pw && !hasSub) pw.innerHTML = '<p class="muted-note">' + L("Entre pra comprar os pacotes.", "Sign in to buy the packs.", "Entra para comprar los paquetes.") + '</p>';
+      if (!hasSub) sb.rpc("creator_pack_counts", { p_creator_key: creatorKey }).then(function (cr) { var row = (cr.data && cr.data[0]) || { fotos: 0, videos: 0 }; fillRealPacks(creatorKey, row.fotos || 0, row.videos || 0, true); }).catch(function () {});
       var cta = hasSub
         ? '<div class="rc-sub"><div><b>' + L("Entre e assine pra ver tudo", "Sign in & subscribe to see everything", "Entra y suscríbete para ver todo") + '</b><div class="rc-sub-s">' + L("As prévias abaixo são grátis. O resto é só pra quem assina.", "The previews below are free. The rest is for subscribers.", "Las prévias de abajo son gratis. El resto es solo para suscriptores.") + '</div></div><button class="btn btn-primary btn-sm" data-gate-signup="1">' + usd(subPrice) + '/' + L("mês", "mo", "mes") + '</button></div>'
         : '<div class="rc-sub"><div><b>' + L("Entre pra comprar os pacotes", "Sign in to buy the packs", "Entra para comprar los paquetes") + '</b><div class="rc-sub-s">' + L("As prévias abaixo são grátis. O resto vem nos pacotes.", "The previews below are free. The rest comes in the packs.", "Las prévias de abajo son gratis. El resto viene en los paquetes.") + '</div></div><button class="btn btn-primary btn-sm" data-gate-signup="1">' + L("Entrar", "Sign in", "Entrar") + '</button></div>';
@@ -2681,6 +2678,39 @@
     });
   }
   function wireGuestCta(b) { b.querySelectorAll("[data-gate-signup]").forEach(function (el) { el.onclick = function () { needLogin(); }; }); }
+  function fillRealPacks(creatorKey, nPh, nVd, guest) {
+    var realWrap = document.getElementById("pf-packs-real"); if (!realWrap) return;
+    var nAll = nPh + nVd;
+    if (!nAll) { realWrap.innerHTML = '<p class="muted-note">' + L("Em breve.", "Coming soon.", "Pronto.") + '</p>'; return; }
+    var R = RG();
+    var other = CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false && x.avatarUrl; })[0] || CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false; })[0];
+    var crossBump = other ? { label: L("Espia a ", "Peek at ", "Mira a ") + other.name + L(" também", " too", " también"), sub: L("prévia quente de outra modelo · 5 fotos", "a taste of another model · 5 photos", "otra modelo · 5 fotos"), amount: R.bump.cross, target: { creatorKey: other.id, n: 5, ptype: "image" } } : null;
+    var KITS = [];
+    if (nPh) KITS.push({ icon: I.photo, key: "fotos", title: "🔥 " + L("Kit Fotos", "Photo Kit", "Kit Fotos"), sub: nPh + " " + L("fotos", "photos", "fotos") + " · " + L("liberado na hora · 30 dias", "instant · 30 days", "al instante · 30 días"), amount: R.kit.fotos, n: nPh, ptype: "image",
+      bump: nVd ? { label: L("Adiciona os ", "Add the ", "Agrega los ") + nVd + " " + L("vídeos", "videos", "videos"), sub: L("completa a coleção dela", "complete her collection", "completa su colección"), amount: R.bump.videos, target: { creatorKey: creatorKey, n: nVd, ptype: "video" } } : crossBump });
+    if (nVd) KITS.push({ icon: I.video, key: "videos", title: "🎥 " + L("Kit Vídeos", "Video Kit", "Kit Videos"), sub: nVd + " " + L("vídeos", "videos", "videos") + " · " + L("sem corte · 30 dias", "uncut · 30 days", "sin cortes · 30 días"), amount: R.kit.videos, n: nVd, ptype: "video",
+      bump: nPh ? { label: L("Adiciona as ", "Add the ", "Agrega las ") + nPh + " " + L("fotos", "photos", "fotos"), sub: L("pague uma vez, leve tudo", "pay once, take it all", "paga una vez, llévalo todo"), amount: R.bump.fotos, target: { creatorKey: creatorKey, n: nPh, ptype: "image" } } : crossBump });
+    if (nPh && nVd) KITS.push({ icon: I.star, key: "tudo", title: "👑 " + L("Kit Completo · 30 dias", "Full Kit · 30 days", "Kit Completo · 30 días"), sub: nPh + " " + L("fotos", "photos", "fotos") + " + " + nVd + " " + L("vídeos", "videos", "videos") + " · " + L("tudo dela", "all of her", "todo de ella"), amount: R.kit.tudo, n: nAll, ptype: null, badge: L("Mais popular", "Most popular", "Más popular"), anchor: R.kit.anchor, bump: crossBump });
+    function kitRow(k) {
+      var id = creatorKey + "-kit-" + k.key;
+      var owned = state.purchased[id];
+      var anchor = k.anchor ? '<span style="text-decoration:line-through;color:var(--faint);font-size:0.8rem;margin-right:0.35rem">' + money(k.anchor) + '</span>' : '';
+      var badge = k.badge ? '<span class="lr-badge">' + k.badge + '</span>' : '';
+      return '<div class="ladder-row">' +
+        '<div class="lr-icon">' + k.icon + '</div>' +
+        '<div class="lr-main"><div class="lr-title">' + k.title + badge + '</div><div class="lr-sub">' + k.sub + '</div></div>' +
+        '<div class="lr-price">' + anchor + money(k.amount) + '</div>' +
+        '<div class="lr-buy">' + (owned ? '<button class="btn btn-good btn-sm" disabled>' + I.check + '</button>' : '<button class="btn btn-primary btn-sm" data-kit="' + k.key + '">' + L("Pegar", "Get", "Tomar") + '</button>') + '</div></div>';
+    }
+    realWrap.innerHTML = '<div class="ladder">' + KITS.map(kitRow).join("") + '</div>';
+    realWrap.querySelectorAll("[data-kit]").forEach(function (btn) {
+      btn.onclick = function () {
+        if (guest || !account) { needLogin(); return; }
+        var k = KITS.filter(function (x) { return x.key === btn.getAttribute("data-kit"); })[0]; if (!k) return;
+        purchaseModal({ id: creatorKey + "-kit-" + k.key, title: k.title.replace(/^\S+\s/, ""), titleSub: k.sub, priceCents: k.amount, creator: currentCreatorName(), icon: k.ptype === "video" ? "video" : "tile", realPack: { creatorKey: creatorKey, n: k.n, amount: k.amount, ptype: k.ptype }, bump: k.bump });
+      };
+    });
+  }
   function loadBuyerContent(creatorKey) {
     var box = document.getElementById("rc-list"); if (!box) return;
     if (!sb) { box.innerHTML = '<p class="muted-note">' + L("Entre pra ver o conteúdo.", "Sign in to see the content.", "Entra para ver el contenido.") + '</p>'; return; }
@@ -2733,40 +2763,8 @@
       });
       wireSub(b, creatorKey, subPrice);
       if (!hasSub) {
-        var realWrap = document.getElementById("pf-packs-real");
-        if (realWrap) {
-          var paidPosts = pr.data.filter(function (p) { return !p.is_free; });
-          var nPh = paidPosts.filter(function (p) { return p.media_type !== "video"; }).length;
-          var nVd = paidPosts.filter(function (p) { return p.media_type === "video"; }).length;
-          var nAll = paidPosts.length;
-          var R = RG();
-          var other = CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false && x.avatarUrl; })[0] || CREATORS.filter(function (x) { return x.id !== creatorKey && x.hasSub === false; })[0];
-          var crossBump = other ? { label: L("Espia a ", "Peek at ", "Mira a ") + other.name + L(" também", " too", " también"), sub: L("prévia quente de outra modelo · 5 fotos", "a taste of another model · 5 photos", "otra modelo · 5 fotos"), amount: R.bump.cross, target: { creatorKey: other.id, n: 5, ptype: "image" } } : null;
-          var KITS = [];
-          if (nPh) KITS.push({ icon: I.photo, key: "fotos", title: "🔥 " + L("Kit Fotos", "Photo Kit", "Kit Fotos"), sub: nPh + " " + L("fotos", "photos", "fotos") + " · " + L("liberado na hora · 30 dias", "instant · 30 days", "al instante · 30 días"), amount: R.kit.fotos, n: nPh, ptype: "image",
-            bump: nVd ? { label: L("Adiciona os ", "Add the ", "Agrega los ") + nVd + " " + L("vídeos", "videos", "videos"), sub: L("completa a coleção dela", "complete her collection", "completa su colección"), amount: R.bump.videos, target: { creatorKey: creatorKey, n: nVd, ptype: "video" } } : crossBump });
-          if (nVd) KITS.push({ icon: I.video, key: "videos", title: "🎥 " + L("Kit Vídeos", "Video Kit", "Kit Videos"), sub: nVd + " " + L("vídeos", "videos", "videos") + " · " + L("sem corte · 30 dias", "uncut · 30 days", "sin cortes · 30 días"), amount: R.kit.videos, n: nVd, ptype: "video",
-            bump: nPh ? { label: L("Adiciona as ", "Add the ", "Agrega las ") + nPh + " " + L("fotos", "photos", "fotos"), sub: L("pague uma vez, leve tudo", "pay once, take it all", "paga una vez, llévalo todo"), amount: R.bump.fotos, target: { creatorKey: creatorKey, n: nPh, ptype: "image" } } : crossBump });
-          if (nPh && nVd) KITS.push({ icon: I.star, key: "tudo", title: "👑 " + L("Kit Completo · 30 dias", "Full Kit · 30 days", "Kit Completo · 30 días"), sub: nPh + " " + L("fotos", "photos", "fotos") + " + " + nVd + " " + L("vídeos", "videos", "videos") + " · " + L("tudo dela", "all of her", "todo de ella"), amount: R.kit.tudo, n: nAll, ptype: null, badge: L("Mais popular", "Most popular", "Más popular"), anchor: R.kit.anchor, bump: crossBump });
-          function kitRow(k) {
-            var id = creatorKey + "-kit-" + k.key;
-            var owned = state.purchased[id];
-            var anchor = k.anchor ? '<span style="text-decoration:line-through;color:var(--faint);font-size:0.8rem;margin-right:0.35rem">' + money(k.anchor) + '</span>' : '';
-            var badge = k.badge ? '<span class="lr-badge">' + k.badge + '</span>' : '';
-            return '<div class="ladder-row">' +
-              '<div class="lr-icon">' + k.icon + '</div>' +
-              '<div class="lr-main"><div class="lr-title">' + k.title + badge + '</div><div class="lr-sub">' + k.sub + '</div></div>' +
-              '<div class="lr-price">' + anchor + money(k.amount) + '</div>' +
-              '<div class="lr-buy">' + (owned ? '<button class="btn btn-good btn-sm" disabled>' + I.check + '</button>' : '<button class="btn btn-primary btn-sm" data-kit="' + k.key + '">' + L("Pegar", "Get", "Tomar") + '</button>') + '</div></div>';
-          }
-          realWrap.innerHTML = KITS.length ? '<div class="ladder">' + KITS.map(kitRow).join("") + '</div>' : '<p class="muted-note">' + L("Em breve.", "Coming soon.", "Pronto.") + '</p>';
-          realWrap.querySelectorAll("[data-kit]").forEach(function (btn) {
-            btn.onclick = function () {
-              var k = KITS.filter(function (x) { return x.key === btn.getAttribute("data-kit"); })[0]; if (!k) return;
-              purchaseModal({ id: creatorKey + "-kit-" + k.key, title: k.title.replace(/^\S+\s/, ""), titleSub: k.sub, priceCents: k.amount, creator: currentCreatorName(), icon: k.ptype === "video" ? "video" : "tile", realPack: { creatorKey: creatorKey, n: k.n, amount: k.amount, ptype: k.ptype }, bump: k.bump });
-            };
-          });
-        }
+        var paidPosts = pr.data.filter(function (p) { return !p.is_free; });
+        fillRealPacks(creatorKey, paidPosts.filter(function (p) { return p.media_type !== "video"; }).length, paidPosts.filter(function (p) { return p.media_type === "video"; }).length, false);
       }
       applyDynTranslation();
     });
