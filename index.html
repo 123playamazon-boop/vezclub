@@ -2393,6 +2393,17 @@
       '<p class="muted-note" style="margin-top:-0.3rem">Leads das campanhas de captação de modelos reais. Entre em contato pelo WhatsApp/e-mail informado. Chegam aqui ao vivo.</p>' +
       '<div id="admin-apps"><p class="muted-note">Carregando…</p></div></div>';
 
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Notificações no celular do time (Pushcut)</h3><span class="hint">push instantâneo</span></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Cada pessoa instala o app <b>Pushcut</b>, cria uma Notification e cola o link aqui. Modo <b>Sempre</b> = recebe o resumo a cada 2h mesmo com zero candidatura (ideal pro gestor de tráfego).</p>' +
+      '<div id="wh-list"><p class="muted-note">Carregando…</p></div>' +
+      '<div class="form" style="margin-top:0.9rem"><div class="form-row">' +
+        field("Nome", '<input id="wh-label" placeholder="Ex: João (tráfego)">') +
+        field("Quando avisar", '<select id="wh-mode"><option value="on_lead">Só quando tem candidatura</option><option value="always">Sempre (resumo mesmo com zero)</option></select>') +
+      '</div>' +
+      field("Link do Pushcut (webhook)", '<input id="wh-url" placeholder="https://api.pushcut.io/.../notifications/...">') +
+      '</div><div class="ob-actions"><button class="btn btn-primary" id="wh-add">' + I.plus + ' Adicionar notificação</button></div>' +
+      '<p class="muted-note" style="margin-top:0.6rem">No app Pushcut: aba <b>Notifications</b> → crie uma → <b>Copy Webhook URL</b> → cola aqui.</p></div>';
+
     html += '<div class="stat-grid">' +
       statId(I.chart, "GMV (vendas totais)", "ad-gmv", "tudo que entrou") +
       statId(I.money, "Comissão da plataforma", "ad-comm", "80% — tráfego + operação") +
@@ -2452,6 +2463,8 @@
     app.innerHTML = html;
     loadAdminReview();
     loadApplications();
+    loadWebhooks();
+    wireWebhookAdd();
     loadKycReview();
     loadAdminMoney();
     loadAiAdmin();
@@ -3049,6 +3062,61 @@
         '<div><b>Enviado em:</b> ' + dFull + '</div>' +
       '</div>' +
     '</div>';
+  }
+
+  function loadWebhooks() {
+    var box = document.getElementById("wh-list"); if (!box || !sb) return;
+    sb.from("alert_webhooks").select("*").order("created_at", { ascending: true }).then(function (r) {
+      var b = document.getElementById("wh-list"); if (!b) return;
+      if (r.error) { b.innerHTML = '<p class="muted-note">Erro: ' + escHtml(r.error.message) + '</p>'; return; }
+      var rows = r.data || [];
+      if (!rows.length) { b.innerHTML = '<p class="muted-note">Nenhum Pushcut cadastrado ainda.</p>'; return; }
+      b.innerHTML = '<div class="apps-list">' + rows.map(function (w) {
+        var modeLabel = w.mode === "always" ? "🔔 Sempre" : "📥 Só c/ candidatura";
+        var shortUrl = escHtml(String(w.url || "").replace(/^https?:\/\//, "").slice(0, 40));
+        return '<div class="app-item"><div class="app-row">' +
+          '<div class="app-info"><div class="app-name">' + escHtml(w.label) + (w.active ? "" : ' <span class="muted-note">(desativado)</span>') + '</div><div class="app-meta">' + modeLabel + ' · ' + shortUrl + '…</div></div>' +
+          '<div class="app-actions"><button class="btn btn-ghost btn-sm" data-whtest="' + w.id + '">Testar</button><button class="btn btn-ghost btn-sm" data-whdel="' + w.id + '">Remover</button></div>' +
+          '</div></div>';
+      }).join("") + '</div>';
+      b.querySelectorAll("[data-whtest]").forEach(function (btn) {
+        btn.onclick = function () { var w = rows.find(function (x) { return x.id === btn.getAttribute("data-whtest"); }); whTest(w); };
+      });
+      b.querySelectorAll("[data-whdel]").forEach(function (btn) {
+        btn.onclick = function () {
+          var id = btn.getAttribute("data-whdel");
+          if (!window.confirm("Remover esta notificação?")) return;
+          sb.from("alert_webhooks").delete().eq("id", id).then(function (res) {
+            if (res.error) { toast("Erro: " + res.error.message); return; }
+            toast("Removido."); loadWebhooks();
+          });
+        };
+      });
+    });
+  }
+  function whTest(w) {
+    if (!w) return;
+    try {
+      fetch(w.url + "?title=" + encodeURIComponent("Teste · Vezclub") + "&text=" + encodeURIComponent("Push de teste pra " + w.label), { mode: "no-cors" });
+      toast("Teste enviado pra " + w.label + " — confira o celular.");
+    } catch (e) { toast("Não consegui enviar o teste."); }
+  }
+  function wireWebhookAdd() {
+    var btn = document.getElementById("wh-add"); if (!btn) return;
+    btn.onclick = function () {
+      var label = (document.getElementById("wh-label").value || "").trim();
+      var url = (document.getElementById("wh-url").value || "").trim();
+      var mode = document.getElementById("wh-mode").value;
+      if (!label || !url) { toast("Preencha nome e link."); return; }
+      if (url.indexOf("api.pushcut.io") < 0 && !window.confirm("O link não parece do Pushcut. Adicionar mesmo assim?")) return;
+      btn.disabled = true;
+      sb.from("alert_webhooks").insert({ label: label, url: url, mode: mode, active: true }).then(function (res) {
+        btn.disabled = false;
+        if (res.error) { toast("Erro: " + res.error.message); return; }
+        document.getElementById("wh-label").value = ""; document.getElementById("wh-url").value = "";
+        toast("Notificação adicionada!"); loadWebhooks();
+      });
+    };
   }
 
   /* ---- admin: AI models (owner-only) ---- */
