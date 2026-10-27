@@ -1035,6 +1035,14 @@
     c.tiles = mkTiles(c.id, c.color);
     return c;
   }
+  var AI_PERSONAS = {};
+  function loadPersonas() {
+    if (!sb) return;
+    sb.from("chat_personas").select("creator_key,greeting,credit_cost_per_msg").eq("active", true).then(function (r) {
+      if (r.error || !r.data) return;
+      var m = {}; r.data.forEach(function (p) { m[p.creator_key] = p; }); AI_PERSONAS = m;
+    });
+  }
   function loadCreators(cb) {
     if (!sb) { if (cb) cb(); return; }
     sb.from("creators").select("key,display_name,handle,tag,sub_price_cents,is_ai,online,hook,color1,color2,avatar_path,cover_path,has_chat,has_subscription").then(function (r) {
@@ -1042,6 +1050,7 @@
         r.data.sort(function (a, b) { return (a.is_ai ? 1 : 0) - (b.is_ai ? 1 : 0); });
         CREATORS = r.data.map(buildCreatorFromDb);
       }
+      loadPersonas();
       loadFreeTeasers(cb);
     });
   }
@@ -3390,6 +3399,87 @@
     try { input.focus(); } catch (e) {}
   }
 
+  function openAiChat(cid) {
+    var c = CREATORS.find(function (x) { return x.id === cid; });
+    if (!c) return;
+    if (!sb || !account) { showAuthGate("login"); return; }
+    var persona = AI_PERSONAS[cid] || {};
+    var greeting = persona.greeting || "oi 🌙";
+    var first = (c.name || "").split(" ")[0];
+    var bal = 0;
+    function fmt(sec) { sec = Math.max(0, sec | 0); var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
+
+    modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
+      '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + avatar(c) +
+      '<div><div class="ch-name">' + escHtml(first) + ' 🌙</div><div class="ch-stat" id="ch-stat">companhia de IA · 18+</div></div>' +
+      '<span id="ch-time" style="margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
+      '<button class="ch-x" data-close>' + XICON + '</button></div>' +
+      '<div class="chat-body" id="chat-body"></div>' +
+      '<div class="chat-input"><input id="chat-text" placeholder="Escreve pra ' + escHtml(first) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
+      '</div></div>';
+
+    var body = document.getElementById("chat-body");
+    var timeEl = document.getElementById("ch-time");
+    function setBal(sec) { bal = Math.max(0, sec | 0); timeEl.textContent = "⏱ " + fmt(bal); }
+    function her(t) { body.insertAdjacentHTML("beforeend", '<div class="bub her">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
+    function me(t) { body.insertAdjacentHTML("beforeend", '<div class="bub me">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
+    function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
+
+    function showBuy() {
+      var pkgs = [{ min: 15, price: 19 }, { min: 30, price: 29 }, { min: 60, price: 49 }];
+      var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">Seu tempo com a ' + escHtml(first) + ' acabou</div><div class="muted-note" style="margin-bottom:.9rem">Recarregue pra continuar a conversa.</div>';
+      pkgs.forEach(function (p) { h += '<button class="btn btn-primary btn-block" data-buytime="' + p.min + '" data-price="' + p.price + '" style="margin-bottom:.5rem">' + p.min + ' min · ' + usd(p.price) + '</button>'; });
+      h += '</div>';
+      body.innerHTML = h;
+      body.querySelectorAll("[data-buytime]").forEach(function (b) {
+        b.onclick = function () { purchaseModal({ id: "chattime-" + cid + "-" + b.getAttribute("data-buytime"), title: b.getAttribute("data-buytime") + " min de chat com " + first, price: +b.getAttribute("data-price"), icon: "call", creator: c.name }); };
+      });
+    }
+
+    sb.from("chat_credits").select("seconds_balance").maybeSingle().then(function (cr) {
+      setBal((cr.data && cr.data.seconds_balance) || 0);
+      if (bal <= 0) showBuy();
+    });
+    sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) {
+      if (!tr.data) { her(greeting); return; }
+      sb.from("chat_messages").select("role,content").eq("thread_id", tr.data.id).order("created_at", { ascending: true }).limit(200).then(function (r) {
+        var rows = (r.data || []);
+        if (!rows.length) { her(greeting); return; }
+        rows.forEach(function (m2) { m2.role === "user" ? me(m2.content) : her(m2.content); });
+      });
+    });
+
+    var sending = false;
+    function doSend() {
+      var inp = document.getElementById("chat-text"); if (!inp) return;
+      var v = (inp.value || "").trim();
+      if (!v || sending) return;
+      if (bal <= 0) { showBuy(); return; }
+      inp.value = ""; me(v); sending = true;
+      var sbtn = document.getElementById("chat-send"); if (sbtn) sbtn.disabled = true;
+      var stat = document.getElementById("ch-stat"); if (stat) stat.textContent = "digitando…";
+      sb.functions.invoke("chat", { body: { creator_key: cid, message: v } }).then(function (res) {
+        sending = false;
+        var sb2 = document.getElementById("chat-send"); if (sb2) sb2.disabled = false;
+        var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = "companhia de IA · 18+";
+        var d = res.data, e = res.error;
+        if (e || !d || d.error) {
+          if (d && d.error === "no_credit") { setBal(0); showBuy(); return; }
+          if (d && d.error === "model_error") { note("(o provedor filtrou essa resposta — hora de trocar o motor pro adulto)"); return; }
+          if (d && d.error === "no_model_key") { note("(motor sem chave configurada)"); return; }
+          note("(não consegui responder agora)"); return;
+        }
+        her(d.reply);
+        if (typeof d.balance === "number") setBal(d.balance);
+        try { document.getElementById("chat-text").focus(); } catch (_) {}
+      }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
+    }
+    document.getElementById("chat-send").onclick = doSend;
+    document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
+    document.getElementById("ch-back").onclick = function () { closeModal(); };
+    try { document.getElementById("chat-text").focus(); } catch (e) {}
+  }
+
   function ageGate() {
     try { if (localStorage.getItem("aura_age_ok")) return; } catch (e) {}
     modalRoot.innerHTML = '<div class="modal-bg"><div class="modal"><div class="modal-pad age-center">' +
@@ -3477,7 +3567,8 @@
       openChatList();
     } else if (chatOpen) {
       if (needLogin()) return;
-      openChatThread(chatOpen.getAttribute("data-chat-open"));
+      var _coid = chatOpen.getAttribute("data-chat-open");
+      if (AI_PERSONAS[_coid]) openAiChat(_coid); else openChatThread(_coid);
     } else if (gift) {
       claimGift(gift.getAttribute("data-gift"));
     } else if (story) {
