@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vezclub · Chat (MVP)</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root{
+    --bg:#0c0a12; --panel:#15121d; --bubble-a:#241a33; --bubble-u:#6d28d9; --line:#2a2435;
+    --ink:#efeaf6; --mut:#9a93ad; --accent:#a855f7; --accent2:#ec4899; --ok:#34d399;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);height:100dvh;display:flex;flex-direction:column}
+  .wrap{max-width:560px;width:100%;margin:0 auto;height:100dvh;display:flex;flex-direction:column;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+
+  /* header */
+  .top{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;flex:0 0 auto}
+  .top .nm{font-weight:800;font-size:1.02rem;line-height:1.1}
+  .top .st{font-size:.74rem;color:var(--ok)}
+  .top .bal{margin-left:auto;text-align:right;font-size:.74rem;color:var(--mut)}
+  .top .bal b{display:block;font-size:1rem;color:var(--ink);font-variant-numeric:tabular-nums}
+
+  .ai-note{font-size:.72rem;color:var(--mut);background:#140f1e;border-bottom:1px solid var(--line);padding:6px 16px;text-align:center}
+
+  /* messages */
+  .msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .b{max-width:78%;padding:10px 14px;border-radius:18px;font-size:.96rem;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+  .b.a{align-self:flex-start;background:var(--bubble-a);border-bottom-left-radius:5px}
+  .b.u{align-self:flex-end;background:var(--bubble-u);border-bottom-right-radius:5px}
+  .typing{align-self:flex-start;background:var(--bubble-a);border-radius:18px;border-bottom-left-radius:5px;padding:12px 16px;display:none}
+  .typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mut);margin:0 2px;animation:bl 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes bl{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+  /* composer */
+  .comp{display:flex;gap:8px;padding:12px 16px;background:var(--panel);border-top:1px solid var(--line)}
+  .comp input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:12px 16px;color:var(--ink);font-size:1rem;font-family:inherit}
+  .comp input:focus{outline:0;border-color:var(--accent)}
+  .comp button{border:0;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;width:46px;height:46px;border-radius:50%;font-size:1.1rem;flex:0 0 auto}
+  .comp button:disabled{opacity:.5}
+
+  /* login + states */
+  .screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center}
+  .screen h1{font-size:1.4rem}
+  .screen p{color:var(--mut);font-size:.9rem;max-width:34ch}
+  .screen input{width:100%;max-width:320px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--ink);font-size:1rem}
+  .screen .btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;border-radius:999px;padding:13px 26px;font-weight:800;font-size:1rem;cursor:pointer;max-width:320px;width:100%}
+  .err{color:#f87171;font-size:.85rem;min-height:1em}
+  .lowcred{display:none;text-align:center;padding:10px 16px;background:#2a1020;color:#fbb;font-size:.84rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div class="screen" id="login">
+    <div class="av" style="width:64px;height:64px;font-size:1.8rem">L</div>
+    <h1>Entrar no chat</h1>
+    <p>Área de teste (MVP). Entre com a conta de admin pra conversar com a Luna.</p>
+    <input id="email" type="email" placeholder="E-mail" autocomplete="username">
+    <input id="pass" type="password" placeholder="Senha" autocomplete="current-password">
+    <button class="btn" id="login-btn">Entrar</button>
+    <div class="err" id="login-err"></div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="chat" style="display:none;flex:1;flex-direction:column;min-height:0">
+    <div class="top">
+      <div class="av">L</div>
+      <div>
+        <div class="nm">Luna 🌙</div>
+        <div class="st">online agora</div>
+      </div>
+      <div class="bal"><b id="bal">--:--</b>tempo restante</div>
+    </div>
+    <div class="ai-note">🤖 Companhia de IA · conversa gerada por inteligência artificial · 18+</div>
+    <div class="msgs" id="msgs"></div>
+    <div class="typing" id="typing"><span></span><span></span><span></span></div>
+    <div class="lowcred" id="lowcred">Seu tempo acabou. Recarregue pra continuar conversando. <i>(no MVP, recarga é manual)</i></div>
+    <div class="comp">
+      <input id="input" placeholder="Escreve pra Luna..." autocomplete="off">
+      <button id="send">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
+  var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+  var CREATOR="luna";
+  var GREETING="oi... não lembro de ter te visto por aqui antes 🌙 como você me achou?";
+  var sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+  var el=function(id){return document.getElementById(id);};
+  var msgs=el("msgs"), typing=el("typing");
+
+  function fmtTime(sec){ sec=Math.max(0,sec|0); var m=Math.floor(sec/60), s=sec%60; return (m<10?"0":"")+m+":"+(s<10?"0":"")+s; }
+  function setBal(sec){ el("bal").textContent=fmtTime(sec); el("lowcred").style.display = sec>0?"none":"block"; el("send").disabled = sec<=0; }
+
+  function addMsg(role, text){
+    var d=document.createElement("div");
+    d.className="b "+(role==="user"?"u":"a");
+    d.textContent=text;
+    msgs.insertBefore(d, typing);
+    msgs.scrollTop=msgs.scrollHeight;
+  }
+  function showTyping(on){ typing.style.display=on?"block":"none"; if(on) msgs.scrollTop=msgs.scrollHeight; }
+
+  function enterChat(){
+    el("login").style.display="none";
+    el("chat").style.display="flex";
+    loadBalance();
+    loadHistory();
+  }
+
+  function loadBalance(){
+    sb.from("chat_credits").select("seconds_balance").maybeSingle().then(function(r){
+      setBal((r.data&&r.data.seconds_balance)||0);
+    });
+  }
+
+  function loadHistory(){
+    sb.from("chat_threads").select("id").eq("creator_key",CREATOR).maybeSingle().then(function(tr){
+      if(!tr.data){ addMsg("assistant",GREETING); return; }
+      sb.from("chat_messages").select("role,content,created_at").eq("thread_id",tr.data.id).order("created_at",{ascending:true}).then(function(r){
+        var rows=(r.data||[]);
+        if(!rows.length){ addMsg("assistant",GREETING); return; }
+        rows.forEach(function(m){ addMsg(m.role,m.content); });
+      });
+    });
+  }
+
+  var sending=false;
+  function send(){
+    if(sending) return;
+    var inp=el("input"); var text=(inp.value||"").trim();
+    if(!text) return;
+    inp.value=""; addMsg("user",text); sending=true; el("send").disabled=true; showTyping(true);
+    sb.functions.invoke("chat",{ body:{ creator_key:CREATOR, message:text } }).then(function(res){
+      showTyping(false); sending=false; el("send").disabled=false; inp.focus();
+      var d=res.data, e=res.error;
+      if(e || !d || d.error){
+        var code = d && d.error;
+        if(code==="no_credit"){ setBal(0); addMsg("assistant","(seu tempo acabou — recarregue pra continuar)"); return; }
+        if(code==="no_model_key"){ addMsg("assistant","(motor sem chave configurada)"); return; }
+        if(code==="model_error"){ addMsg("assistant","(o modelo recusou/filtrou essa resposta — provável limite do provedor)"); console.log("model_error",d.detail); return; }
+        addMsg("assistant","(erro: "+((d&&d.error)||(e&&e.message)||"desconhecido")+")");
+        console.log("chat error", e, d);
+        return;
+      }
+      addMsg("assistant", d.reply);
+      if(typeof d.balance==="number") setBal(d.balance);
+    }).catch(function(err){
+      showTyping(false); sending=false; el("send").disabled=false;
+      addMsg("assistant","(falha de conexão)"); console.log(err);
+    });
+  }
+  el("send").onclick=send;
+  el("input").addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+
+  // login
+  el("login-btn").onclick=function(){
+    var email=el("email").value.trim(), pass=el("pass").value;
+    if(!email||!pass){ el("login-err").textContent="Preencha e-mail e senha."; return; }
+    el("login-btn").disabled=true; el("login-err").textContent="";
+    sb.auth.signInWithPassword({email:email,password:pass}).then(function(r){
+      el("login-btn").disabled=false;
+      if(r.error){ el("login-err").textContent="Não deu: "+r.error.message; return; }
+      enterChat();
+    });
+  };
+  el("pass").addEventListener("keydown",function(e){ if(e.key==="Enter") el("login-btn").click(); });
+
+  // já logado?
+  sb.auth.getSession().then(function(r){ if(r.data&&r.data.session) enterChat(); });
+})();
+</script>
+</body>
+</html>
