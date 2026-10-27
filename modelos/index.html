@@ -55,6 +55,11 @@
      radial-gradient(640px 360px at -5% 10%,rgba(255,106,61,.08),transparent 55%)}
   .magic{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:999px;padding:7px 15px;font-size:.78rem;font-weight:700;color:var(--ink);margin-bottom:22px}
   .magic .pp{width:7px;height:7px;border-radius:50%;background:var(--brand)}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+  .hero-img{position:relative}
+  .hero-img img{width:100%;height:auto;border-radius:22px;box-shadow:0 30px 60px -28px rgba(23,18,31,.35);display:block}
+  .hero-img .tagfloat{position:absolute;bottom:14px;left:14px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:.8rem;font-weight:700;color:var(--ink);box-shadow:var(--shadow);display:flex;align-items:center;gap:7px}
+  .hero-img .tagfloat .pp{width:7px;height:7px;border-radius:50%;background:var(--ok)}
   .hero h1{max-width:15ch}
   .hero .sub{font-size:clamp(1.05rem,2.1vw,1.28rem);color:var(--mut);max-width:44ch;margin:22px 0 4px}
   .hero-cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:26px}
@@ -153,7 +158,7 @@
   .tm-head b{display:block;color:var(--ink);font-size:.95rem}
   .tm-head small{color:var(--mut2);font-size:.8rem;font-weight:600}
 
-  @media(max-width:820px){ .g2,.g3,.tiers{grid-template-columns:1fr} .stats{grid-template-columns:repeat(2,1fr)} }
+  @media(max-width:820px){ .g2,.g3,.tiers{grid-template-columns:1fr} .stats{grid-template-columns:repeat(2,1fr)} .hero-grid{grid-template-columns:1fr;gap:30px} .hero-img{max-width:460px;margin:0 auto} }
   @media(max-width:640px){
     section{padding:46px 0}
     .sticky{display:flex} .wa{bottom:88px} body{padding-bottom:76px}
@@ -179,17 +184,25 @@
 <!-- HERO -->
 <section class="hero">
   <div class="wrap">
-    <div class="magic"><span class="pp"></span><span data-i="magic">Programa “Você Grava, A Gente Vende”</span></div>
-    <h1 data-i="hero_h1">Você grava. <span class="grad-txt">A gente transforma em renda.</span></h1>
-    <p class="sub" data-i="hero_sub">Você só grava do seu jeito. A gente edita, distribui, vende no chat 24h e te paga — com sua equipe em Miami e uma IA própria. Primeiro conteúdo no ar em 7 dias.</p>
-    <div class="hero-cta">
-      <a href="#candidatar" class="btn" data-i="hero_cta">Quero me candidatar →</a>
-      <a href="#como" class="btn ghost" data-i="hero_cta2">Como funciona</a>
-    </div>
-    <div class="trust">
-      <span><i class="dot"></i><span data-i="t1">100% discreto</span></span>
-      <span><i class="dot"></i><span data-i="t2">$0 de entrada</span></span>
-      <span><i class="dot"></i><span data-i="t3">Você mantém o controle</span></span>
+    <div class="hero-grid">
+      <div>
+        <div class="magic"><span class="pp"></span><span data-i="magic">Programa “Você Grava, A Gente Vende”</span></div>
+        <h1 data-i="hero_h1">Você grava. <span class="grad-txt">A gente transforma em renda.</span></h1>
+        <p class="sub" data-i="hero_sub">Você só grava do seu jeito. A gente edita, distribui, vende no chat 24h e te paga — com sua equipe em Miami e uma IA própria. Primeiro conteúdo no ar em 7 dias.</p>
+        <div class="hero-cta">
+          <a href="#candidatar" class="btn" data-i="hero_cta">Quero me candidatar →</a>
+          <a href="#como" class="btn ghost" data-i="hero_cta2">Como funciona</a>
+        </div>
+        <div class="trust">
+          <span><i class="dot"></i><span data-i="t1">100% discreto</span></span>
+          <span><i class="dot"></i><span data-i="t2">$0 de entrada</span></span>
+          <span><i class="dot"></i><span data-i="t3">Você mantém o controle</span></span>
+        </div>
+      </div>
+      <div class="hero-img">
+        <img src="creators.webp" width="1080" height="1080" alt="Criadoras Vezclub" loading="eager">
+        <div class="tagfloat"><span class="pp"></span><span data-i="imgtag">Criadoras reais, renda real</span></div>
+      </div>
     </div>
 
     <div class="stats">
@@ -409,6 +422,7 @@
     magic:['Programa “Você Grava, A Gente Vende”','The “You Film, We Sell” Program'],
     hero_h1:['Você grava. <span class="grad-txt">A gente transforma em renda.</span>','You film. <span class="grad-txt">We turn it into income.</span>'],
     hero_sub:["Você só grava do seu jeito. A gente edita, distribui, vende no chat 24h e te paga — com sua equipe em Miami e uma IA própria. Primeiro conteúdo no ar em 7 dias.","You just film, your way. We edit, distribute, sell in chat 24/7 and pay you — with your Miami team and a proprietary AI. First content live in 7 days."],
+    imgtag:["Criadoras reais, renda real","Real creators, real income"],
     hero_cta:["Quero me candidatar →","I want to apply →"],
     hero_cta2:["Como funciona","How it works"],
     t1:["100% discreto","100% discreet"], t2:["$0 de entrada","$0 to start"], t3:["Você mantém o controle","You stay in control"],
