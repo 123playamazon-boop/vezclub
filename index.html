@@ -2381,6 +2381,10 @@
       '</div>' +
       '<p class="muted-note" style="margin-top:0.7rem">A separação real de gateway (Pix no BR, cartão nos EUA) e o relatório de receita por país entram junto com a integração de pagamento.</p></div>';
 
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Candidaturas de criadoras</h3><span class="hint">vezclub.com/modelos</span></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Leads das campanhas de captação de modelos reais. Entre em contato pelo WhatsApp/e-mail informado.</p>' +
+      '<div id="admin-apps"><p class="muted-note">Carregando…</p></div></div>';
+
     html += '<div class="stat-grid">' +
       statId(I.chart, "GMV (vendas totais)", "ad-gmv", "tudo que entrou") +
       statId(I.money, "Comissão da plataforma", "ad-comm", "80% — tráfego + operação") +
@@ -2439,6 +2443,7 @@
 
     app.innerHTML = html;
     loadAdminReview();
+    loadApplications();
     loadKycReview();
     loadAdminMoney();
     loadAiAdmin();
@@ -2941,6 +2946,26 @@
       b.innerHTML = r.data.map(function (p) {
         return '<div class="ladder-row"><div class="lr-icon" style="background:var(--accent-tint);color:var(--accent)">' + I.money + '</div><div class="lr-main"><div class="lr-title">' + escHtml(p.display_name || p.creator_key) + '</div><div class="lr-sub">20% da criadora</div></div><div class="lr-price">' + centsDual(p.owed_cents) + '</div><button class="btn btn-ghost btn-sm" data-stub="Pagar ' + escHtml(p.display_name || p.creator_key) + '">Pagar</button></div>';
       }).join("");
+    });
+  }
+
+  function loadApplications() {
+    var box = document.getElementById("admin-apps"); if (!box || !sb) return;
+    sb.from("creator_applications").select("*").order("created_at", { ascending: false }).limit(100).then(function (r) {
+      var b = document.getElementById("admin-apps"); if (!b) return;
+      if (r.error) { b.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
+      var rows = r.data || [];
+      if (!rows.length) { b.innerHTML = '<p class="muted-note">Nenhuma candidatura ainda. Solte as campanhas pra vezclub.com/modelos.</p>'; return; }
+      var h = '<div class="table-wrap"><table><thead><tr><th>Quando</th><th>Nome / @</th><th>Contato</th><th>Experiência</th><th>Origem</th></tr></thead><tbody>';
+      rows.forEach(function (a) {
+        var d = a.created_at ? new Date(a.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
+        var exp = a.experience === "sim" ? "Já cria" : a.experience === "nao" ? "Interessada" : a.experience === "talvez" ? "Quer saber +" : "—";
+        var who = escHtml(a.name || "—") + (a.instagram ? ' · ' + escHtml(a.instagram) : '');
+        var flag = a.region === "br" ? "🇧🇷" : a.region === "us" ? "🇺🇸" : "";
+        h += '<tr><td><small>' + d + '</small></td><td style="font-weight:600">' + who + '</td><td>' + escHtml(a.contact || "—") + '</td><td>' + exp + '</td><td>' + flag + ' ' + escHtml(a.lang || "") + '</td></tr>';
+      });
+      h += '</tbody></table></div><p class="muted-note" style="margin-top:0.6rem">' + rows.length + ' candidatura(s).</p>';
+      b.innerHTML = h;
     });
   }
 
