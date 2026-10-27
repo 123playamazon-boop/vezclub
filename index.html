@@ -798,7 +798,6 @@
     <div class="roles" id="roles">
       <button data-role="buyer" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Ver criadoras</span></button>
       <button data-role="creator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Me candidatar</span></button>
-      <button data-role="admin" id="role-admin" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 9h8V3h-8z"/></svg><span>Admin</span></button>
     </div>
     <div class="top-actions">
       <span class="proto-pill">Protótipo</span>
@@ -1295,7 +1294,9 @@
   function usd(n) { return "$" + n.toLocaleString("en-US"); }
   var _locale = { pt: "pt-BR", en: "en-US", es: "es-ES" };
   function nfmt(n) { try { return (n || 0).toLocaleString(_locale[lang] || "pt-BR"); } catch (e) { return String(n); } }
-  function brl(n) { return "R$" + Math.round(n * 2.8).toLocaleString("pt-BR"); }
+  var USD_BRL = 5.4; // taxa aproximada só para exibição no painel
+  function brl(n) { return "R$" + Math.round(n * USD_BRL).toLocaleString("pt-BR"); }
+  function dual(n) { return usd(n) + " · " + brl(n); }
   /* ---------- região (Brasil x EUA): moeda, preços e meios de pagamento ---------- */
   var REGIONS = {
     us: { cur: "$", dec: ".", kit: { fotos: 990, videos: 1490, tudo: 1990, anchor: 2480 }, bump: { videos: 700, fotos: 500, cross: 990 }, pay: ["Visa", "Mastercard", "Amex", "Apple Pay"] },
@@ -2396,7 +2397,7 @@
           ? '<button class="btn btn-ghost btn-sm" data-stub="Reativar ' + r.c.name + '">Reativar</button>'
           : '<button class="btn btn-ghost btn-sm" data-stub="Pagar ' + r.c.name + '">Pagar</button>';
       html += '<tr><td><div class="t-creator">' + avatar(r.c) + '<div><div style="font-weight:600">' + r.c.name + '</div><small>' + r.c.handle + '</small></div></div></td>' +
-        '<td>' + pill + '</td><td class="num">' + (r.month ? usd(r.month) : "—") + '</td><td class="num">' + (com ? usd(com) : "—") + '</td><td>' + act + '</td></tr>';
+        '<td>' + pill + '</td><td class="num">' + (r.month ? dual(r.month) : "—") + '</td><td class="num">' + (com ? dual(com) : "—") + '</td><td>' + act + '</td></tr>';
     });
     html += '</tbody></table></div></div>';
 
@@ -2422,7 +2423,7 @@
       '<p class="muted-note">As imagens/vídeos são gerados por vocês (plataforma de IA externa) e sobem aqui. Aparecem no feed misturados às criadoras reais.</p></div>';
 
     html += '<div class="dash-2" style="margin-top:1.2rem">';
-    html += '<div class="card"><div class="card-head"><h3>Receita da plataforma · 7 dias</h3><span class="hint">comissão em USD</span></div>' + barChart([890, 1120, 760, 1340, 1210, 1580, 1420]) + '</div>';
+    html += '<div class="card"><div class="card-head"><h3>Receita da plataforma · 7 dias</h3><span class="hint">US$ · R$</span></div>' + barChart([890, 1120, 760, 1340, 1210, 1580, 1420]) + '</div>';
     html += '<div class="card"><div class="card-head"><h3>A repassar às criadoras (20%)</h3></div><div class="ladder" id="admin-payouts"><p class="muted-note">Carregando…</p></div>' +
       '<button class="btn btn-primary btn-block" data-stub="Processar repasses" style="margin-top:1rem">' + I.money + ' Processar repasses</button>' +
       '<p class="muted-note">Recebimento do comprador e repasse via CCBill/Segpay (adult-friendly) — integração na etapa de pagamento.</p></div>';
@@ -2442,7 +2443,7 @@
   }
 
   function payRow(c, amt) {
-    return '<div class="ladder-row"><div class="lr-icon" style="background:' + grad(c.color) + ';color:#fff">' + initials(c.name) + '</div><div class="lr-main"><div class="lr-title">' + c.name + '</div><div class="lr-sub">' + c.handle + '</div></div><div class="lr-price">' + usd(amt) + '</div><button class="btn btn-ghost btn-sm" data-stub="Pagar ' + c.name + '">Pagar</button></div>';
+    return '<div class="ladder-row"><div class="lr-icon" style="background:' + grad(c.color) + ';color:#fff">' + initials(c.name) + '</div><div class="lr-main"><div class="lr-title">' + c.name + '</div><div class="lr-sub">' + c.handle + '</div></div><div class="lr-price">' + dual(amt) + '</div><button class="btn btn-ghost btn-sm" data-stub="Pagar ' + c.name + '">Pagar</button></div>';
   }
 
   /* ---------------- modals ---------------- */
@@ -2897,6 +2898,7 @@
 
   /* ---- money: real earnings & payouts (80/20 split) ---- */
   function centsUsd(c) { return usd(Math.round((c || 0) / 100)); }
+  function centsDual(c) { return dual(Math.round((c || 0) / 100)); }
   function statId(icon, label, id, sub) { return '<div class="stat"><div class="label">' + icon + label + '</div><div class="value" id="' + id + '">—</div><div class="delta flat">' + sub + '</div></div>'; }
   function loadEarnings() {
     if (!sb || !account) return;
@@ -2921,8 +2923,8 @@
     sb.rpc("platform_stats").then(function (r) {
       var d = (r.data && r.data[0]) || { gmv_cents: 0, platform_cents: 0, payout_cents: 0, tx: 0 };
       function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
-      set("ad-gmv", centsUsd(d.gmv_cents)); set("ad-comm", centsUsd(d.platform_cents));
-      set("ad-pay", centsUsd(d.payout_cents)); set("ad-tx", String(d.tx || 0));
+      set("ad-gmv", centsDual(d.gmv_cents)); set("ad-comm", centsDual(d.platform_cents));
+      set("ad-pay", centsDual(d.payout_cents)); set("ad-tx", String(d.tx || 0));
     });
     var box = document.getElementById("admin-payouts");
     if (box) sb.rpc("creator_payouts").then(function (r) {
@@ -2930,7 +2932,7 @@
       if (r.error) { b.innerHTML = '<p class="muted-note">Erro: ' + escHtml(r.error.message) + '</p>'; return; }
       if (!r.data || !r.data.length) { b.innerHTML = '<p class="muted-note">Nenhuma venda ainda — nada a repassar.</p>'; return; }
       b.innerHTML = r.data.map(function (p) {
-        return '<div class="ladder-row"><div class="lr-icon" style="background:var(--accent-tint);color:var(--accent)">' + I.money + '</div><div class="lr-main"><div class="lr-title">' + escHtml(p.display_name || p.creator_key) + '</div><div class="lr-sub">20% da criadora</div></div><div class="lr-price">' + centsUsd(p.owed_cents) + '</div><button class="btn btn-ghost btn-sm" data-stub="Pagar ' + escHtml(p.display_name || p.creator_key) + '">Pagar</button></div>';
+        return '<div class="ladder-row"><div class="lr-icon" style="background:var(--accent-tint);color:var(--accent)">' + I.money + '</div><div class="lr-main"><div class="lr-title">' + escHtml(p.display_name || p.creator_key) + '</div><div class="lr-sub">20% da criadora</div></div><div class="lr-price">' + centsDual(p.owed_cents) + '</div><button class="btn btn-ghost btn-sm" data-stub="Pagar ' + escHtml(p.display_name || p.creator_key) + '">Pagar</button></div>';
       }).join("");
     });
   }
@@ -3225,6 +3227,14 @@
   }
   var brandHome = document.getElementById("brand-home");
   if (brandHome) brandHome.addEventListener("click", goHome);
+  // acesso ao painel por link secreto (sem botão exposto): vezclub.com/#painel
+  function isAdminHash() { return (location.hash || "").replace("#", "").toLowerCase() === "painel"; }
+  function goAdminSecret() {
+    if (account && account.isAdmin) { state.role = "admin"; state.view = "feed"; render(); }
+    else if (sb && !account) { showAuthGate("login"); }
+    else { toast(L("Acesso restrito.", "Restricted access.", "Acceso restringido.")); }
+  }
+  window.addEventListener("hashchange", function () { if (isAdminHash()) goAdminSecret(); });
   document.getElementById("roles").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     var role = b.getAttribute("data-role");
@@ -3650,6 +3660,7 @@
       account.isAdmin = !!(r.data && r.data[0] && r.data[0].is_admin);
       updateRoleButtons();
       if (state.role === "admin" && !account.isAdmin) { goHome(); }
+      if (account.isAdmin && isAdminHash()) { state.role = "admin"; state.view = "feed"; render(); }
     });
     hideAuthGate();
     state.role = account.role === "creator" ? "creator" : "buyer";
@@ -3785,7 +3796,7 @@
       if (session) { if (!account) enterPlatform(session); }
       else { account = null; stopSalesWatch(); var ab = document.getElementById("acct-badge"); if (ab) ab.remove(); enterGuest(); }
     });
-    sb.auth.getSession().then(function (r) { if (r.data.session) enterPlatform(r.data.session); else enterGuest(); });
+    sb.auth.getSession().then(function (r) { if (r.data.session) enterPlatform(r.data.session); else { enterGuest(); if (isAdminHash()) showAuthGate("login"); } });
   } else {
     render();
     ageGate();
