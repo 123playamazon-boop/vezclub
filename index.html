@@ -254,6 +254,13 @@
   .panel .sub { color: var(--muted); font-size: 0.84rem; margin: 0.25rem 0 0.9rem; }
   .ladder { display: flex; flex-direction: column; gap: 0.4rem; }
   .ladder-row { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.7rem; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-2); }
+  .apps-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .app-item { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); overflow: hidden; }
+  .app-row { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; padding: 0.7rem 0.85rem; flex-wrap: wrap; }
+  .app-name { font-weight: 700; font-size: 0.95rem; }
+  .app-meta { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .app-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .app-det { padding: 0.7rem 0.85rem; border-top: 1px dashed var(--line); font-size: 0.85rem; line-height: 1.7; background: var(--surface); }
   .ladder-row:hover { border-color: var(--accent); }
   .ladder-row .lr-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--accent-tint); color: var(--accent); display: grid; place-items: center; flex: none; }
   .ladder-row .lr-icon svg { width: 17px; height: 17px; }
@@ -2951,22 +2958,53 @@
 
   function loadApplications() {
     var box = document.getElementById("admin-apps"); if (!box || !sb) return;
-    sb.from("creator_applications").select("*").order("created_at", { ascending: false }).limit(100).then(function (r) {
+    sb.from("creator_applications").select("*").order("created_at", { ascending: false }).limit(200).then(function (r) {
       var b = document.getElementById("admin-apps"); if (!b) return;
       if (r.error) { b.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
       var rows = r.data || [];
       if (!rows.length) { b.innerHTML = '<p class="muted-note">Nenhuma candidatura ainda. Solte as campanhas pra vezclub.com/modelos.</p>'; return; }
-      var h = '<div class="table-wrap"><table><thead><tr><th>Quando</th><th>Nome / @</th><th>Contato</th><th>Experiência</th><th>Origem</th></tr></thead><tbody>';
-      rows.forEach(function (a) {
-        var d = a.created_at ? new Date(a.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
-        var exp = a.experience === "sim" ? "Já cria" : a.experience === "nao" ? "Interessada" : a.experience === "talvez" ? "Quer saber +" : "—";
-        var who = escHtml(a.name || "—") + (a.instagram ? ' · ' + escHtml(a.instagram) : '');
-        var flag = a.region === "br" ? "🇧🇷" : a.region === "us" ? "🇺🇸" : "";
-        h += '<tr><td><small>' + d + '</small></td><td style="font-weight:600">' + who + '</td><td>' + escHtml(a.contact || "—") + '</td><td>' + exp + '</td><td>' + flag + ' ' + escHtml(a.lang || "") + '</td></tr>';
+      b.innerHTML = '<div class="apps-list">' + rows.map(appRow).join("") + '</div><p class="muted-note" style="margin-top:0.6rem">' + rows.length + ' candidatura(s).</p>';
+      b.querySelectorAll("[data-appdet]").forEach(function (btn) {
+        btn.onclick = function () { var d = document.getElementById(btn.getAttribute("data-appdet")); if (d) { var open = d.style.display !== "none"; d.style.display = open ? "none" : "block"; btn.textContent = open ? "Ver" : "Fechar"; } };
       });
-      h += '</tbody></table></div><p class="muted-note" style="margin-top:0.6rem">' + rows.length + ' candidatura(s).</p>';
-      b.innerHTML = h;
     });
+  }
+  function appWa(a) {
+    var c = (a.contact || "").trim();
+    if (!c || c.indexOf("@") >= 0) return null;
+    var d = c.replace(/\D/g, ""); if (!d) return null;
+    if (a.region === "br" && d.indexOf("55") !== 0) d = "55" + d;
+    if (a.region === "us" && d.length === 10) d = "1" + d;
+    var msg = (a.lang === "en")
+      ? "Hi! This is Vezclub, we got your application ✨ can I walk you through the next steps?"
+      : "Oi! Aqui é da Vezclub, recebemos sua candidatura ✨ posso te passar os próximos passos?";
+    return "https://wa.me/" + d + "?text=" + encodeURIComponent(msg);
+  }
+  function appRow(a) {
+    var dShort = a.created_at ? new Date(a.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
+    var dFull = a.created_at ? new Date(a.created_at).toLocaleString("pt-BR") : "—";
+    var exp = a.experience === "sim" ? "Já cria conteúdo" : a.experience === "nao" ? "Interessada (não cria ainda)" : a.experience === "talvez" ? "Quer saber mais antes" : "—";
+    var flag = a.region === "br" ? "🇧🇷" : a.region === "us" ? "🇺🇸" : "";
+    var who = escHtml(a.name || "—") + (a.instagram ? ' · ' + escHtml(a.instagram) : '');
+    var det = "appdet-" + (a.id || Math.random().toString(36).slice(2));
+    var wa = appWa(a);
+    var contactBtn = wa
+      ? '<a class="btn btn-primary btn-sm" href="' + wa + '" target="_blank" rel="noopener">💬 WhatsApp</a>'
+      : '<a class="btn btn-ghost btn-sm" href="mailto:' + escHtml(a.contact || "") + '">✉️ E-mail</a>';
+    return '<div class="app-item">' +
+      '<div class="app-row">' +
+        '<div class="app-info"><div class="app-name">' + who + '</div><div class="app-meta">' + exp + ' · ' + flag + ' ' + escHtml((a.lang || "").toUpperCase()) + ' · ' + dShort + '</div></div>' +
+        '<div class="app-actions"><button class="btn btn-ghost btn-sm" data-appdet="' + det + '">Ver</button>' + contactBtn + '</div>' +
+      '</div>' +
+      '<div class="app-det" id="' + det + '" style="display:none">' +
+        '<div><b>Contato:</b> ' + escHtml(a.contact || "—") + '</div>' +
+        '<div><b>Instagram:</b> ' + escHtml(a.instagram || "—") + '</div>' +
+        '<div><b>Já cria conteúdo adulto:</b> ' + exp + '</div>' +
+        '<div><b>18+ confirmado:</b> ' + (a.age_ok ? "Sim" : "Não") + '</div>' +
+        '<div><b>Idioma / região:</b> ' + escHtml((a.lang || "—")) + ' / ' + escHtml((a.region || "—")) + '</div>' +
+        '<div><b>Enviado em:</b> ' + dFull + '</div>' +
+      '</div>' +
+    '</div>';
   }
 
   /* ---- admin: AI models (owner-only) ---- */
