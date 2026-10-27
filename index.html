@@ -3037,6 +3037,14 @@
       : "Oi! Aqui é da Vezclub, recebemos sua candidatura ✨ posso te passar os próximos passos?";
     return "https://wa.me/" + d + "?text=" + encodeURIComponent(msg);
   }
+  function appSocial(a) {
+    var v = (a.instagram || "").trim(); if (!v) return null;
+    if (/^https?:\/\//i.test(v)) return v;
+    if (/(^|\.|\/)tiktok\.com/i.test(v)) return "https://" + v.replace(/^\/+/, "");
+    if (/^instagram\.com/i.test(v)) return "https://" + v;
+    var h = v.replace(/^@/, "").replace(/\s+/g, "");
+    return "https://instagram.com/" + h;
+  }
   function appRow(a) {
     var dShort = a.created_at ? new Date(a.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
     var dFull = a.created_at ? new Date(a.created_at).toLocaleString("pt-BR") : "—";
@@ -3048,10 +3056,12 @@
     var contactBtn = wa
       ? '<a class="btn btn-primary btn-sm" href="' + wa + '" target="_blank" rel="noopener">💬 WhatsApp</a>'
       : '<a class="btn btn-ghost btn-sm" href="mailto:' + escHtml(a.contact || "") + '">✉️ E-mail</a>';
+    var social = appSocial(a);
+    var socialBtn = social ? '<a class="btn btn-ghost btn-sm" href="' + escHtml(social) + '" target="_blank" rel="noopener">👤 Perfil</a>' : '';
     return '<div class="app-item">' +
       '<div class="app-row">' +
         '<div class="app-info"><div class="app-name">' + who + '</div><div class="app-meta">' + exp + ' · ' + flag + ' ' + escHtml((a.lang || "").toUpperCase()) + ' · ' + dShort + '</div></div>' +
-        '<div class="app-actions"><button class="btn btn-ghost btn-sm" data-appdet="' + det + '">Ver</button>' + contactBtn + '</div>' +
+        '<div class="app-actions"><button class="btn btn-ghost btn-sm" data-appdet="' + det + '">Ver</button>' + socialBtn + contactBtn + '</div>' +
       '</div>' +
       '<div class="app-det" id="' + det + '" style="display:none">' +
         '<div><b>Contato:</b> ' + escHtml(a.contact || "—") + '</div>' +
