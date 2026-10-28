@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b20"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b21"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4003,7 +4003,9 @@ fbq('track', 'PageView');
       sb.from("messages").insert({ conversation: conv, sender_id: account.id, sender_role: account.role, sender_name: account.name, body: v.slice(0, 2000) }).then(function (res) { if (res.error) toast("Não enviou: " + res.error.message); });
     }
     function doSend() { var v = (input.value || "").trim(); if (!v) return; input.value = ""; input.focus(); sendBody(v); }
-    document.getElementById("chat-send").onclick = doSend;
+    var _sbtn = document.getElementById("chat-send");
+    _sbtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    _sbtn.onclick = doSend;
     input.addEventListener("keydown", function (e) { if (e.key === "Enter") doSend(); });
     var tipBtn = document.getElementById("chat-tip"), tipRow = document.getElementById("tip-row");
     if (tipBtn && tipRow) {
@@ -4304,7 +4306,10 @@ fbq('track', 'PageView');
         try { document.getElementById("chat-text").focus(); } catch (_) {}
       }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
     }
-    document.getElementById("chat-send").onclick = doSend;
+    var _sendBtn = document.getElementById("chat-send");
+    // impede que tocar no botao tire o foco do campo (mantem o teclado aberto e o envio dispara no 1o toque)
+    _sendBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    _sendBtn.onclick = doSend;
     document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
     document.getElementById("ch-back").onclick = function () { closeModal(); };
     // no mobile nao foca automatico (evita o teclado abrir na hora e baguncar o layout); o usuario toca no campo
