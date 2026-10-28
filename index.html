@@ -1054,6 +1054,7 @@ fbq('track', 'PageView');
   function mediaUrl(path) { try { var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return null; } }
   // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed)
   function imgUrl(path, w, q) { try { var u = sb.storage.from("avatars").getPublicUrl(path, { transform: { width: w, quality: q || 70 } }).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return mediaUrl(path); } }
+  function avThumb(c, w) { return c.avatarPath ? imgUrl(c.avatarPath, w || 160, 76) : (c.avatarUrl || null); }
   function seedRand(str, salt) { var h = 2166136261 >>> 0; var s = (str || "") + "|" + (salt || ""); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
   function vanityStats(key) {
     var subs = 420 + Math.floor(seedRand(key, "s") * 5200);      // ~420–5.600 assinantes
@@ -1411,7 +1412,7 @@ fbq('track', 'PageView');
 
   function grad(g) { return "linear-gradient(140deg," + g[0] + "," + g[1] + ")"; }
   function avatar(c, cls) {
-    if (c.avatarUrl) { var au = c.avatarPath ? imgUrl(c.avatarPath, 160, 76) : c.avatarUrl; return '<div class="avatar ' + (cls || "") + '" style="background-image:url(\'' + au + '\');background-size:cover;background-position:center"></div>'; }
+    if (c.avatarUrl) { var au = avThumb(c, 160); return '<div class="avatar ' + (cls || "") + '" style="background-image:url(\'' + au + '\');background-size:cover;background-position:center"></div>'; }
     return '<div class="avatar ' + (cls || "") + '" style="background:' + grad(c.color) + '">' + initials(c.name) + '</div>';
   }
   function coverBg(c) { return c.coverUrl ? ("center/cover no-repeat url('" + c.coverUrl + "')") : grad(c.color); }
@@ -1423,7 +1424,7 @@ fbq('track', 'PageView');
     if (!c.hasChat) {
       return '<div class="cc-foot" style="margin-top:0.95rem"><button class="btn btn-primary btn-block btn-sm" data-open="' + c.id + '">' + L("Ver perfil", "View profile", "Ver perfil") + '</button></div>';
     }
-    var avBg = c.avatarUrl ? ("center/cover no-repeat url('" + c.avatarUrl + "')") : grad(c.color);
+    var avBg = c.avatarUrl ? ("center/cover no-repeat url('" + avThumb(c, 90) + "')") : grad(c.color);
     var invite = c.online
       ? (c.name + ' <b>' + L("tá online te esperando", "is online waiting for you", "está en línea esperándote") + '</b> 💬')
       : (c.name + ' ' + L("quer te conhecer — manda a primeira", "wants to meet you — send the first", "quiere conocerte — manda el primero") + ' 💬');
@@ -1453,7 +1454,7 @@ fbq('track', 'PageView');
     return '<div class="stories">' + CREATORS.map(function (c) {
       var seen = state.storiesSeen[c.id];
       var av = c.avatarUrl
-        ? '<div class="av" style="background-image:url(\'' + c.avatarUrl + '\');background-size:cover;background-position:center"></div>'
+        ? '<div class="av" style="background-image:url(\'' + avThumb(c, 130) + '\');background-size:cover;background-position:center"></div>'
         : '<div class="av" style="background:' + grad(c.color) + '">' + initials(c.name) + '</div>';
       return '<div class="story ' + (seen ? "seen" : "") + '" data-story="' + c.id + '"><div class="ring">' + av + '</div><div class="nm">' + c.name.split(" ")[0] + '</div><div class="exp">' + (seen ? "visto" : "expira em " + (3 + c.left % 6) + "h") + '</div></div>';
     }).join("") + '</div>';
