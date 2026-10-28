@@ -79,7 +79,9 @@ Deno.serve(async (req) => {
     let gift = null;
     const gifts = Array.isArray(persona.gift_images) ? persona.gift_images : [];
     const every = persona.gift_every || 4;
-    if (userMsgs % every === 0 && giftIdx < gifts.length) {
+    const firstAt = 2; // primeira foto cedo, pra empolgar ainda no minuto grátis
+    const giftDue = giftIdx === 0 ? (userMsgs >= firstAt) : ((userMsgs - firstAt) % every === 0 && userMsgs > firstAt);
+    if (giftDue && giftIdx < gifts.length) {
       const g = gifts[giftIdx];
       gift = { url: `${SUPABASE_URL}/storage/v1/object/public/avatars/${g.path}`, caption: g.caption || "" };
       giftIdx += 1;
