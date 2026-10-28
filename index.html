@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b27"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b28"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4275,15 +4275,7 @@ fbq('track', 'PageView');
         };
       });
     }
-    function priceBanner(freeNote) {
-      if (document.getElementById("pkg-banner")) return;
-      var txt = freeNote ? L("1 min por minha conta 💜 · depois a partir de $9,90", "1 min on me 💜 · then from $9.90", "1 min va por mi cuenta 💜 · luego desde $9,90")
-                         : L("tempo de conversa a partir de $9,90", "chat time from $9.90", "tiempo de charla desde $9,90");
-      var html = '<div id="pkg-banner" style="background:var(--surface-2,rgba(127,127,127,.08));border:1px solid var(--line);border-radius:12px;padding:.55rem .8rem;margin-bottom:.6rem;font-size:.8rem;display:flex;align-items:center;gap:.5rem">' +
-        '<span>' + txt + '</span><button class="btn btn-ghost btn-sm" id="pkg-see" style="margin-left:auto;white-space:nowrap">' + L("ver pacotes", "see packs", "ver paquetes") + '</button></div>';
-      body.insertAdjacentHTML("afterbegin", html);
-      var see = document.getElementById("pkg-see"); if (see) see.onclick = showMenu;
-    }
+    function priceBanner(freeNote) { /* faixa de preco removida do topo do chat (pedido do Bruno) — os pacotes aparecem quando o tempo acaba */ }
     function showMenu() {
       var h = '<div class="bub her" style="max-width:88%"><div style="font-weight:700;margin-bottom:.45rem">' + L("Quanto mais tempo, mais barato o minuto 😏", "The more time, the cheaper the minute 😏", "Cuanto más tiempo, más barato el minuto 😏") + '</div>' + pkgBtns() + '</div>';
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
