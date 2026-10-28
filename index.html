@@ -2448,6 +2448,10 @@
       '<p class="muted-note" style="margin-top:-0.3rem">Quem sumiu (10d+) ou ficou sem crédito. No MVP é manual: clique pra avisar o time e recuperem no contato. O disparo automático com cupom entra junto com o pagamento.</p>' +
       '<div id="wb-list"><p class="muted-note">Carregando…</p></div></div>';
 
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Chats ao vivo · intervenção humana</h3><button class="btn btn-ghost btn-sm" id="live-refresh">↻ Atualizar</button></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Conversas em andamento. As marcadas 🔴 citaram cancelamento, reembolso, chargeback ou sofrimento — entre, <b>assuma a conversa</b> (o robô para na hora) e fale você mesmo pra resolver e evitar o estorno. Pra ele, continua sendo a modelo.</p>' +
+      '<div id="live-list"><p class="muted-note">Carregando…</p></div></div>';
+
     html += '<div class="card"><div class="card-head"><h3>Campanhas · Brasil × EUA</h3><span class="hint">links pro anúncio</span></div>' +
       '<p class="muted-note" style="margin-top:-0.3rem">Cada link abre o site já na moeda e nos meios de pagamento certos. Use um por público no tráfego pago.</p>' +
       '<div class="ladder">' +
@@ -2540,6 +2544,7 @@
     app.innerHTML = html;
     loadCrm();
     loadWinback();
+    loadLiveChats();
     loadAdminReview();
     loadApplications();
     loadWebhooks();
@@ -3141,6 +3146,96 @@
     });
   }
 
+  function loadLiveChats() {
+    var btn = document.getElementById("live-refresh"); if (btn) btn.onclick = loadLiveChats;
+    if (!sb) return;
+    sb.rpc("admin_live_threads", { p_limit: 80 }).then(function (r) {
+      var box = document.getElementById("live-list"); if (!box) return;
+      if (r.error) { box.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
+      var rows = r.data || [];
+      if (!rows.length) { box.innerHTML = '<p class="muted-note">Nenhuma conversa ainda. As conversas aparecem aqui conforme as pessoas falam com as modelos.</p>'; return; }
+      var flagged = rows.filter(function (x) { return x.flagged; }).length;
+      var h = (flagged ? '<div style="font-size:.82rem;color:#dc2626;margin-bottom:.5rem">🔴 <b>' + flagged + '</b> conversa(s) pedindo atenção agora.</div>' : '');
+      h += '<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Modelo</th><th>Última mensagem</th><th>Status</th><th></th></tr></thead><tbody>';
+      rows.forEach(function (t) {
+        var badge = t.human_mode ? '<span style="font-size:.66rem;color:#2563eb">🙋 você no controle</span>'
+          : t.flagged ? '<span style="font-size:.66rem;color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>'
+          : '<span style="font-size:.66rem;color:var(--mut)">🤖 robô</span>';
+        var snippet = (t.last_msg || '').slice(0, 46);
+        h += '<tr' + (t.flagged ? ' style="background:rgba(220,38,38,.06)"' : '') + '><td><div style="font-weight:600;font-size:.82rem">' + escHtml((t.email || '—').split('@')[0]) + '</div><small style="color:var(--mut)">' + Math.floor((t.balance_sec || 0) / 60) + ' min · ' + (t.user_msgs || 0) + ' msgs</small></td>' +
+          '<td style="font-size:.82rem">' + escHtml(t.creator_key || '') + '</td>' +
+          '<td style="font-size:.8rem;color:var(--mut);max-width:220px">' + escHtml(snippet) + (snippet.length >= 46 ? '…' : '') + '</td>' +
+          '<td>' + badge + '</td>' +
+          '<td><button class="btn ' + (t.flagged || t.human_mode ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '">' + (t.human_mode ? 'Continuar' : 'Entrar') + '</button></td></tr>';
+      });
+      h += '</tbody></table></div><p class="muted-note" style="margin-top:.5rem">' + rows.length + ' conversa(s) · flagadas no topo.</p>';
+      box.innerHTML = h;
+      box.querySelectorAll('[data-interv]').forEach(function (b) { b.onclick = function () { openIntervene(b.getAttribute('data-interv'), b.getAttribute('data-icreator'), b.getAttribute('data-iemail'), b.getAttribute('data-ihuman') === '1'); }; });
+    });
+  }
+  function openIntervene(tid, creatorKey, email, human) {
+    var ipoll = null, shown = 0;
+    var ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem";
+    ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:560px;width:100%;max-height:88vh;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+      '<div style="display:flex;align-items:center;gap:.5rem;padding:.9rem 1rem;border-bottom:1px solid var(--line,#eee)"><div style="flex:1;min-width:0"><b>' + escHtml(creatorKey) + '</b> · <span style="color:var(--mut)">' + escHtml(email || "") + '</span><div id="iv-mode" style="font-size:.72rem"></div></div>' +
+      '<button id="iv-toggle" class="btn btn-sm"></button>' +
+      '<button id="iv-close" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit;margin-left:.3rem">✕</button></div>' +
+      '<div id="iv-body" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.5rem;min-height:240px"><p class="muted-note">Carregando…</p></div>' +
+      '<div style="display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line,#eee)"><input id="iv-text" placeholder="Escreva como a ' + escHtml(creatorKey) + '…" style="flex:1;padding:.6rem .8rem;border:1px solid var(--line,#ddd);border-radius:10px;font-size:.9rem;background:transparent;color:inherit" autocomplete="off"><button id="iv-send" class="btn btn-primary btn-sm">Enviar</button></div></div>';
+    document.body.appendChild(ov);
+    var body = ov.querySelector("#iv-body"), tgl = ov.querySelector("#iv-toggle"), modeEl = ov.querySelector("#iv-mode");
+    function cleanup() { if (ipoll) { clearInterval(ipoll); ipoll = null; } if (ov.parentNode) document.body.removeChild(ov); loadLiveChats(); }
+    ov.onclick = function (e) { if (e.target === ov) cleanup(); };
+    ov.querySelector("#iv-close").onclick = cleanup;
+    function paintMode() {
+      tgl.textContent = human ? '✓ Você no controle · devolver ao robô' : 'Assumir conversa';
+      tgl.className = 'btn btn-sm ' + (human ? 'btn-ghost' : 'btn-primary');
+      modeEl.innerHTML = human ? '<span style="color:#2563eb">🙋 o robô está pausado — você responde</span>' : '<span style="color:var(--mut)">🤖 o robô está respondendo</span>';
+    }
+    paintMode();
+    function sync() {
+      sb.rpc("admin_thread_messages", { p_thread: tid }).then(function (r) {
+        if (r.error) { if (!shown) body.innerHTML = '<p class="muted-note">Erro: ' + escHtml(r.error.message) + '</p>'; return; }
+        var rows = r.data || [];
+        if (!shown) body.innerHTML = "";
+        if (rows.length > shown) {
+          var hh = "";
+          rows.slice(shown).forEach(function (m) {
+            var mine = m.role === "user";
+            var tag = (!mine && m.by_human) ? '<div style="font-size:.6rem;color:#2563eb;margin-bottom:1px">você</div>' : '';
+            hh += '<div style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + ';color:' + (mine ? "inherit" : "#fff") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word">' + escHtml(m.content || "") + '</div></div>';
+          });
+          body.insertAdjacentHTML("beforeend", hh); shown = rows.length; body.scrollTop = body.scrollHeight;
+        } else if (!rows.length && !shown) { body.innerHTML = '<p class="muted-note">Sem mensagens ainda.</p>'; }
+      });
+    }
+    sync(); ipoll = setInterval(sync, 3000);
+    tgl.onclick = function () {
+      var target = !human; tgl.disabled = true;
+      sb.rpc("admin_set_human_mode", { p_thread: tid, p_on: target }).then(function (r) {
+        tgl.disabled = false;
+        if (r.error || (r.data && r.data.error)) { toast("erro ao mudar o modo"); return; }
+        human = target; paintMode();
+      });
+    };
+    function ivSend() {
+      var inp = ov.querySelector("#iv-text"); var v = (inp.value || "").trim(); if (!v) return;
+      var sendBtn = ov.querySelector("#iv-send"); sendBtn.disabled = true;
+      function doIt() {
+        sb.rpc("admin_send_as_creator", { p_thread: tid, p_text: v }).then(function (r) {
+          sendBtn.disabled = false;
+          if (r.error || (r.data && r.data.error)) { toast("não enviou"); return; }
+          inp.value = ""; sync();
+        });
+      }
+      if (!human) { sb.rpc("admin_set_human_mode", { p_thread: tid, p_on: true }).then(function () { human = true; paintMode(); doIt(); }); }
+      else doIt();
+    }
+    ov.querySelector("#iv-send").onclick = ivSend;
+    ov.querySelector("#iv-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); ivSend(); } });
+  }
+
   var WB_TARGETS = [];
   function loadWinback() {
     var box = document.getElementById("wb-list"); if (!box || !sb) return;
@@ -3697,6 +3792,7 @@
     var greeting = persona.greeting || "oi 🌙";
     var first = (c.name || "").split(" ")[0];
     var bal = 0, tick = null, pending = 0;
+    var threadId = null, lastSeenId = 0, poll = null;
     function fmt(sec) { sec = Math.max(0, sec | 0); var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
 
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
@@ -3772,13 +3868,27 @@
       }).catch(function () { setBal(0); showBuy(); });
     });
     sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) {
-      if (!tr.data) { her(greeting); return; }
-      sb.from("chat_messages").select("role,content").eq("thread_id", tr.data.id).order("created_at", { ascending: true }).limit(200).then(function (r) {
+      if (!tr.data) { her(greeting); startPoll(); return; }
+      threadId = tr.data.id;
+      sb.from("chat_messages").select("id,role,content").eq("thread_id", tr.data.id).order("created_at", { ascending: true }).limit(200).then(function (r) {
         var rows = (r.data || []);
-        if (!rows.length) { her(greeting); return; }
-        rows.forEach(function (m2) { m2.role === "user" ? me(m2.content) : her(m2.content); });
+        if (!rows.length) { her(greeting); startPoll(); return; }
+        rows.forEach(function (m2) { if (m2.id > lastSeenId) lastSeenId = m2.id; m2.role === "user" ? me(m2.content) : her(m2.content); });
+        startPoll();
       });
     });
+
+    // recebe mensagens inseridas por um atendente humano (intervenção) sem o usuário perceber a troca
+    function startPoll() {
+      if (poll) return;
+      poll = setInterval(function () {
+        if (!document.body.contains(body)) { clearInterval(poll); poll = null; return; }
+        if (!threadId) { sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) threadId = tr.data.id; }); return; }
+        sb.from("chat_messages").select("id,content,by_human").eq("thread_id", threadId).gt("id", lastSeenId).order("id", { ascending: true }).then(function (r) {
+          (r.data || []).forEach(function (m3) { if (m3.id > lastSeenId) lastSeenId = m3.id; if (m3.by_human) her(m3.content); });
+        });
+      }, 3000);
+    }
 
     var sending = false;
     function doSend() {
@@ -3799,6 +3909,13 @@
           if (d && d.error === "model_error") { note("(o provedor filtrou essa resposta — hora de trocar o motor pro adulto)"); return; }
           if (d && d.error === "no_model_key") { note("(motor sem chave configurada)"); return; }
           note("(não consegui responder agora)"); return;
+        }
+        if (!threadId) sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) threadId = tr.data.id; });
+        if (d.human) { // um atendente assumiu — a resposta vem pelo poll, sem quebrar o clima
+          if (typeof d.balance === "number") setBal(d.balance);
+          if (!tick && bal > 0) startClock();
+          try { document.getElementById("chat-text").focus(); } catch (_) {}
+          return;
         }
         her(d.reply);
         if (!tick && bal > 0) startClock();

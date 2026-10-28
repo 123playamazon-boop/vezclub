@@ -41,9 +41,9 @@ Deno.serve(async (req) => {
     const balance = cred?.seconds_balance ?? 0;
     if (balance <= 0) return json({ error: "no_credit", balance: 0 }, 402);
 
-    let thread = (await admin.from("chat_threads").select("id,user_msgs,gift_idx").eq("user_id", userId).eq("creator_key", creator_key).single()).data;
+    let thread = (await admin.from("chat_threads").select("id,user_msgs,gift_idx,human_mode,flagged").eq("user_id", userId).eq("creator_key", creator_key).single()).data;
     if (!thread) {
-      thread = (await admin.from("chat_threads").insert({ user_id: userId, creator_key }).select("id,user_msgs,gift_idx").single()).data;
+      thread = (await admin.from("chat_threads").insert({ user_id: userId, creator_key }).select("id,user_msgs,gift_idx,human_mode,flagged").single()).data;
     }
 
     const { data: mem } = await admin.from("chat_memory").select("summary").eq("user_id", userId).eq("creator_key", creator_key).single();
@@ -51,6 +51,29 @@ Deno.serve(async (req) => {
     const history = (recent || []).reverse();
 
     await admin.from("chat_messages").insert({ thread_id: thread!.id, user_id: userId, role: "user", content: message });
+
+    // --- deteccao de risco: sinaliza pro time entrar (intervencao humana) ---
+    const low = (message || "").toLowerCase();
+    const RISK = /(charge\s?back|estorno|estornar|reembols|cancel(ar|amento|o|a)|quero meu dinheiro|meu dinheiro de volta|dinheiro de volta|processar|advogad|procon|pol[ií]cia|denunci|fraude|golpe|me enganaram|tô sendo roubad|to sendo roubad)/;
+    const WELL = /(suic[ií]d|me matar|quero morrer|vou me machucar|me machucar|automutila|não aguento mais viver|nao aguento mais viver)/;
+    let flagReason: string | null = null;
+    if (WELL.test(low)) flagReason = "bem-estar";
+    else if (RISK.test(low)) flagReason = "risco de cancelamento/chargeback";
+    if (flagReason && !thread!.flagged) {
+      try {
+        await admin.from("chat_threads").update({ flagged: true, flag_reason: flagReason, flagged_at: new Date().toISOString() }).eq("id", thread!.id);
+        const { data: hooks } = await admin.from("alert_webhooks").select("url").eq("active", true);
+        const title = encodeURIComponent("⚠️ Chat precisa de atenção");
+        const text = encodeURIComponent(`${creator_key}: "${(message || "").slice(0, 90)}" — ${flagReason}`);
+        for (const h of (hooks || [])) { try { await fetch(`${h.url}?title=${title}&text=${text}`, { method: "POST" }); } catch (_) {} }
+      } catch (_) {}
+    }
+
+    // --- modo humano: o robô fica em silêncio; um atendente responde pelo painel ---
+    if (thread!.human_mode) {
+      const { data: credH } = await admin.from("chat_credits").select("seconds_balance").eq("user_id", userId).single();
+      return json({ human: true, balance: credH?.seconds_balance ?? balance });
+    }
 
     const { data: cfg } = await admin.from("app_config").select("key,value").in("key", ["OPENAI_API_KEY", "OPENAI_BASE_URL"]);
     const cfgMap: Record<string, string> = {};
