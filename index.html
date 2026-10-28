@@ -3890,7 +3890,7 @@
 
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
       '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + avatar(c) +
-      '<div><div class="ch-name">' + escHtml(first) + '</div><div class="ch-stat" id="ch-stat">companhia de IA · 18+</div></div>' +
+      '<div><div class="ch-name">' + escHtml(first) + '</div><div class="ch-stat" id="ch-stat">' + L("online agora", "online now", "en línea ahora") + '</div></div>' +
       '<span id="ch-time" style="margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
       '<button class="ch-x" data-close>' + XICON + '</button></div>' +
       '<div class="chat-body" id="chat-body"></div>' +
@@ -4001,7 +4001,7 @@
       sb.functions.invoke("chat", { body: { creator_key: cid, message: v } }).then(function (res) {
         sending = false;
         var sb2 = document.getElementById("chat-send"); if (sb2) sb2.disabled = false;
-        var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = "companhia de IA · 18+";
+        var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = L("online agora", "online now", "en línea ahora");
         var d = res.data, e = res.error;
         if (e || !d || d.error) {
           if (d && d.error === "no_credit") { setBal(0); showBuy(); return; }
