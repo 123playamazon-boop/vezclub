@@ -3946,8 +3946,10 @@
     var threadId = null, lastSeenId = 0, poll = null;
     function fmt(sec) { sec = Math.max(0, sec | 0); var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
 
-    // ---- FAKE-DOOR (MVP): mede intenção de pagamento real sem cobrar ----
+    // ---- FAKE-DOOR (MVP): primeiro acesso grátis, captura e-mail, mede intenção ----
     var FAKE_DOOR = true;
+    var emailDone = false;
+    var EMAIL_TRIAL_SECONDS = 300; // 5 min grátis após o e-mail (limita custo de API)
     var PKG_SETS = {
       A: [{ min: 10, price: 9.9 }, { min: 20, price: 17.9 }, { min: 30, price: 24.9 }, { min: 60, price: 44.9 }],
       B: [{ min: 10, price: 12.9 }, { min: 20, price: 22.9 }, { min: 30, price: 32.9 }, { min: 60, price: 59.9 }]
@@ -3980,21 +3982,48 @@
     }
     var fdPaywallLogged = false;
     function logPaywall() { if (fdPaywallLogged) return; fdPaywallLogged = true; logIntent("paywall_view", { creator_key: cid, variant: FD_VAR }); }
-    function fakeDoorCapture(min, price) {
-      var k = "fd-" + Date.now();
-      var h = '<div class="bub her" style="max-width:92%">' +
-        '<div style="font-weight:700;margin-bottom:.35rem">' + L("Os pagamentos estão abrindo agora 💜", "Payments are opening right now 💜", "Los pagos se están abriendo ahora 💜") + '</div>' +
-        '<div style="font-size:.84rem;opacity:.9;margin-bottom:.6rem">' + L("Me deixa teu contato que eu te chamo no segundo que liberar teu tempo comigo 😏", "Leave me your contact and I'll ping you the second your time with me unlocks 😏", "Déjame tu contacto y te aviso en cuanto se libere tu tiempo conmigo 😏") + '</div>' +
-        '<div style="display:flex;gap:.4rem;flex-wrap:wrap"><input id="' + k + '-c" placeholder="' + L("e-mail ou WhatsApp", "email or WhatsApp", "e-mail o WhatsApp") + '" style="flex:1;min-width:150px;padding:.55rem .7rem;border-radius:10px;border:1px solid var(--line);background:var(--surface-2,rgba(127,127,127,.08));color:inherit;font-size:.85rem" autocomplete="off">' +
-        '<button class="btn btn-primary btn-sm" id="' + k + '-b">' + L("me avisa", "notify me", "avísame") + '</button></div></div>';
-      body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
-      var btn = document.getElementById(k + "-b"), inp = document.getElementById(k + "-c");
-      if (btn) btn.onclick = function () {
+    function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v || ""); }
+    // gate de e-mail: primeiro acesso grátis, mas tem que deixar o e-mail pra continuar (vira lista pra cobrar depois)
+    function emailGate() {
+      logPaywall();
+      var k = "eg-" + Date.now();
+      body.innerHTML = '<div style="padding:1.1rem;text-align:center">' +
+        '<div style="font-weight:800;font-size:1.05rem;margin-bottom:.3rem">' + L("Teu 1º acesso é por minha conta 💜", "Your 1st access is on me 💜", "Tu 1er acceso va por mi cuenta 💜") + '</div>' +
+        '<div class="muted-note" style="margin-bottom:1rem">' + L("Me deixa teu e-mail que eu libero mais um tempo contigo agora — e te aviso das novidades em primeira mão.", "Leave me your email and I'll unlock more time with you right now — and I'll let you know first about what's new.", "Déjame tu e-mail y te libero más tiempo conmigo ahora — y te aviso primero de las novedades.") + '</div>' +
+        '<input id="' + k + '-c" type="email" inputmode="email" placeholder="' + L("teu melhor e-mail", "your best email", "tu mejor e-mail") + '" style="width:100%;box-sizing:border-box;padding:.7rem .8rem;border-radius:12px;border:1px solid var(--line);background:var(--surface-2,rgba(127,127,127,.08));color:inherit;font-size:.95rem;margin-bottom:.5rem" autocomplete="email">' +
+        '<div id="' + k + '-err" style="color:var(--crit,#f85149);font-size:.78rem;min-height:1rem;margin-bottom:.4rem"></div>' +
+        '<button class="btn btn-primary btn-block" id="' + k + '-b">' + L("liberar meu tempo grátis 🔓", "unlock my free time 🔓", "liberar mi tiempo gratis 🔓") + '</button>' +
+        '<div class="muted-note" style="margin-top:.7rem;font-size:.74rem">' + L("Sem cobrança agora. É só pra guardar teu lugar.", "No charge now. Just to save your spot.", "Sin cobro ahora. Solo para guardar tu lugar.") + '</div></div>';
+      var btn = document.getElementById(k + "-b"), inp = document.getElementById(k + "-c"), err = document.getElementById(k + "-err");
+      function submit() {
         var v = (inp && inp.value || "").trim();
-        logIntent("lead_capture", { creator_key: cid, pack: min + "min", price_cents: Math.round(price * 100), currency: "USD", variant: FD_VAR, contact: v });
-        var wrap = btn.closest(".bub");
-        if (wrap) wrap.innerHTML = '<div style="font-weight:700">' + L("Prontinho 💋 te chamo assim que abrir.", "Done 💋 I'll ping you the moment it opens.", "Listo 💋 te aviso en cuanto abra.") + '</div>';
-      };
+        if (!validEmail(v)) { if (err) err.textContent = L("Coloca um e-mail válido 🙂", "Enter a valid email 🙂", "Pon un e-mail válido 🙂"); return; }
+        btn.disabled = true; btn.textContent = L("liberando…", "unlocking…", "liberando…");
+        logIntent("lead_capture", { creator_key: cid, variant: FD_VAR, contact: v });
+        sb.rpc("claim_email_trial_m", { p_creator_key: cid, p_seconds: EMAIL_TRIAL_SECONDS }).then(function (r) {
+          emailDone = true;
+          var d = r && r.data;
+          var nb = (d && typeof d.balance === "number") ? d.balance : 0;
+          if (d && d.granted) {
+            body.innerHTML = "";
+            setBal(nb || EMAIL_TRIAL_SECONDS);
+            note(L("Teu teste é por minha conta 💜 aproveita, tô toda tua agora", "Your test is on me 💜 enjoy, I'm all yours now", "Tu prueba va por mi cuenta 💜 aprovecha, soy toda tuya ahora"));
+            startClock();
+          } else if (nb > 0) { body.innerHTML = ""; setBal(nb); startClock(); }
+          else { showBuy(); } // já usou o grátis do e-mail antes → mostra pacotes
+        }).catch(function () { emailDone = true; showBuy(); });
+      }
+      if (btn) btn.onclick = submit;
+      if (inp) inp.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+      setTimeout(function () { if (inp) inp.focus(); }, 60);
+    }
+    // depois do teste grátis já gasto + e-mail já capturado: só avisa que o pagamento abre em breve
+    function fakeDoorCapture(min, price) {
+      logPaywall();
+      var h = '<div class="bub her" style="max-width:92%">' +
+        '<div style="font-weight:700;margin-bottom:.3rem">' + L("Já anotei teu tempo comigo 💜", "I've noted your time with me 💜", "Ya anoté tu tiempo conmigo 💜") + '</div>' +
+        '<div style="font-size:.84rem;opacity:.9">' + L("Os pagamentos estão abrindo — te chamo no teu e-mail no segundo que liberar, viu? 😏", "Payments are opening — I'll ping your email the second it unlocks, ok? 😏", "Los pagos se están abriendo — te aviso a tu e-mail en cuanto se libere 😏") + '</div></div>';
+      body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
     }
 
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
@@ -4035,6 +4064,8 @@
         b.onclick = function () {
           var _min = +b.getAttribute("data-buytime"), _price = +b.getAttribute("data-price");
           try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_click", meta: { min: _min, price: _price } }); } catch (e) {}
+          // antes do e-mail: o clique vira o gate de e-mail (libera mais tempo grátis). Depois do e-mail: é intenção real de pagar.
+          if (!emailDone) { emailGate(); return; }
           logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
           if (FAKE_DOOR) { fakeDoorCapture(_min, _price); return; }
           purchaseModal({ id: "chattime-" + cid + "-" + _min, title: _min + " min de chat com " + first, price: _price, icon: "call", creator: c.name });
@@ -4063,12 +4094,18 @@
       wirePkgs(body);
     }
     function showBuy() {
+      // primeiro esgotamento + sem e-mail ainda → gate de e-mail (acesso grátis em troca do contato)
+      if (!emailDone) { emailGate(); return; }
+      logPaywall();
       var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">' + L("Seu tempo com a ", "Your time with ", "Tu tiempo con ") + escHtml(first) + L(" acabou", " is up", " se acabó") + '</div><div class="muted-note" style="margin-bottom:.9rem">' + L("Recarregue pra continuar — ela tá te esperando.", "Recharge to keep going — she's waiting for you.", "Recarga para seguir — ella te espera.") + '</div>' + pkgBtns() + '</div>';
       body.innerHTML = h;
       logPaywall();
       try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_view" }); } catch (e) {}
       wirePkgs(body);
     }
+
+    // já deu e-mail antes (nesta modelo)? então não pede de novo
+    try { if (sb && account) sb.from("credit_ledger").select("id").eq("creator_key", cid).eq("reason", "email_trial").limit(1).then(function (lr) { if (lr && lr.data && lr.data.length) emailDone = true; }); } catch (e) {}
 
     sb.from("chat_credits_m").select("seconds_balance").eq("creator_key", cid).maybeSingle().then(function (cr) {
       var b0 = (cr.data && cr.data.seconds_balance) || 0;
