@@ -132,7 +132,7 @@ fbq('track', 'PageView');
   }
 
   * { box-sizing: border-box; min-width: 0; }
-  html { -webkit-text-size-adjust: 100%; overflow-x: hidden; max-width: 100%; }
+  html { -webkit-text-size-adjust: 100%; overflow-x: hidden; max-width: 100%; overscroll-behavior: none; }
   body {
     background: var(--bg);
     color: var(--fg);
@@ -192,7 +192,9 @@ fbq('track', 'PageView');
     .roles button { padding: 0.42rem 0.6rem; }
     .top-actions { gap: 0.35rem; }
     .icon-btn { width: 36px; height: 36px; }
-    /* chat em tela cheia no celular: o WRAPPER e dimensionado pelo visualViewport (teclado iOS nao cobre nem colapsa) */
+    /* teclado iOS: QUALQUER modal e dimensionado pela area visivel (height/transform via JS) e centraliza acima do teclado */
+    .modal-bg.vv-sized { bottom: auto; overflow-y: auto; }
+    /* chat em tela cheia: o wrapper vira a area visivel e o chat preenche ele */
     .modal-bg.chat-open { position: fixed; top: 0; left: 0; right: 0; bottom: auto; height: 100dvh; padding: 0; display: block; z-index: 140; }
     .modal-bg.chat-open .chat-modal { position: absolute; inset: 0; width: 100%; max-width: none; height: 100%; border: 0; border-radius: 0; }
   }
@@ -832,8 +834,8 @@ fbq('track', 'PageView');
   .rc-media img, .rc-media video { cursor: zoom-in; }
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(5,8,16,0.94); display: flex; align-items: center; justify-content: center; padding: 16px; -webkit-user-select: none; user-select: none; }
   .lightbox .lb-wrap { position: relative; max-width: 100%; max-height: 100%; display: flex; }
-  .lightbox img { max-width: 100%; max-height: 92vh; object-fit: contain; border-radius: 10px; -webkit-user-drag: none; }
-  .lightbox .lb-close { position: absolute; top: -6px; right: -6px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .lightbox img { max-width: 92vw; max-height: 82vh; object-fit: contain; border-radius: 10px; -webkit-user-drag: none; }
+  .lightbox .lb-close { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); z-index: 3; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; cursor: pointer; }
   .lightbox .lb-close svg { width: 18px; height: 18px; }
   .lightbox .wm { border-radius: 10px; }
   .lightbox .lb-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.7); font-size: 0.74rem; z-index: 3; }
@@ -888,7 +890,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b18"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b19"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2638,28 +2640,32 @@ fbq('track', 'PageView');
   var _mScrollY = 0;
   try {
     new MutationObserver(function () {
-      var open = modalRoot.childElementCount > 0;
-      var has = document.body.classList.contains("modal-open");
-      if (open && !has) {
-        _mScrollY = window.scrollY || window.pageYOffset || 0;
-        document.body.style.top = (-_mScrollY) + "px";
-        document.body.classList.add("modal-open");
-      } else if (!open && has) {
+      var bg = modalRoot.querySelector(".modal-bg");
+      if (bg && bg !== _vvBg) {
+        // um modal (novo) abriu — trava o fundo uma vez e (re)conecta o ajuste de teclado nesse modal
+        if (!document.body.classList.contains("modal-open")) {
+          _mScrollY = window.scrollY || window.pageYOffset || 0;
+          document.body.style.top = (-_mScrollY) + "px";
+          document.body.classList.add("modal-open");
+        }
+        detachVV(); attachVV(bg);
+      } else if (!bg && document.body.classList.contains("modal-open")) {
         document.body.classList.remove("modal-open");
         document.body.style.top = "";
         try { window.scrollTo(0, _mScrollY); } catch (e) {}
+        detachVV();
       }
     }).observe(modalRoot, { childList: true });
   } catch (e) {}
   /* chat em tela cheia no celular: ancora no visualViewport pra o teclado do iOS nao cobrir o composer */
+  // --- teclado do iOS: dimensiona QUALQUER modal aberto pela area visivel (gate de login, chat, etc) ---
   var _vvFit = null, _vvBg = null, _vvFocusIn = null, _vvTimers = [];
-  function installChatVV() {
+  function attachVV(bg) {
     try {
+      if (!bg) return;
       if (!window.matchMedia("(max-width:560px)").matches) return;
-      var bg = modalRoot.querySelector(".modal-bg");
-      if (!bg || !modalRoot.querySelector(".chat-modal")) return;
       _vvBg = bg;
-      bg.classList.add("chat-open");
+      bg.classList.add("vv-sized");
       var vv = window.visualViewport;
       _vvFit = function () {
         if (vv) {
@@ -2671,13 +2677,13 @@ fbq('track', 'PageView');
       };
       if (vv) { vv.addEventListener("resize", _vvFit); vv.addEventListener("scroll", _vvFit); }
       window.addEventListener("resize", _vvFit);
-      // iOS dispara o resize do teclado com atraso: alguns refits pontuais (sem loop)
-      _vvFocusIn = function () { [60, 200, 400].forEach(function (d) { _vvTimers.push(setTimeout(_vvFit, d)); }); };
+      // iOS dispara o resize do teclado com atraso: refits pontuais (sem loop)
+      _vvFocusIn = function () { [50, 150, 300, 500].forEach(function (d) { _vvTimers.push(setTimeout(_vvFit, d)); }); };
       bg.addEventListener("focusin", _vvFocusIn);
       _vvFit();
     } catch (e) {}
   }
-  function removeChatVV() {
+  function detachVV() {
     try {
       var vv = window.visualViewport;
       if (_vvFit) {
@@ -2689,7 +2695,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     _vvFit = null; _vvBg = null; _vvFocusIn = null; _vvTimers = [];
   }
-  function closeModal() { removeChatVV(); if (chatCh && sb) { try { sb.removeChannel(chatCh); } catch (e) {} chatCh = null; } modalRoot.innerHTML = ""; }
+  function closeModal() { detachVV(); if (chatCh && sb) { try { sb.removeChannel(chatCh); } catch (e) {} chatCh = null; } modalRoot.innerHTML = ""; }
 
   function purchaseModal(opts) {
     var icon = opts.icon === "video" || opts.icon === "vid" ? I.video : opts.icon === "call" ? I.call : I.photo;
@@ -3943,7 +3949,7 @@ fbq('track', 'PageView');
         var un = unreadMap[conv] || 0;
         return '<div class="cl-row" data-cl="' + c.id + '">' + avatar(c) + '<div class="cl-main"><div class="cl-name">' + c.name.split(" ")[0] + '<span class="verif">' + I.verif + '</span></div><div class="cl-last">' + (c.online ? "online agora" : "toque pra conversar") + '</div></div><div class="cl-meta"><div class="cl-time">' + (c.online ? "online" : "há 1h") + '</div>' + (un ? '<div class="cl-unread">' + un + '</div>' : '') + '</div></div>';
       }).join("");
-      modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal"><div class="chat-head"><div class="ch-name" style="font-size:1.05rem">Mensagens</div><button class="ch-x" data-close>' + XICON + '</button></div><div class="chat-body" style="padding:0.4rem 0.9rem;background:var(--surface)"><div class="chat-list">' + rows + '</div></div></div></div>';
+      modalRoot.innerHTML = '<div class="modal-bg chat-open" data-close><div class="modal chat-modal"><div class="chat-head"><div class="ch-name" style="font-size:1.05rem">Mensagens</div><button class="ch-x" data-close>' + XICON + '</button></div><div class="chat-body" style="padding:0.4rem 0.9rem;background:var(--surface)"><div class="chat-list">' + rows + '</div></div></div></div>';
       modalRoot.querySelectorAll(".cl-row").forEach(function (r) { r.onclick = function () { var _cid = r.getAttribute("data-cl"); if (AI_PERSONAS[_cid]) openAiChat(_cid); else openChatThread(_cid); }; });
     }
     if (sb && account) sb.rpc("my_unread").then(function (r) { var map = {}; if (!r.error && r.data) r.data.forEach(function (x) { map[x.conversation_id] = x.n; }); paint(map); });
@@ -3987,7 +3993,7 @@ fbq('track', 'PageView');
     var enabled = account && conv;
     var showTip = account && account.role === "buyer";
     var tipChips = [5, 10, 20, 50].map(function (a) { return '<button data-tip="' + a + '">' + usd(a) + '</button>'; }).join("");
-    modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
+    modalRoot.innerHTML = '<div class="modal-bg chat-open" data-close><div class="modal chat-modal">' +
       '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + peerAvatarHtml + '<div><div class="ch-name">' + escHtml(peerName) + '</div><div class="ch-stat" id="ch-stat">' + escHtml(peerStatus || "") + '</div></div><button class="ch-x" id="ch-safety" aria-label="Denunciar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V4h13l-2 4 2 4H4"/></svg></button><button class="ch-x" data-close>' + XICON + '</button></div>' +
       '<div class="chat-body" id="chat-body"><div class="chat-empty" style="margin:auto;color:var(--faint);font-size:.86rem;text-align:center;padding:2rem 1rem">Carregando…</div></div>' +
       (showTip ? '<div class="tip-row" id="tip-row">' + tipChips + '</div>' : '') +
@@ -3995,7 +4001,6 @@ fbq('track', 'PageView');
       '</div></div>';
     document.getElementById("ch-back").onclick = backFn || openChatList;
     var _sfb = document.getElementById("ch-safety"); if (_sfb) _sfb.onclick = safetyMenu;
-    installChatVV();
     var input = document.getElementById("chat-text");
     function sendBody(v) {
       if (!v || !account || !sb || !conv) return;
@@ -4064,7 +4069,7 @@ fbq('track', 'PageView');
 
     // ---- FAKE-DOOR (MVP): primeiro acesso grátis, captura e-mail, mede intenção ----
     var FAKE_DOOR = true;
-    var emailDone = false;
+    var emailDone = !!(account && account.email); // ja logado = ja temos o e-mail, nao pede de novo
     var EMAIL_TRIAL_SECONDS = 300; // 5 min grátis após o e-mail (limita custo de API)
     function fbt(ev, p) { try { if (window.fbq) fbq("track", ev, p || {}); } catch (e) {} }
     function clar() { try { if (window.clarity) window.clarity.apply(null, arguments); } catch (e) {} }
@@ -4146,7 +4151,7 @@ fbq('track', 'PageView');
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
     }
 
-    modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
+    modalRoot.innerHTML = '<div class="modal-bg chat-open" data-close><div class="modal chat-modal">' +
       '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + avatar(c) +
       '<div><div class="ch-name">' + escHtml(first) + '</div><div class="ch-stat" id="ch-stat">' + L("online agora", "online now", "en línea ahora") + '</div></div>' +
       '<span style="font-size:9px;color:var(--faint);align-self:flex-start;margin-left:auto">' + BUILD + '</span>' +
@@ -4306,7 +4311,6 @@ fbq('track', 'PageView');
     document.getElementById("chat-send").onclick = doSend;
     document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
     document.getElementById("ch-back").onclick = function () { closeModal(); };
-    installChatVV();
     // no mobile nao foca automatico (evita o teclado abrir na hora e baguncar o layout); o usuario toca no campo
     try { if (!window.matchMedia("(max-width:560px)").matches) document.getElementById("chat-text").focus(); } catch (e) {}
   }
