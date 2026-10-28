@@ -199,7 +199,8 @@ fbq('track', 'PageView');
   @media (max-width: 560px) { .feed-grid { grid-template-columns: 1fr; } }
 
   .creator-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
-  .cc-cover { aspect-ratio: 4 / 3; max-height: 200px; background-size: cover !important; background-position: center !important; position: relative; }
+  .cc-cover { aspect-ratio: 4 / 3; max-height: 200px; background-size: cover !important; background-position: center !important; position: relative; overflow: hidden; }
+  .cc-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
   .cc-body { position: relative; z-index: 2; padding: 0 1rem 1rem; margin-top: -30px; display: flex; flex-direction: column; gap: 0.1rem; }
   .avatar { width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; border: 3px solid var(--surface); box-shadow: var(--shadow); }
   .cc-name { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
@@ -1412,6 +1413,7 @@ fbq('track', 'PageView');
     return '<div class="avatar ' + (cls || "") + '" style="background:' + grad(c.color) + '">' + initials(c.name) + '</div>';
   }
   function coverBg(c) { return c.coverUrl ? ("center/cover no-repeat url('" + c.coverUrl + "')") : grad(c.color); }
+  function coverImg(c) { return c.coverUrl ? '<img class="cc-cover-img" src="' + c.coverUrl + '" loading="lazy" decoding="async" alt="">' : ''; }
 
   function unreadTotal() { var n = 0; for (var k in state.unread) n += state.unread[k] || 0; return n; }
   function liveCount(c) { return Math.round(c.subs * 0.012) + (c.online ? 8 : 2); }
@@ -1764,7 +1766,7 @@ fbq('track', 'PageView');
         var _fts = c.freeTiles.slice(0, 3);
         strip = _fts.map(function (ft, i) {
           var u = mediaUrl(ft.path);
-          return u ? '<div class="mini-tile has-img"><img src="' + u + '" alt="">' + (i === 0 ? '<span class="mini-free">' + L("Grátis", "Free", "Gratis") + '</span>' : '') + '</div>'
+          return u ? '<div class="mini-tile has-img"><img src="' + u + '" loading="lazy" decoding="async" alt="">' + (i === 0 ? '<span class="mini-free">' + L("Grátis", "Free", "Gratis") + '</span>' : '') + '</div>'
                    : '<div class="mini-tile" style="background:' + grad(c.color) + '"></div>';
         }).join("");
         // sem miniatura quebrada: a faixa se ajusta ao nº de fotos que a modelo tem
@@ -1782,7 +1784,7 @@ fbq('track', 'PageView');
         ? '<div class="cc-status on"><span class="live-dot"></span>' + L("Online agora · te respondo na hora", "Online now · I reply right away", "En línea ahora · te respondo al instante") + '</div>'
         : '<div class="cc-status off">' + I.clock + ' ' + L("Volto já · deixa sua mensagem", "Back soon · leave me a message", "Vuelvo pronto · déjame tu mensaje") + '</div>';
       html += '<div class="creator-card" data-creator="' + c.id + '" data-online="' + (c.online ? "1" : "0") + '" data-tags="' + escHtml((c.tag || "").toLowerCase()) + '" data-s="' + escHtml((c.name + " " + c.handle + " " + (c.tag || "") + " " + (c.hook || "")).toLowerCase()) + '">' +
-        '<div class="cc-cover" style="background:' + coverBg(c) + '">' + ribbon + (c.online ? '<div class="pf-online" style="top:10px;right:10px;font-size:0.66rem;padding:0.22rem 0.52rem"><span class="live"></span>online</div>' : '') + '</div>' +
+        '<div class="cc-cover" style="background:' + grad(c.color) + '">' + coverImg(c) + ribbon + (c.online ? '<div class="pf-online" style="top:10px;right:10px;font-size:0.66rem;padding:0.22rem 0.52rem"><span class="live"></span>online</div>' : '') + '</div>' +
         '<div class="cc-body">' +
           avatar(c) +
           '<div class="cc-name">' + c.name + '<span class="verif">' + I.verif + '</span></div>' +
