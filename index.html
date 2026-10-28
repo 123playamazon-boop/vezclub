@@ -2456,6 +2456,10 @@
       '<p class="muted-note" style="margin-top:-0.3rem">Qual modelo engaja mais — conversas, mensagens, minutos grátis dados e minutos consumidos. Ranqueado por quem mais prende no chat. A receita em R$/US$ entra junto com o pagamento (cada compra já fica marcada por modelo).</p>' +
       '<div id="ms-list"><p class="muted-note">Carregando…</p></div></div>';
 
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Teste de pagamento (fake-door)</h3><button class="btn btn-ghost btn-sm" id="fd-refresh">↻ Atualizar</button></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">MVP sem cobrar: mede quem chegou no paywall, quem <b>clicou em comprar</b> (intenção real de pagar), qual pacote puxa mais e o teste A/B de preço. Os contatos capturados viram sua lista de espera de pagantes.</p>' +
+      '<div id="fd-list"><p class="muted-note">Carregando…</p></div></div>';
+
     html += '<div class="card"><div class="card-head"><h3>Campanhas · Brasil × EUA</h3><span class="hint">links pro anúncio</span></div>' +
       '<p class="muted-note" style="margin-top:-0.3rem">Cada link abre o site já na moeda e nos meios de pagamento certos. Use um por público no tráfego pago.</p>' +
       '<div class="ladder">' +
@@ -2550,6 +2554,7 @@
     loadWinback();
     loadLiveChats();
     loadModelStats();
+    loadFakeDoor();
     loadAdminReview();
     loadApplications();
     loadWebhooks();
@@ -3170,6 +3175,59 @@
           '<td class="num">' + mins(m.sec_active) + ' min</td></tr>';
       });
       h += '</tbody></table></div>';
+      box.innerHTML = h;
+    });
+  }
+  function loadFakeDoor() {
+    var btn = document.getElementById("fd-refresh"); if (btn) btn.onclick = loadFakeDoor;
+    if (!sb) return;
+    sb.rpc("admin_intent_stats").then(function (r) {
+      var box = document.getElementById("fd-list"); if (!box) return;
+      if (r.error) { box.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
+      var d = r.data || {};
+      var t = d.totals || {};
+      var views = t.paywall_view || 0, clicks = t.buy_click || 0, leads = t.lead_capture || 0;
+      var rate = views > 0 ? Math.round(clicks / views * 1000) / 10 : 0;
+      function money(c) { return c == null ? "—" : "$" + (c / 100).toFixed(2); }
+      var h = '<div class="ms-kpis" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">' +
+        '<div style="flex:1;min-width:120px;background:var(--surface-2,rgba(127,127,127,.08));border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem"><div style="font-size:1.5rem;font-weight:800">' + views + '</div><div class="muted-note">viram o paywall</div></div>' +
+        '<div style="flex:1;min-width:120px;background:var(--surface-2,rgba(127,127,127,.08));border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem"><div style="font-size:1.5rem;font-weight:800;color:var(--good,#3fb950)">' + clicks + '</div><div class="muted-note">clicaram em comprar</div></div>' +
+        '<div style="flex:1;min-width:120px;background:var(--surface-2,rgba(127,127,127,.08));border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem"><div style="font-size:1.5rem;font-weight:800">' + rate + '%</div><div class="muted-note">intenção de compra</div></div>' +
+        '<div style="flex:1;min-width:120px;background:var(--surface-2,rgba(127,127,127,.08));border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem"><div style="font-size:1.5rem;font-weight:800">' + leads + '</div><div class="muted-note">contatos (lista de espera)</div></div>' +
+        '</div>';
+
+      var bv = d.by_variant || [];
+      if (bv.length) {
+        h += '<div style="font-weight:700;margin:.3rem 0 .5rem">Teste A/B de preço</div><div class="table-wrap"><table><thead><tr><th>Variante</th><th>Preço</th><th class="num">Viram</th><th class="num">Clicaram</th><th class="num">Intenção</th></tr></thead><tbody>';
+        bv.forEach(function (v) {
+          var vr = (v.paywall_view || 0) > 0 ? Math.round((v.buy_click || 0) / v.paywall_view * 1000) / 10 : 0;
+          h += '<tr><td><b>' + escHtml(v.variant || "—") + '</b></td><td>' + money(v.price_cents) + (v.currency && v.currency !== "USD" ? " " + escHtml(v.currency) : "") + '</td><td class="num">' + (v.paywall_view || 0) + '</td><td class="num"><b>' + (v.buy_click || 0) + '</b></td><td class="num">' + vr + '%</td></tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+
+      var bp = d.by_pack || [];
+      if (bp.length) {
+        h += '<div style="font-weight:700;margin:1rem 0 .5rem">Pacote mais clicado</div><div class="table-wrap"><table><thead><tr><th>Pacote</th><th class="num">Cliques</th></tr></thead><tbody>';
+        bp.forEach(function (p, i) { h += '<tr><td>' + (i === 0 ? '🏆 ' : '') + escHtml(p.pack) + '</td><td class="num"><b>' + (p.buy_click || 0) + '</b></td></tr>'; });
+        h += '</tbody></table></div>';
+      }
+
+      var bc = d.by_creator || [];
+      if (bc.length) {
+        h += '<div style="font-weight:700;margin:1rem 0 .5rem">Intenção por modelo</div><div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Viram</th><th class="num">Clicaram</th></tr></thead><tbody>';
+        bc.forEach(function (cc, i) { h += '<tr><td>' + (i === 0 && (cc.buy_click || 0) > 0 ? '🏆 ' : '') + escHtml(cc.creator_key) + '</td><td class="num">' + (cc.paywall_view || 0) + '</td><td class="num"><b>' + (cc.buy_click || 0) + '</b></td></tr>'; });
+        h += '</tbody></table></div>';
+      }
+
+      var lds = d.leads || [];
+      if (lds.length) {
+        h += '<div style="font-weight:700;margin:1rem 0 .5rem">Lista de espera (' + lds.length + ')</div><div class="table-wrap"><table><thead><tr><th>Contato</th><th>Modelo</th><th>Pacote</th></tr></thead><tbody>';
+        lds.forEach(function (l) { h += '<tr><td style="font-size:.82rem">' + escHtml(l.contact || "—") + '</td><td>' + escHtml(l.creator_key || "—") + '</td><td>' + escHtml(l.pack || "—") + '</td></tr>'; });
+        h += '</tbody></table></div>';
+      }
+
+      if (!views && !clicks && !leads) h = '<p class="muted-note">Sem dados ainda. Os números aparecem assim que alguém usar o minuto grátis e bater no paywall.</p>';
       box.innerHTML = h;
     });
   }
@@ -3888,6 +3946,57 @@
     var threadId = null, lastSeenId = 0, poll = null;
     function fmt(sec) { sec = Math.max(0, sec | 0); var m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
 
+    // ---- FAKE-DOOR (MVP): mede intenção de pagamento real sem cobrar ----
+    var FAKE_DOOR = true;
+    var PKG_SETS = {
+      A: [{ min: 10, price: 9.9 }, { min: 20, price: 17.9 }, { min: 30, price: 24.9 }, { min: 60, price: 44.9 }],
+      B: [{ min: 10, price: 12.9 }, { min: 20, price: 22.9 }, { min: 30, price: 32.9 }, { min: 60, price: 59.9 }]
+    };
+    function fdVariant() {
+      try {
+        var id = (account && account.id) || localStorage.getItem("vez_anon") || "";
+        if (!id) { id = "a" + Math.random().toString(36).slice(2); try { localStorage.setItem("vez_anon", id); } catch (e) {} }
+        var h = 0; for (var i = 0; i < id.length; i++) { h = (h * 31 + id.charCodeAt(i)) >>> 0; }
+        return (h % 2) ? "B" : "A";
+      } catch (e) { return "A"; }
+    }
+    var FD_VAR = fdVariant();
+    function logIntent(type, ctx) {
+      ctx = ctx || {};
+      try {
+        if (!sb) return;
+        sb.from("intent_events").insert({
+          user_id: (account && account.id) || null,
+          creator_key: ctx.creator_key || null,
+          event_type: type,
+          pack: ctx.pack || null,
+          price_cents: (ctx.price_cents != null ? ctx.price_cents : null),
+          currency: ctx.currency || "USD",
+          variant: ctx.variant || null,
+          contact: ctx.contact || null,
+          meta: ctx.meta || null
+        });
+      } catch (e) {}
+    }
+    var fdPaywallLogged = false;
+    function logPaywall() { if (fdPaywallLogged) return; fdPaywallLogged = true; logIntent("paywall_view", { creator_key: cid, variant: FD_VAR }); }
+    function fakeDoorCapture(min, price) {
+      var k = "fd-" + Date.now();
+      var h = '<div class="bub her" style="max-width:92%">' +
+        '<div style="font-weight:700;margin-bottom:.35rem">' + L("Os pagamentos estão abrindo agora 💜", "Payments are opening right now 💜", "Los pagos se están abriendo ahora 💜") + '</div>' +
+        '<div style="font-size:.84rem;opacity:.9;margin-bottom:.6rem">' + L("Me deixa teu contato que eu te chamo no segundo que liberar teu tempo comigo 😏", "Leave me your contact and I'll ping you the second your time with me unlocks 😏", "Déjame tu contacto y te aviso en cuanto se libere tu tiempo conmigo 😏") + '</div>' +
+        '<div style="display:flex;gap:.4rem;flex-wrap:wrap"><input id="' + k + '-c" placeholder="' + L("e-mail ou WhatsApp", "email or WhatsApp", "e-mail o WhatsApp") + '" style="flex:1;min-width:150px;padding:.55rem .7rem;border-radius:10px;border:1px solid var(--line);background:var(--surface-2,rgba(127,127,127,.08));color:inherit;font-size:.85rem" autocomplete="off">' +
+        '<button class="btn btn-primary btn-sm" id="' + k + '-b">' + L("me avisa", "notify me", "avísame") + '</button></div></div>';
+      body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
+      var btn = document.getElementById(k + "-b"), inp = document.getElementById(k + "-c");
+      if (btn) btn.onclick = function () {
+        var v = (inp && inp.value || "").trim();
+        logIntent("lead_capture", { creator_key: cid, pack: min + "min", price_cents: Math.round(price * 100), currency: "USD", variant: FD_VAR, contact: v });
+        var wrap = btn.closest(".bub");
+        if (wrap) wrap.innerHTML = '<div style="font-weight:700">' + L("Prontinho 💋 te chamo assim que abrir.", "Done 💋 I'll ping you the moment it opens.", "Listo 💋 te aviso en cuanto abra.") + '</div>';
+      };
+    }
+
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
       '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + avatar(c) +
       '<div><div class="ch-name">' + escHtml(first) + '</div><div class="ch-stat" id="ch-stat">' + L("online agora", "online now", "en línea ahora") + '</div></div>' +
@@ -3914,7 +4023,7 @@
     function me(t) { body.insertAdjacentHTML("beforeend", '<div class="bub me">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
 
-    var PKGS = [{ min: 10, price: 9.9 }, { min: 20, price: 17.9 }, { min: 30, price: 24.9 }, { min: 60, price: 44.9 }];
+    var PKGS = PKG_SETS[FD_VAR] || PKG_SETS.A;
     function pkgBtns() {
       return PKGS.map(function (p) {
         var tagp = p.min === 60 ? ' · ' + L('melhor', 'best', 'mejor') : (p.min === 10 ? ' · ' + L('pra começar', 'to start', 'para empezar') : '');
@@ -3924,8 +4033,11 @@
     function wirePkgs(scope) {
       scope.querySelectorAll("[data-buytime]").forEach(function (b) {
         b.onclick = function () {
-          try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_click", meta: { min: +b.getAttribute("data-buytime"), price: +b.getAttribute("data-price") } }); } catch (e) {}
-          purchaseModal({ id: "chattime-" + cid + "-" + b.getAttribute("data-buytime"), title: b.getAttribute("data-buytime") + " min de chat com " + first, price: +b.getAttribute("data-price"), icon: "call", creator: c.name });
+          var _min = +b.getAttribute("data-buytime"), _price = +b.getAttribute("data-price");
+          try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_click", meta: { min: _min, price: _price } }); } catch (e) {}
+          logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
+          if (FAKE_DOOR) { fakeDoorCapture(_min, _price); return; }
+          purchaseModal({ id: "chattime-" + cid + "-" + _min, title: _min + " min de chat com " + first, price: _price, icon: "call", creator: c.name });
         };
       });
     }
@@ -3945,6 +4057,7 @@
     }
     function showOpenPacks() {
       if (document.getElementById("open-packs")) return;
+      logPaywall();
       var h = '<div id="open-packs" class="bub her" style="max-width:92%"><div style="font-weight:700;margin-bottom:.3rem">' + L("Seu 1º minuto é por minha conta 💜", "Your 1st minute is on me 💜", "Tu 1er minuto va por mi cuenta 💜") + '</div><div style="font-size:.82rem;margin-bottom:.5rem;opacity:.85">' + L("Depois é só escolher seu tempo comigo 👇", "After that, just pick your time with me 👇", "Después solo elige tu tiempo conmigo 👇") + '</div>' + pkgBtns() + '</div>';
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
       wirePkgs(body);
@@ -3952,6 +4065,7 @@
     function showBuy() {
       var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">' + L("Seu tempo com a ", "Your time with ", "Tu tiempo con ") + escHtml(first) + L(" acabou", " is up", " se acabó") + '</div><div class="muted-note" style="margin-bottom:.9rem">' + L("Recarregue pra continuar — ela tá te esperando.", "Recharge to keep going — she's waiting for you.", "Recarga para seguir — ella te espera.") + '</div>' + pkgBtns() + '</div>';
       body.innerHTML = h;
+      logPaywall();
       try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_view" }); } catch (e) {}
       wirePkgs(body);
     }
