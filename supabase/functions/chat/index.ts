@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     const { data: persona } = await admin.from("chat_personas").select("*").eq("creator_key", creator_key).eq("active", true).single();
     if (!persona) return json({ error: "persona_not_found" }, 404);
 
-    const { data: cred } = await admin.from("chat_credits").select("seconds_balance").eq("user_id", userId).single();
+    const { data: cred } = await admin.from("chat_credits_m").select("seconds_balance").eq("user_id", userId).eq("creator_key", creator_key).maybeSingle();
     const balance = cred?.seconds_balance ?? 0;
     if (balance <= 0) return json({ error: "no_credit", balance: 0 }, 402);
 
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     // --- modo humano: o robô fica em silêncio; um atendente responde pelo painel ---
     if (thread!.human_mode) {
-      const { data: credH } = await admin.from("chat_credits").select("seconds_balance").eq("user_id", userId).single();
+      const { data: credH } = await admin.from("chat_credits_m").select("seconds_balance").eq("user_id", userId).eq("creator_key", creator_key).maybeSingle();
       return json({ human: true, balance: credH?.seconds_balance ?? balance });
     }
 
@@ -113,8 +113,10 @@ Deno.serve(async (req) => {
 
     const cost = persona.credit_cost_per_msg ?? 20;
     const newBal = Math.max(0, balance - cost);
-    await admin.from("chat_credits").update({ seconds_balance: newBal, updated_at: new Date().toISOString() }).eq("user_id", userId);
-    await admin.from("credit_ledger").insert({ user_id: userId, delta_seconds: -cost, reason: "chat" });
+    if (cost > 0) {
+      await admin.from("chat_credits_m").update({ seconds_balance: newBal, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("creator_key", creator_key);
+      await admin.from("credit_ledger").insert({ user_id: userId, delta_seconds: -cost, reason: "chat", creator_key });
+    }
 
     return json({ reply, balance: newBal, gift });
   } catch (e) {

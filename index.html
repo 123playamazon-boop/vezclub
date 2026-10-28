@@ -3873,7 +3873,7 @@
     var body = document.getElementById("chat-body");
     var timeEl = document.getElementById("ch-time");
     function setBal(sec) { bal = Math.max(0, sec | 0); timeEl.textContent = "⏱ " + fmt(bal); }
-    function flush() { if (pending > 0) { var pp = pending; pending = 0; sb.rpc("chat_consume", { p_seconds: pp }).then(function (r) { if (r && typeof r.data === "number" && r.data < bal) setBal(r.data); }); } }
+    function flush() { if (pending > 0) { var pp = pending; pending = 0; sb.rpc("chat_consume_m", { p_creator_key: cid, p_seconds: pp }).then(function (r) { if (r && typeof r.data === "number" && r.data < bal) setBal(r.data); }); } }
     function startClock() {
       if (tick) return;
       tick = setInterval(function () {
@@ -3929,11 +3929,11 @@
       wirePkgs(body);
     }
 
-    sb.from("chat_credits").select("seconds_balance").maybeSingle().then(function (cr) {
+    sb.from("chat_credits_m").select("seconds_balance").eq("creator_key", cid).maybeSingle().then(function (cr) {
       var b0 = (cr.data && cr.data.seconds_balance) || 0;
       if (b0 > 0) { setBal(b0); priceBanner(false); startClock(); return; }
-      // sem saldo: oferece 1 minuto grátis, uma vez por pessoa (fisga antes de cobrar)
-      sb.rpc("claim_free_trial", { p_seconds: 60 }).then(function (r) {
+      // sem saldo PRA ESTA MODELO: oferece 1 minuto grátis, uma vez por modelo (fisga antes de cobrar)
+      sb.rpc("claim_free_trial_m", { p_creator_key: cid, p_seconds: 60 }).then(function (r) {
         var d = r && r.data;
         if (d && d.granted) { setBal(d.balance || 60); priceBanner(true); note(L("Ganhou 1 minuto comigo — aproveita 😏", "You got 1 minute with me — enjoy 😏", "Ganaste 1 minuto conmigo — aprovecha 😏")); setTimeout(showOpenPacks, 1200); startClock(); }
         else { setBal((d && d.balance) || 0); showBuy(); }
