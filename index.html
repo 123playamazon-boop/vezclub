@@ -1052,6 +1052,8 @@ fbq('track', 'PageView');
 
   var IMG_VER = "4"; // bump quando trocar imagens de modelo pra furar o cache (max-age 1h)
   function mediaUrl(path) { try { var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return null; } }
+  // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed)
+  function imgUrl(path, w, q) { try { var u = sb.storage.from("avatars").getPublicUrl(path, { transform: { width: w, quality: q || 70 } }).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return mediaUrl(path); } }
   function seedRand(str, salt) { var h = 2166136261 >>> 0; var s = (str || "") + "|" + (salt || ""); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
   function vanityStats(key) {
     var subs = 420 + Math.floor(seedRand(key, "s") * 5200);      // ~420–5.600 assinantes
@@ -1059,12 +1061,12 @@ fbq('track', 'PageView');
     return { subs: subs, likes: likes };
   }
   function buildCreatorFromDb(row) {
-    if (DEMO[row.key]) { var d = DEMO[row.key]; d.ai = !!row.is_ai; d.hasChat = (row.has_chat !== false); d.hasSub = (row.has_subscription !== false); if (row.avatar_path) d.avatarUrl = mediaUrl(row.avatar_path); if (row.cover_path) d.coverUrl = mediaUrl(row.cover_path); return d; }
+    if (DEMO[row.key]) { var d = DEMO[row.key]; d.ai = !!row.is_ai; d.hasChat = (row.has_chat !== false); d.hasSub = (row.has_subscription !== false); if (row.avatar_path) { d.avatarUrl = mediaUrl(row.avatar_path); d.avatarPath = row.avatar_path; } if (row.cover_path) { d.coverUrl = mediaUrl(row.cover_path); d.coverPath = row.cover_path; } return d; }
     var color = [row.color1 || "#2f6bff", row.color2 || "#7a3cff"];
     var vs = vanityStats(row.key);
     var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: row.tag || "", color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: row.hook || "", story: row.hook || "", interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: row.hook || "Entra no meu mundo.", stack: ["Meu feed completo", "Conteúdo novo toda semana", "Chat direto comigo", "Desconto em tudo"], bonus: ["Pack de boas-vindas"], guarantee: "7 dias de garantia.", left: 20, fans: [] };
-    if (row.avatar_path) c.avatarUrl = mediaUrl(row.avatar_path);
-    if (row.cover_path) c.coverUrl = mediaUrl(row.cover_path);
+    if (row.avatar_path) { c.avatarUrl = mediaUrl(row.avatar_path); c.avatarPath = row.avatar_path; }
+    if (row.cover_path) { c.coverUrl = mediaUrl(row.cover_path); c.coverPath = row.cover_path; }
     c.hasChat = (row.has_chat !== false);
     c.hasSub = (row.has_subscription !== false);
     c.tiles = mkTiles(c.id, c.color);
@@ -1409,11 +1411,11 @@ fbq('track', 'PageView');
 
   function grad(g) { return "linear-gradient(140deg," + g[0] + "," + g[1] + ")"; }
   function avatar(c, cls) {
-    if (c.avatarUrl) return '<div class="avatar ' + (cls || "") + '" style="background-image:url(\'' + c.avatarUrl + '\');background-size:cover;background-position:center"></div>';
+    if (c.avatarUrl) { var au = c.avatarPath ? imgUrl(c.avatarPath, 160, 76) : c.avatarUrl; return '<div class="avatar ' + (cls || "") + '" style="background-image:url(\'' + au + '\');background-size:cover;background-position:center"></div>'; }
     return '<div class="avatar ' + (cls || "") + '" style="background:' + grad(c.color) + '">' + initials(c.name) + '</div>';
   }
   function coverBg(c) { return c.coverUrl ? ("center/cover no-repeat url('" + c.coverUrl + "')") : grad(c.color); }
-  function coverImg(c) { return c.coverUrl ? '<img class="cc-cover-img" src="' + c.coverUrl + '" loading="lazy" decoding="async" alt="">' : ''; }
+  function coverImg(c) { var u = c.coverPath ? imgUrl(c.coverPath, 480, 72) : c.coverUrl; return u ? '<img class="cc-cover-img" src="' + u + '" loading="lazy" decoding="async" alt="">' : ''; }
 
   function unreadTotal() { var n = 0; for (var k in state.unread) n += state.unread[k] || 0; return n; }
   function liveCount(c) { return Math.round(c.subs * 0.012) + (c.online ? 8 : 2); }
@@ -1765,7 +1767,7 @@ fbq('track', 'PageView');
       if (c.freeTiles && c.freeTiles.length) {
         var _fts = c.freeTiles.slice(0, 3);
         strip = _fts.map(function (ft, i) {
-          var u = mediaUrl(ft.path);
+          var u = imgUrl(ft.path, 320, 64);
           return u ? '<div class="mini-tile has-img"><img src="' + u + '" loading="lazy" decoding="async" alt="">' + (i === 0 ? '<span class="mini-free">' + L("Grátis", "Free", "Gratis") + '</span>' : '') + '</div>'
                    : '<div class="mini-tile" style="background:' + grad(c.color) + '"></div>';
         }).join("");
