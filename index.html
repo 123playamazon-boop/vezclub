@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b30"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b31"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4867,7 +4867,7 @@ fbq('track', 'PageView');
       if (q.get("paid") === "1") {
         var ck = q.get("ck") || "", sid = q.get("session_id") || "";
         try { history.replaceState(null, "", location.pathname); } catch (e) {}
-        function done() { toast(L("Pagamento confirmado! Teu tempo foi liberado 💜", "Payment confirmed! Your time is unlocked 💜", "¡Pago confirmado! Tu tiempo fue liberado 💜")); if (ck && account) setTimeout(function () { try { openAiChat(ck); } catch (e) {} }, 400); }
+        function done() { try { clar("event", "purchase"); clar("set", "funnel_stage", "paid"); if (ck) clar("set", "modelo", ck); } catch (e) {} try { fbt("Purchase", { content_category: "chat_credit", content_name: ck || "" }); } catch (e) {} toast(L("Pagamento confirmado! Teu tempo foi liberado 💜", "Payment confirmed! Your time is unlocked 💜", "¡Pago confirmado! Tu tiempo fue liberado 💜")); if (ck && account) setTimeout(function () { try { openAiChat(ck); } catch (e) {} }, 400); }
         // confirma o pagamento no servidor (credita o tempo) e so entao abre o chat
         if (sid && sb) { sb.functions.invoke("stripe_webhook", { body: { session_id: sid } }).then(done).catch(done); }
         else done();
