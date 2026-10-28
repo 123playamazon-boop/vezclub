@@ -1050,7 +1050,7 @@ fbq('track', 'PageView');
     }
   };
 
-  var IMG_VER = "6"; // bump quando trocar imagens de modelo pra furar o cache (max-age 1h)
+  var IMG_VER = "7"; // bump quando trocar imagens de modelo pra furar o cache (max-age 1h)
   function mediaUrl(path) { try { var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return null; } }
   // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed)
   function imgUrl(path, w, q) { try { var u = sb.storage.from("avatars").getPublicUrl(path, { transform: { width: w, quality: q || 70 } }).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return mediaUrl(path); } }
