@@ -1942,8 +1942,8 @@
     if (c.hasSub) html += '<div class="pf-section"><div class="pf-h">' + I.star + ' ' + L("Quer mais? Suba de nível", "Want more? Level up", "¿Quieres más? Sube de nivel") + '</div>' +
       '<div class="fans-grid">' + tierCard("vip", vipAmt, false) + tierCard("intimo", intAmt, true) + '</div></div>';
 
-    // daily drop (appointment + alert)
-    html += '<div class="pf-section"><div class="drop">' + I.bolt + '<span><b>' + L("Novo drop todo dia às 21h.", "New drop every day at 9pm.", "Nuevo drop cada día a las 21h.") + '</b> ' + L("Ative o alerta pra ser o primeiro a ver.", "Turn on alerts to be first to see it.", "Activa el alerta para ser el primero en verlo.") + '</span><button class="btn btn-ghost btn-sm" data-notif style="margin-left:auto;flex:none;white-space:nowrap">' + I.bolt + ' ' + L("Me avisa", "Notify me", "Avísame") + '</button></div></div>';
+    // daily drop (appointment + alert) — linguagem de conteúdo, escondido no funil de chat
+    if (!chatOnly) html += '<div class="pf-section"><div class="drop">' + I.bolt + '<span><b>' + L("Novo drop todo dia às 21h.", "New drop every day at 9pm.", "Nuevo drop cada día a las 21h.") + '</b> ' + L("Ative o alerta pra ser o primeiro a ver.", "Turn on alerts to be first to see it.", "Activa el alerta para ser el primero en verlo.") + '</span><button class="btn btn-ghost btn-sm" data-notif style="margin-left:auto;flex:none;white-space:nowrap">' + I.bolt + ' ' + L("Me avisa", "Notify me", "Avísame") + '</button></div></div>';
 
     // mystery gift (variable reward)
     var gifted = state.giftClaimed[c.id];
