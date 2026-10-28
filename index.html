@@ -1824,6 +1824,7 @@
     var c = CREATORS.find(function (x) { return x.id === state.creatorId; });
     if (!c) { state.view = "feed"; return renderFeed(); }
     var subbed = state.subscribed[c.id];
+    var chatOnly = !!AI_PERSONAS[c.id]; // modelo de IA = foco 100% no chat (sem loja de packs)
 
     function st(n, l) { return '<div><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
     function subBtn(block) {
@@ -1873,6 +1874,17 @@
     }
     }
 
+    // promessa do chat (modelos de IA): fotos chegam na conversa, conforme ela flui — segura a pessoa no chat
+    if (chatOnly) {
+      html += '<div class="pf-section"><div style="background:linear-gradient(135deg,' + (c.color1 || '#a855f7') + ',' + (c.color2 || '#ec4899') + ');color:#fff;border-radius:16px;padding:1.1rem 1.2rem;box-shadow:0 10px 30px rgba(0,0,0,.18)">' +
+        '<div style="font-weight:800;font-size:1.02rem;margin-bottom:.35rem">' + I.gift + ' ' + L("As fotos vêm na conversa", "The photos come in the chat", "Las fotos vienen en la charla") + '</div>' +
+        '<p style="margin:0;font-size:.92rem;line-height:1.45;opacity:.96">' + L(
+          "Quanto mais real fica a nossa conversa, mais eu me solto 😏 Vou te mandando minhas fotos aqui no chat — no meu tempo, do meu jeito. Não é catálogo: é o que eu escolho te mostrar quando você me ganha.",
+          "The more real our talk gets, the more I open up 😏 I'll send you my photos right here in the chat — in my time, my way. It's not a catalog: it's what I choose to show you once you win me over.",
+          "Cuanto más real se pone la charla, más me suelto 😏 Te mando mis fotos aquí en el chat — a mi ritmo, a mi manera. No es un catálogo: es lo que elijo mostrarte cuando me conquistas."
+        ) + '</p></div></div>';
+    }
+
     // about
     html += '<div class="pf-section"><div class="pf-h">Sobre mim</div><p class="pf-about">' + c.story + '</p></div>';
 
@@ -1881,7 +1893,8 @@
     html += '<div class="pf-h" style="margin-top:1.3rem">Meus universos</div><div class="tag-row">' + c.universes.map(function (t) { return '<span class="tag univ">' + t + '</span>'; }).join("") + '</div></div>';
 
     // real content (free previews first, then paid) — ABOVE the paywall
-    html += '<div class="pf-section"><div class="pf-h">' + I.photo + ' ' + L("Conteúdo", "Content", "Contenido") + ' <span style="font-weight:600;font-size:0.8rem;color:var(--faint)">' + L("prévias grátis + desbloqueie", "free previews + unlock", "prévias gratis + desbloquea") + '</span></div><div id="rc-list"><p class="muted-note">Carregando…</p></div></div>';
+    var _rcSub = chatOnly ? L("prévia dela", "a peek at her", "un vistazo a ella") : L("prévias grátis + desbloqueie", "free previews + unlock", "prévias gratis + desbloquea");
+    html += '<div class="pf-section"><div class="pf-h">' + I.photo + ' ' + L("Conteúdo", "Content", "Contenido") + ' <span style="font-weight:600;font-size:0.8rem;color:var(--faint)">' + _rcSub + '</span></div><div id="rc-list"><p class="muted-note">Carregando…</p></div></div>';
 
     // grand slam offer (Hormozi: stack com valor + âncora + reversão de risco)
     var perDay = (c.subPrice / 30).toFixed(2).replace(".", ",");
@@ -1940,7 +1953,7 @@
       if (c.hasChat) html += '<div class="pf-section"><div class="pf-h">' + I.call + ' Chamada de vídeo</div><div class="ladder">' +
         CALLS.map(function (p, i) { return ladderRow(I.call, p.label, "Momento 1-a-1, só nosso", p.usd, c.id, "call-" + i); }).join("") + '</div></div>';
       html += '</div>'; // /#pf-packs
-    } else {
+    } else if (!chatOnly) {
       // pack-only creator (AI / no subscription): real packs sized to actual content, injected by loadBuyerContent
       html += '<div class="pf-section" id="pf-packs-real-wrap" style="margin-top:2.4rem;border-top:1px solid var(--line);padding-top:1.6rem"><div class="pf-h">' + I.photo + ' ' + L("Pacotes disponíveis", "Available packs", "Paquetes disponibles") + '</div><p class="muted-note" style="margin-top:-0.4rem">' + L("Leve o pacote completo ou compre item por item acima. Você recebe exatamente o que está aqui — sem assinatura, sem mensalidade.", "Grab the full pack or buy item by item above. You get exactly what is here — no subscription, no monthly fee.", "Lleva el paquete completo o compra ítem por ítem arriba. Recibes exactamente lo que está aquí — sin suscripción.") + '</p><div id="pf-packs-real"><p class="muted-note">' + L("Carregando pacotes…", "Loading packs…", "Cargando paquetes…") + '</p></div></div>';
     }
@@ -2784,6 +2797,16 @@
       var b = document.getElementById("rc-list"); if (!b) return;
       var pr = res[0], ur = res[1], sr = res[2];
       if (pr.error) { b.innerHTML = '<p class="muted-note">Erro: ' + escHtml(pr.error.message) + '</p>'; return; }
+      var chatOnly = !!AI_PERSONAS[creatorKey];
+      if (chatOnly) {
+        var freeOnly = (pr.data || []).filter(function (p) { return p.is_free; });
+        if (!freeOnly.length) { b.innerHTML = '<p class="muted-note">' + L("Fala com ela no chat — o resto ela te mostra lá. 😏", "Talk to her in the chat — she shows you the rest there. 😏", "Habla con ella en el chat — el resto te lo muestra ahí. 😏") + '</p>'; return; }
+        b.innerHTML = '<div class="rc-grid">' + freeOnly.map(function (p) {
+          return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div></div>';
+        }).join("") + '</div><p class="muted-note" style="margin-top:.6rem">' + L("Isso é só a prévia. As fotos de verdade ela manda na conversa.", "This is just the preview. The real photos she sends in the chat.", "Esto es solo la prévia. Las fotos de verdad las manda en la charla.") + '</p>';
+        freeOnly.forEach(showFree);
+        return;
+      }
       var now = Date.now();
       var subUntil = 0; if (sr.data) sr.data.forEach(function (s) { var t = new Date(s.expires_at).getTime(); if (t > subUntil) subUntil = t; if (t > now && s.tier) state.subscribedTier[creatorKey] = s.tier; });
       var subActive = subUntil > now;
