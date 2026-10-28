@@ -1684,7 +1684,6 @@ fbq('track', 'PageView');
       var k = b.getAttribute("data-role"), sp = b.querySelector("span");
       if (sp && map[k]) sp.textContent = map[k];
     });
-    var pp = document.querySelector(".proto-pill"); if (pp) pp.textContent = "Protótipo";
     var pan = document.getElementById("panic-btn");
     if (pan) { var ptn = pan.childNodes[pan.childNodes.length - 1]; if (ptn && ptn.nodeType === 3) ptn.nodeValue = "Sair rápido"; pan.setAttribute("aria-label", "Sair rápido"); }
   }
@@ -4462,7 +4461,7 @@ fbq('track', 'PageView');
     n.setAttribute("style", "position:fixed;inset:0;z-index:300;background:var(--bg);overflow:auto;padding:max(28px,env(safe-area-inset-top,0px)) 16px 28px");
     n.innerHTML = '<div style="max-width:380px;margin:1.3rem auto 0">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.2rem"><button class="icon-btn" id="ag-close" aria-label="Fechar">' + XICON + '</button>' + langSelHtml() + '</div>' +
-      '<div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(140deg,var(--accent),var(--lock2));display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.6rem;margin:0 auto 1rem">A</div>' +
+      '<div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(140deg,var(--accent),var(--lock2));display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.6rem;margin:0 auto 1rem">V</div>' +
       '<h1 style="text-align:center;font-size:1.5rem">' + (mode === "login" ? "Entrar na Vezclub" : "Criar sua conta") + '</h1>' +
       '<p style="text-align:center;color:var(--muted);margin:.4rem 0 1.3rem;font-size:.92rem">' + (mode === "login" ? "Acesse pra entrar na plataforma." : "Cadastre-se e tenha acesso a tudo: feed, perfis e chat.") + '</p>' +
       '<div class="ctabs" style="max-width:none"><button data-am="login" class="' + (mode === "login" ? "on" : "") + '">Entrar</button><button data-am="signup" class="' + (mode === "signup" ? "on" : "") + '">Cadastrar</button></div>' +
@@ -4589,7 +4588,7 @@ fbq('track', 'PageView');
     var clauses = T.clauses.map(function (c) { return '<h4>' + c[0] + '</h4><p>' + c[1] + '</p>'; }).join("");
     n.innerHTML = '<div style="max-width:560px;margin:1rem auto 0">' +
       '<div style="display:flex;justify-content:flex-end;margin-bottom:0.4rem">' + langSelHtml() + '</div>' +
-      '<div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,var(--accent),var(--lock2));display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.5rem;margin:0 auto 0.8rem">A</div>' +
+      '<div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(140deg,var(--accent),var(--lock2));display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.5rem;margin:0 auto 0.8rem">V</div>' +
       '<h1 style="text-align:center;font-size:1.4rem">Termos e Condições</h1>' +
       '<p style="text-align:center;color:var(--muted);margin:.4rem 0 1rem;font-size:.9rem">Leia e aceite para entrar. A plataforma contém conteúdo adulto e perfis gerados por IA.</p>' +
       '<div class="contract" style="max-height:48vh"><p class="c-intro">' + T.intro + '</p>' + clauses + '</div>' +
