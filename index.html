@@ -197,8 +197,8 @@ fbq('track', 'PageView');
     /* teclado iOS (modais normais, ex: login): dimensiona o modal-bg pela area visivel e centraliza acima do teclado */
     .modal-bg.vv-sized:not(.chat-open) { bottom: auto; overflow-y: auto; }
     /* chat: FUNDO escuro cobre a tela toda (nao vaza feed); so o PAINEL branco e dimensionado pelo teclado */
-    .modal-bg.chat-open { position: fixed; inset: 0; padding: 0; display: block; overflow: hidden; z-index: 140; }
-    .modal-bg.chat-open .chat-modal { position: fixed; top: 0; left: 0; right: 0; width: 100%; max-width: none; height: 100dvh; border: 0; border-radius: 0; }
+    .modal-bg.chat-open { position: fixed; inset: 0; padding: 0; display: block; overflow: hidden; z-index: 140; background: var(--bg) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    .modal-bg.chat-open .chat-modal { position: fixed; top: 0; left: 0; right: 0; width: 100%; max-width: none; height: 100dvh; border: 0; border-radius: 0; background: var(--bg); }
   }
 
   /* ---------- shell ---------- */
@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b28"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b29"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
