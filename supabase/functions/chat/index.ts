@@ -31,8 +31,10 @@ Deno.serve(async (req) => {
     const userId = userIdFromJwt(req.headers.get("Authorization") || "");
     if (!userId) return json({ error: "auth" }, 401);
 
-    const { creator_key, message } = await req.json();
+    const { creator_key, message, lang } = await req.json();
     if (!creator_key || !message) return json({ error: "missing" }, 400);
+    const LANGS: Record<string, string> = { pt: "português do Brasil", en: "English", es: "español" };
+    const uiLang = LANGS[lang] ? lang : "pt";
 
     const { data: persona } = await admin.from("chat_personas").select("*").eq("creator_key", creator_key).eq("active", true).single();
     if (!persona) return json({ error: "persona_not_found" }, 404);
@@ -82,7 +84,9 @@ Deno.serve(async (req) => {
     const MODEL_BASE = Deno.env.get("OPENAI_BASE_URL") || cfgMap["OPENAI_BASE_URL"] || "https://api.openai.com/v1";
     if (!MODEL_KEY) return json({ error: "no_model_key" }, 503);
 
-    const sys = persona.system_prompt + (mem?.summary ? `\n\n[O que você já sabe sobre ele]\n${mem.summary}` : "");
+    const langName = ({ pt: "português do Brasil", en: "English", es: "español" } as Record<string, string>)[uiLang];
+    const langDirective = `\n\n[IDIOMA — OBRIGATÓRIO] O app da pessoa está no idioma: ${langName}. Responda SEMPRE em ${langName}. Só mude de idioma se a pessoa claramente escrever em outro idioma por conta própria. Não comece em português se o idioma do app for outro.`;
+    const sys = persona.system_prompt + langDirective + (mem?.summary ? `\n\n[O que você já sabe sobre ele]\n${mem.summary}` : "");
     const messages = [{ role: "system", content: sys }, ...history.map((m: any) => ({ role: m.role, content: m.content })), { role: "user", content: message }];
 
     const r = await fetch(`${MODEL_BASE}/chat/completions`, {

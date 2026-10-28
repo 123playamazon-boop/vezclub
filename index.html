@@ -1065,7 +1065,7 @@ fbq('track', 'PageView');
     }
   };
 
-  var IMG_VER = "8"; // bump quando trocar imagens de modelo pra furar o cache (max-age 1h)
+  var IMG_VER = "9"; // bump quando trocar imagens de modelo pra furar o cache (max-age 1h)
   function mediaUrl(path) { try { var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return null; } }
   // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed)
   function imgUrl(path, w, q) { try { var u = sb.storage.from("avatars").getPublicUrl(path, { transform: { width: w, quality: q || 70 } }).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return mediaUrl(path); } }
@@ -4176,12 +4176,13 @@ fbq('track', 'PageView');
         else { setBal((d && d.balance) || 0); showBuy(); }
       }).catch(function () { setBal(0); showBuy(); });
     });
+    function showGreeting() { if (lang !== "pt") { translateOne(greeting, lang, function (t) { her(t || greeting); }); } else { her(greeting); } }
     sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) {
-      if (!tr.data) { her(greeting); startPoll(); return; }
+      if (!tr.data) { showGreeting(); startPoll(); return; }
       threadId = tr.data.id;
       sb.from("chat_messages").select("id,role,content").eq("thread_id", tr.data.id).order("created_at", { ascending: true }).limit(200).then(function (r) {
         var rows = (r.data || []);
-        if (!rows.length) { her(greeting); startPoll(); return; }
+        if (!rows.length) { showGreeting(); startPoll(); return; }
         rows.forEach(function (m2) { if (m2.id > lastSeenId) lastSeenId = m2.id; m2.role === "user" ? me(m2.content) : her(m2.content); });
         startPoll();
       });
@@ -4208,7 +4209,7 @@ fbq('track', 'PageView');
       inp.value = ""; me(v); sending = true;
       var sbtn = document.getElementById("chat-send"); if (sbtn) sbtn.disabled = true;
       var stat = document.getElementById("ch-stat"); if (stat) stat.textContent = "digitando…";
-      sb.functions.invoke("chat", { body: { creator_key: cid, message: v } }).then(function (res) {
+      sb.functions.invoke("chat", { body: { creator_key: cid, message: v, lang: lang } }).then(function (res) {
         sending = false;
         var sb2 = document.getElementById("chat-send"); if (sb2) sb2.disabled = false;
         var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = L("online agora", "online now", "en línea ahora");
