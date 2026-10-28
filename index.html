@@ -1727,7 +1727,7 @@ fbq('track', 'PageView');
   }
   function applyDynTranslation() {
     var tl = lang;
-    var nodes = document.querySelectorAll(".pf-hook, .pf-about, .cc-hook2, .rc-cap, .ph-time ~ .post-cap, .post-cap");
+    var nodes = document.querySelectorAll(".pf-hook, .pf-about, .cc-hook2, .sv-hook, .rc-cap, .ph-time ~ .post-cap, .post-cap");
     nodes.forEach(function (el) {
       if (el.querySelector && el.querySelector("*")) return; // only plain-text nodes
       var orig = el.getAttribute("data-orig");
@@ -1741,7 +1741,7 @@ fbq('track', 'PageView');
       _trCache[key] = orig; // placeholder to avoid refetch storms; fallback is original
       translateOne(orig, tl, function (tr) {
         _trCache[key] = tr; try { localStorage.setItem("tr:" + key, tr); } catch (e) {}
-        document.querySelectorAll(".pf-hook, .pf-about, .cc-hook2, .rc-cap, .post-cap").forEach(function (x) {
+        document.querySelectorAll(".pf-hook, .pf-about, .cc-hook2, .sv-hook, .rc-cap, .post-cap").forEach(function (x) {
           if ((x.getAttribute("data-orig") || x.textContent || "").trim() === orig) x.textContent = tr;
         });
       });
@@ -2799,9 +2799,10 @@ fbq('track', 'PageView');
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal" style="max-width:360px;background:transparent;border:0;box-shadow:none">' +
       '<div class="story-view' + (sbg ? ' has-img' : '') + '" style="' + svStyle + '">' +
         '<div class="sv-bar"><i></i></div>' +
-        '<div class="sv-body"><div class="sv-name">' + c.name.split(" ")[0] + '</div><p>' + c.hook + '</p>' +
-        '<button class="btn btn-block" data-story-go style="background:#fff;color:var(--accent)">Ver meu perfil</button></div>' +
+        '<div class="sv-body"><div class="sv-name">' + c.name.split(" ")[0] + '</div><p class="sv-hook">' + escHtml(c.hook) + '</p>' +
+        '<button class="btn btn-block" data-story-go style="background:#fff;color:var(--accent)">' + L("Ver meu perfil", "See my profile", "Ver mi perfil") + '</button></div>' +
       '</div></div></div>';
+    applyDynTranslation();
     var b = modalRoot.querySelector("[data-story-go]");
     if (b) b.onclick = function () { closeModal(); state.creatorId = cid; state.view = "store"; render(); };
   }
@@ -3926,7 +3927,7 @@ fbq('track', 'PageView');
       '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + peerAvatarHtml + '<div><div class="ch-name">' + escHtml(peerName) + '</div><div class="ch-stat" id="ch-stat">' + escHtml(peerStatus || "") + '</div></div><button class="ch-x" id="ch-safety" aria-label="Denunciar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V4h13l-2 4 2 4H4"/></svg></button><button class="ch-x" data-close>' + XICON + '</button></div>' +
       '<div class="chat-body" id="chat-body"><div class="chat-empty" style="margin:auto;color:var(--faint);font-size:.86rem;text-align:center;padding:2rem 1rem">Carregando…</div></div>' +
       (showTip ? '<div class="tip-row" id="tip-row">' + tipChips + '</div>' : '') +
-      '<div class="chat-input">' + (showTip ? '<button id="chat-tip" class="chat-tip"' + (enabled ? "" : " disabled") + ' aria-label="Gorjeta">$</button>' : '') + '<input id="chat-text" placeholder="Escreva…" autocomplete="off"' + (enabled ? "" : " disabled") + '><button id="chat-send"' + (enabled ? "" : " disabled") + '>' + I.send + '</button></div>' +
+      '<div class="chat-input">' + (showTip ? '<button id="chat-tip" class="chat-tip"' + (enabled ? "" : " disabled") + ' aria-label="Gorjeta">$</button>' : '') + '<input id="chat-text" placeholder="' + escHtml(L("Escreva…", "Write…", "Escribe…")) + '" autocomplete="off"' + (enabled ? "" : " disabled") + '><button id="chat-send"' + (enabled ? "" : " disabled") + '>' + I.send + '</button></div>' +
       '</div></div>';
     document.getElementById("ch-back").onclick = backFn || openChatList;
     var _sfb = document.getElementById("ch-safety"); if (_sfb) _sfb.onclick = safetyMenu;
@@ -4086,7 +4087,7 @@ fbq('track', 'PageView');
       '<span id="ch-time" style="margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
       '<button class="ch-x" data-close>' + XICON + '</button></div>' +
       '<div class="chat-body" id="chat-body"></div>' +
-      '<div class="chat-input"><input id="chat-text" placeholder="Escreve pra ' + escHtml(first) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
+      '<div class="chat-input"><input id="chat-text" placeholder="' + escHtml(L("Escreve pra ", "Message ", "Escribe a ") + first) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
       '</div></div>';
 
     var body = document.getElementById("chat-body");
