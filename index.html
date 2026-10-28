@@ -190,6 +190,9 @@ fbq('track', 'PageView');
     .roles button { padding: 0.42rem 0.6rem; }
     .top-actions { gap: 0.35rem; }
     .icon-btn { width: 36px; height: 36px; }
+    /* chat vira tela cheia no celular (teclado iOS nao cobre o composer) */
+    .chat-modal { position: fixed; inset: 0 0 auto 0; width: 100%; max-width: none; height: 100dvh; border: 0; border-radius: 0; z-index: 140; }
+    .modal-bg.chat-open { padding: 0; }
   }
 
   /* ---------- shell ---------- */
@@ -2625,7 +2628,38 @@ fbq('track', 'PageView');
 
   /* ---------------- modals ---------------- */
   var modalRoot = document.getElementById("modal-root");
-  function closeModal() { if (chatCh && sb) { try { sb.removeChannel(chatCh); } catch (e) {} chatCh = null; } modalRoot.innerHTML = ""; }
+  /* chat em tela cheia no celular: ancora no visualViewport pra o teclado do iOS nao cobrir o composer */
+  var _vvFit = null;
+  function installChatVV() {
+    try {
+      if (!window.visualViewport) return;
+      if (!window.matchMedia("(max-width:560px)").matches) return;
+      var bg = modalRoot.querySelector(".modal-bg");
+      var el = modalRoot.querySelector(".chat-modal");
+      if (!el) return;
+      if (bg) bg.classList.add("chat-open");
+      try { document.body.style.overflow = "hidden"; } catch (e) {}
+      _vvFit = function () {
+        var vv = window.visualViewport;
+        el.style.height = vv.height + "px";
+        el.style.top = vv.offsetTop + "px";
+      };
+      window.visualViewport.addEventListener("resize", _vvFit);
+      window.visualViewport.addEventListener("scroll", _vvFit);
+      _vvFit();
+    } catch (e) {}
+  }
+  function removeChatVV() {
+    try {
+      if (_vvFit && window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", _vvFit);
+        window.visualViewport.removeEventListener("scroll", _vvFit);
+      }
+    } catch (e) {}
+    _vvFit = null;
+    try { document.body.style.overflow = ""; } catch (e) {}
+  }
+  function closeModal() { removeChatVV(); if (chatCh && sb) { try { sb.removeChannel(chatCh); } catch (e) {} chatCh = null; } modalRoot.innerHTML = ""; }
 
   function purchaseModal(opts) {
     var icon = opts.icon === "video" || opts.icon === "vid" ? I.video : opts.icon === "call" ? I.call : I.photo;
@@ -3931,6 +3965,7 @@ fbq('track', 'PageView');
       '</div></div>';
     document.getElementById("ch-back").onclick = backFn || openChatList;
     var _sfb = document.getElementById("ch-safety"); if (_sfb) _sfb.onclick = safetyMenu;
+    installChatVV();
     var input = document.getElementById("chat-text");
     function sendBody(v) {
       if (!v || !account || !sb || !conv) return;
@@ -4240,6 +4275,7 @@ fbq('track', 'PageView');
     document.getElementById("chat-send").onclick = doSend;
     document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
     document.getElementById("ch-back").onclick = function () { closeModal(); };
+    installChatVV();
     try { document.getElementById("chat-text").focus(); } catch (e) {}
   }
 
