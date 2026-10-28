@@ -3592,7 +3592,7 @@
         return '<div class="cl-row" data-cl="' + c.id + '">' + avatar(c) + '<div class="cl-main"><div class="cl-name">' + c.name.split(" ")[0] + '<span class="verif">' + I.verif + '</span></div><div class="cl-last">' + (c.online ? "online agora" : "toque pra conversar") + '</div></div><div class="cl-meta"><div class="cl-time">' + (c.online ? "online" : "há 1h") + '</div>' + (un ? '<div class="cl-unread">' + un + '</div>' : '') + '</div></div>';
       }).join("");
       modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal"><div class="chat-head"><div class="ch-name" style="font-size:1.05rem">Mensagens</div><button class="ch-x" data-close>' + XICON + '</button></div><div class="chat-body" style="padding:0.4rem 0.9rem;background:var(--surface)"><div class="chat-list">' + rows + '</div></div></div></div>';
-      modalRoot.querySelectorAll(".cl-row").forEach(function (r) { r.onclick = function () { openChatThread(r.getAttribute("data-cl")); }; });
+      modalRoot.querySelectorAll(".cl-row").forEach(function (r) { r.onclick = function () { var _cid = r.getAttribute("data-cl"); if (AI_PERSONAS[_cid]) openAiChat(_cid); else openChatThread(_cid); }; });
     }
     if (sb && account) sb.rpc("my_unread").then(function (r) { var map = {}; if (!r.error && r.data) r.data.forEach(function (x) { map[x.conversation_id] = x.n; }); paint(map); });
     else paint({});
