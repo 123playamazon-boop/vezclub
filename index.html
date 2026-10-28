@@ -1100,7 +1100,13 @@ fbq('track', 'PageView');
     if (!sb) { if (cb) cb(); return; }
     sb.from("creators").select("key,display_name,handle,tag,sub_price_cents,is_ai,online,hook,color1,color2,avatar_path,cover_path,has_chat,has_subscription").then(function (r) {
       if (!r.error && r.data && r.data.length) {
-        r.data.sort(function (a, b) { return (a.is_ai ? 1 : 0) - (b.is_ai ? 1 : 0); });
+        // modelos com fotos em baixa resolução vão pro final do feed até serem atualizadas
+        var LOWRES = { nina: 1, sofia: 1, emma: 1, maya: 1 };
+        r.data.sort(function (a, b) {
+          var la = LOWRES[a.key] ? 1 : 0, lb = LOWRES[b.key] ? 1 : 0;
+          if (la !== lb) return la - lb;
+          return (a.is_ai ? 1 : 0) - (b.is_ai ? 1 : 0);
+        });
         CREATORS = r.data.map(buildCreatorFromDb);
       }
       loadPersonas();
