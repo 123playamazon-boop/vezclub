@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b29"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b30"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2681,8 +2681,17 @@ fbq('track', 'PageView');
       _vvFit = function () {
         var h = vv ? vv.height : window.innerHeight;
         var ot = vv ? vv.offsetTop : 0;
-        target.style.height = h + "px";
-        target.style.transform = ot ? ("translateY(" + ot + "px)") : "none";
+        if (isChat) {
+          // painel SEMPRE tela cheia (solido, cobre tudo); so levanto o compositor acima do teclado
+          // via padding-bottom = altura do teclado — assim NADA do feed pode vazar atras dele
+          var kb = Math.max(0, window.innerHeight - h - ot);
+          target.style.height = "100dvh";
+          target.style.paddingBottom = kb + "px";
+          target.style.transform = "none";
+        } else {
+          target.style.height = h + "px";
+          target.style.transform = ot ? ("translateY(" + ot + "px)") : "none";
+        }
       };
       if (vv) { vv.addEventListener("resize", _vvFit); vv.addEventListener("scroll", _vvFit); }
       window.addEventListener("resize", _vvFit);
@@ -2700,7 +2709,7 @@ fbq('track', 'PageView');
         window.removeEventListener("resize", _vvFit);
       }
       if (_vvBg && _vvFocusIn) _vvBg.removeEventListener("focusin", _vvFocusIn);
-      if (_vvTarget) { _vvTarget.style.height = ""; _vvTarget.style.transform = ""; }
+      if (_vvTarget) { _vvTarget.style.height = ""; _vvTarget.style.transform = ""; _vvTarget.style.paddingBottom = ""; }
       _vvTimers.forEach(function (t) { clearTimeout(t); });
     } catch (e) {}
     _vvFit = null; _vvBg = null; _vvTarget = null; _vvFocusIn = null; _vvTimers = [];
