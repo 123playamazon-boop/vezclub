@@ -2400,14 +2400,10 @@
   /* ---------------- admin console ---------------- */
   function renderAdmin() {
     if (!(account && account.isAdmin)) { goHome(); return; } // admin console is not public
-    var rows = [
-      { c: CREATORS[0], status: "ok", month: 8420 },
-      { c: CREATORS[1], status: "ok", month: 12940 },
-      { c: CREATORS[3], status: "ok", month: 9810 },
-      { c: CREATORS[4], status: "ok", month: 7260 },
-      { c: CREATORS[2], status: "pend", month: 0 },
-      { c: CREATORS[5], status: "off", month: 3180 }
-    ];
+    var demoMonths = [8420, 12940, 9810, 7260, 5600, 4100, 3180];
+    var rows = (CREATORS || []).filter(Boolean).map(function (c, i) {
+      return { c: c, status: "ok", month: demoMonths[i % demoMonths.length] };
+    });
     var gmv = rows.reduce(function (s, r) { return s + r.month; }, 0);
     var net = Math.round(gmv * 0.85);
     var commission = Math.round(net * 0.5);
@@ -2471,6 +2467,7 @@
     html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Criadoras</h3><button class="btn btn-primary btn-sm" data-stub="Adicionar criadora">' + I.plus + ' Adicionar criadora</button></div>' +
       '<div class="table-wrap"><table><thead><tr><th>Criadora</th><th>Status KYC</th><th class="num">Vendas (mês)</th><th class="num">Comissão (50%)</th><th>Ações</th></tr></thead><tbody>';
     rows.forEach(function (r) {
+      if (!r.c) return;
       var com = Math.round(r.month * 0.85 * 0.5);
       var pill = r.status === "ok" ? '<span class="pill ok"><span class="d"></span>Verificada</span>'
         : r.status === "pend" ? '<span class="pill pend"><span class="d"></span>KYC pendente</span>'
