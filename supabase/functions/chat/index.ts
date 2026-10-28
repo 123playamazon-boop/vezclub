@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     let gift = null;
     const gifts = Array.isArray(persona.gift_images) ? persona.gift_images : [];
     const every = persona.gift_every || 4;
-    const firstAt = 2; // primeira foto cedo, pra empolgar ainda no minuto grátis
+    const firstAt = 1; // primeira foto logo na 1a msg (dentro do 1o minuto gratis), pra empolgar
     const giftDue = giftIdx === 0 ? (userMsgs >= firstAt) : ((userMsgs - firstAt) % every === 0 && userMsgs > firstAt);
     if (giftDue && giftIdx < gifts.length) {
       const g = gifts[giftIdx];

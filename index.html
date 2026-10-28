@@ -3841,6 +3841,15 @@
     try { input.focus(); } catch (e) {}
   }
 
+  window.__zoom = function (src) {
+    if (!src) return;
+    var ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100000;display:flex;align-items:center;justify-content:center;padding:1rem;cursor:zoom-out";
+    ov.innerHTML = '<img src="' + src + '" alt="" style="max-width:94vw;max-height:90vh;border-radius:14px;box-shadow:0 10px 50px rgba(0,0,0,.7)">' +
+      '<button aria-label="fechar" style="position:fixed;top:14px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:1.3rem;cursor:pointer">✕</button>';
+    ov.onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
+    document.body.appendChild(ov);
+  };
   function openAiChat(cid) {
     var c = CREATORS.find(function (x) { return x.id === cid; });
     if (!c) return;
@@ -3907,6 +3916,12 @@
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
       wirePkgs(body);
     }
+    function showOpenPacks() {
+      if (document.getElementById("open-packs")) return;
+      var h = '<div id="open-packs" class="bub her" style="max-width:92%"><div style="font-weight:700;margin-bottom:.3rem">' + L("Seu 1º minuto é por minha conta 💜", "Your 1st minute is on me 💜", "Tu 1er minuto va por mi cuenta 💜") + '</div><div style="font-size:.82rem;margin-bottom:.5rem;opacity:.85">' + L("Depois é só escolher seu tempo comigo 👇", "After that, just pick your time with me 👇", "Después solo elige tu tiempo conmigo 👇") + '</div>' + pkgBtns() + '</div>';
+      body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
+      wirePkgs(body);
+    }
     function showBuy() {
       var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">' + L("Seu tempo com a ", "Your time with ", "Tu tiempo con ") + escHtml(first) + L(" acabou", " is up", " se acabó") + '</div><div class="muted-note" style="margin-bottom:.9rem">' + L("Recarregue pra continuar — ela tá te esperando.", "Recharge to keep going — she's waiting for you.", "Recarga para seguir — ella te espera.") + '</div>' + pkgBtns() + '</div>';
       body.innerHTML = h;
@@ -3920,7 +3935,7 @@
       // sem saldo: oferece 1 minuto grátis, uma vez por pessoa (fisga antes de cobrar)
       sb.rpc("claim_free_trial", { p_seconds: 60 }).then(function (r) {
         var d = r && r.data;
-        if (d && d.granted) { setBal(d.balance || 60); priceBanner(true); note(L("Ganhou 1 minuto comigo — aproveita 😏", "You got 1 minute with me — enjoy 😏", "Ganaste 1 minuto conmigo — aprovecha 😏")); startClock(); }
+        if (d && d.granted) { setBal(d.balance || 60); priceBanner(true); note(L("Ganhou 1 minuto comigo — aproveita 😏", "You got 1 minute with me — enjoy 😏", "Ganaste 1 minuto conmigo — aprovecha 😏")); setTimeout(showOpenPacks, 1200); startClock(); }
         else { setBal((d && d.balance) || 0); showBuy(); }
       }).catch(function () { setBal(0); showBuy(); });
     });
@@ -3976,7 +3991,7 @@
         }
         her(d.reply);
         if (!tick && bal > 0) startClock();
-        if (d.gift && d.gift.url) { setTimeout(function () { if (d.gift.caption) her(d.gift.caption); body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:200px"><img src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block"></div>'); body.scrollTop = body.scrollHeight; }, 800); }
+        if (d.gift && d.gift.url) { setTimeout(function () { if (d.gift.caption) her(d.gift.caption); body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:230px;position:relative"><img class="chat-img" src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)"><span style="position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:27px;height:27px;display:flex;align-items:center;justify-content:center;font-size:.92rem;pointer-events:none">🔍</span></div>'); body.scrollTop = body.scrollHeight; }, 800); }
         if (typeof d.balance === "number") setBal(d.balance);
         try { document.getElementById("chat-text").focus(); } catch (_) {}
       }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
