@@ -192,9 +192,9 @@ fbq('track', 'PageView');
     .roles button { padding: 0.42rem 0.6rem; }
     .top-actions { gap: 0.35rem; }
     .icon-btn { width: 36px; height: 36px; }
-    /* chat vira tela cheia no celular (teclado iOS nao cobre o composer) */
-    .chat-modal { position: fixed; inset: 0 0 auto 0; width: 100%; max-width: none; height: 100dvh; border: 0; border-radius: 0; z-index: 140; }
-    .modal-bg.chat-open { padding: 0; }
+    /* chat em tela cheia no celular: o WRAPPER e dimensionado pelo visualViewport (teclado iOS nao cobre nem colapsa) */
+    .modal-bg.chat-open { position: fixed; top: 0; left: 0; right: 0; bottom: auto; height: 100dvh; padding: 0; display: block; z-index: 140; }
+    .modal-bg.chat-open .chat-modal { position: absolute; inset: 0; width: 100%; max-width: none; height: 100%; border: 0; border-radius: 0; }
   }
 
   /* ---------- shell ---------- */
@@ -2651,40 +2651,28 @@ fbq('track', 'PageView');
     }).observe(modalRoot, { childList: true });
   } catch (e) {}
   /* chat em tela cheia no celular: ancora no visualViewport pra o teclado do iOS nao cobrir o composer */
-  var _vvFit = null, _vvEl = null, _vvRAF = 0, _vvFocusIn = null;
+  var _vvFit = null, _vvBg = null, _vvFocusIn = null, _vvTimers = [];
   function installChatVV() {
     try {
       if (!window.matchMedia("(max-width:560px)").matches) return;
       var bg = modalRoot.querySelector(".modal-bg");
-      var el = modalRoot.querySelector(".chat-modal");
-      if (!el) return;
-      _vvEl = el;
-      if (bg) bg.classList.add("chat-open");
-      try { document.body.style.overflow = "hidden"; document.documentElement.style.overflow = "hidden"; } catch (e) {}
+      if (!bg || !modalRoot.querySelector(".chat-modal")) return;
+      _vvBg = bg;
+      bg.classList.add("chat-open");
       var vv = window.visualViewport;
       _vvFit = function () {
-        try { window.scrollTo(0, 0); } catch (e) {}
         if (vv) {
-          el.style.height = vv.height + "px";
-          el.style.top = vv.offsetTop + "px";
-          el.style.left = vv.offsetLeft + "px";
-          el.style.width = vv.width + "px";
+          bg.style.height = vv.height + "px";
+          bg.style.transform = vv.offsetTop ? ("translateY(" + vv.offsetTop + "px)") : "none";
         } else {
-          el.style.height = window.innerHeight + "px";
-          el.style.top = "0px";
+          bg.style.height = window.innerHeight + "px";
         }
       };
       if (vv) { vv.addEventListener("resize", _vvFit); vv.addEventListener("scroll", _vvFit); }
       window.addEventListener("resize", _vvFit);
-      // iOS dispara o resize atrasado e empurra a pagina: refit acompanhando a animacao do teclado
-      _vvFocusIn = function () {
-        var t0 = Date.now();
-        (function loop() {
-          _vvFit();
-          if (Date.now() - t0 < 800) _vvRAF = requestAnimationFrame(loop);
-        })();
-      };
-      el.addEventListener("focusin", _vvFocusIn);
+      // iOS dispara o resize do teclado com atraso: alguns refits pontuais (sem loop)
+      _vvFocusIn = function () { [60, 200, 400].forEach(function (d) { _vvTimers.push(setTimeout(_vvFit, d)); }); };
+      bg.addEventListener("focusin", _vvFocusIn);
       _vvFit();
     } catch (e) {}
   }
@@ -2695,11 +2683,10 @@ fbq('track', 'PageView');
         if (vv) { vv.removeEventListener("resize", _vvFit); vv.removeEventListener("scroll", _vvFit); }
         window.removeEventListener("resize", _vvFit);
       }
-      if (_vvEl && _vvFocusIn) _vvEl.removeEventListener("focusin", _vvFocusIn);
-      if (_vvRAF) cancelAnimationFrame(_vvRAF);
+      if (_vvBg && _vvFocusIn) _vvBg.removeEventListener("focusin", _vvFocusIn);
+      _vvTimers.forEach(function (t) { clearTimeout(t); });
     } catch (e) {}
-    _vvFit = null; _vvEl = null; _vvFocusIn = null; _vvRAF = 0;
-    try { document.body.style.overflow = ""; document.documentElement.style.overflow = ""; } catch (e) {}
+    _vvFit = null; _vvBg = null; _vvFocusIn = null; _vvTimers = [];
   }
   function closeModal() { removeChatVV(); if (chatCh && sb) { try { sb.removeChannel(chatCh); } catch (e) {} chatCh = null; } modalRoot.innerHTML = ""; }
 
@@ -4318,7 +4305,8 @@ fbq('track', 'PageView');
     document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
     document.getElementById("ch-back").onclick = function () { closeModal(); };
     installChatVV();
-    try { document.getElementById("chat-text").focus(); } catch (e) {}
+    // no mobile nao foca automatico (evita o teclado abrir na hora e baguncar o layout); o usuario toca no campo
+    try { if (!window.matchMedia("(max-width:560px)").matches) document.getElementById("chat-text").focus(); } catch (e) {}
   }
 
   function ageGate() {
