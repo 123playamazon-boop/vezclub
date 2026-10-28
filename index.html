@@ -3965,6 +3965,7 @@ fbq('track', 'PageView');
     var FAKE_DOOR = true;
     var emailDone = false;
     var EMAIL_TRIAL_SECONDS = 300; // 5 min grátis após o e-mail (limita custo de API)
+    function fbt(ev, p) { try { if (window.fbq) fbq("track", ev, p || {}); } catch (e) {} }
     var PKG_SETS = {
       A: [{ min: 10, price: 9.9 }, { min: 20, price: 17.9 }, { min: 30, price: 24.9 }, { min: 60, price: 44.9 }],
       B: [{ min: 10, price: 12.9 }, { min: 20, price: 22.9 }, { min: 30, price: 32.9 }, { min: 60, price: 59.9 }]
@@ -4015,6 +4016,7 @@ fbq('track', 'PageView');
         if (!validEmail(v)) { if (err) err.textContent = L("Coloca um e-mail válido 🙂", "Enter a valid email 🙂", "Pon un e-mail válido 🙂"); return; }
         btn.disabled = true; btn.textContent = L("liberando…", "unlocking…", "liberando…");
         logIntent("lead_capture", { creator_key: cid, variant: FD_VAR, contact: v });
+        fbt("Lead", { content_name: cid }); // deixou o e-mail no gate
         sb.rpc("claim_email_trial_m", { p_creator_key: cid, p_seconds: EMAIL_TRIAL_SECONDS }).then(function (r) {
           emailDone = true;
           var d = r && r.data;
@@ -4052,6 +4054,7 @@ fbq('track', 'PageView');
 
     var body = document.getElementById("chat-body");
     var timeEl = document.getElementById("ch-time");
+    fbt("ViewContent", { content_name: cid, content_category: "chat" }); // abriu uma conversa
     function setBal(sec) { bal = Math.max(0, sec | 0); timeEl.textContent = "⏱ " + fmt(bal); }
     function flush() { if (pending > 0) { var pp = pending; pending = 0; sb.rpc("chat_consume_m", { p_creator_key: cid, p_seconds: pp }).then(function (r) { if (r && typeof r.data === "number" && r.data < bal) setBal(r.data); }); } }
     function startClock() {
@@ -4082,6 +4085,7 @@ fbq('track', 'PageView');
           // antes do e-mail: o clique vira o gate de e-mail (libera mais tempo grátis). Depois do e-mail: é intenção real de pagar.
           if (!emailDone) { emailGate(); return; }
           logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
+          fbt("InitiateCheckout", { content_name: cid, value: _price, currency: "USD", contents: [{ id: _min + "min", quantity: 1 }] }); // clicou num pacote (intenção de pagar)
           if (FAKE_DOOR) { fakeDoorCapture(_min, _price); return; }
           purchaseModal({ id: "chattime-" + cid + "-" + _min, title: _min + " min de chat com " + first, price: _price, icon: "call", creator: c.name });
         };
