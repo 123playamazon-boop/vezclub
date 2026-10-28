@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b25"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b26"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4261,6 +4261,15 @@ fbq('track', 'PageView');
           logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
           fbt("InitiateCheckout", { content_name: cid, value: _price, currency: "USD", contents: [{ id: _min + "min", quantity: 1 }] }); // clicou num pacote (intenção de pagar)
           clar("event", "buy_click"); clar("set", "funnel_stage", "buy_intent");
+          // pagamento real: Stripe Checkout. Se o Stripe ainda nao estiver configurado (sem chave), cai no fake-door.
+          if (sb && account) {
+            try { b.disabled = true; } catch (e) {}
+            sb.functions.invoke("stripe_checkout", { body: { pack_code: "vex" + _min, creator_key: cid } }).then(function (res) {
+              if (res && res.data && res.data.url) { window.location.href = res.data.url; }
+              else { try { b.disabled = false; } catch (e) {} fakeDoorCapture(_min, _price); }
+            }).catch(function () { try { b.disabled = false; } catch (e) {} fakeDoorCapture(_min, _price); });
+            return;
+          }
           if (FAKE_DOOR) { fakeDoorCapture(_min, _price); return; }
           purchaseModal({ id: "chattime-" + cid + "-" + _min, title: _min + " min de chat com " + first, price: _price, icon: "call", creator: c.name });
         };
@@ -4849,7 +4858,20 @@ fbq('track', 'PageView');
     document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-role") === "buyer"); });
     updateRoleButtons();
     renderGuestBadge();
-    loadCreators(function () { render(); ageGate(); });
+    loadCreators(function () { render(); ageGate(); checkPaidReturn(); });
+  }
+  function checkPaidReturn() {
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.get("paid") === "1") {
+        var ck = q.get("ck") || "";
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        toast(L("Pagamento confirmado! Teu tempo foi liberado 💜", "Payment confirmed! Your time is unlocked 💜", "¡Pago confirmado! Tu tiempo fue liberado 💜"));
+        if (ck && account) setTimeout(function () { try { openAiChat(ck); } catch (e) {} }, 700);
+      } else if (q.get("canceled") === "1") {
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+      }
+    } catch (e) {}
   }
 
   function enterPlatform(session) {
@@ -4876,8 +4898,9 @@ fbq('track', 'PageView');
           var ok = r.data && r.data[0] && r.data[0].tos_accepted_at;
           if (ok) { render(); ageGate(); }
           else showTosGate(function () { render(); ageGate(); });
+          checkPaidReturn();
         });
-      } else { render(); ageGate(); }
+      } else { render(); ageGate(); checkPaidReturn(); }
     });
   }
 
