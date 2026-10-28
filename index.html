@@ -194,11 +194,11 @@ fbq('track', 'PageView');
     .icon-btn { width: 36px; height: 36px; }
     /* CRITICO iOS: fonte >=16px em TODO campo evita o zoom-on-focus do Safari (que desloca o site e baguncava o teclado) */
     input, textarea, select { font-size: 16px !important; }
-    /* teclado iOS: QUALQUER modal e dimensionado pela area visivel (height/transform via JS) e centraliza acima do teclado */
-    .modal-bg.vv-sized { bottom: auto; overflow-y: auto; }
-    /* chat em tela cheia: o wrapper vira a area visivel e o chat preenche ele */
-    .modal-bg.chat-open { position: fixed; top: 0; left: 0; right: 0; bottom: auto; height: 100dvh; padding: 0; display: block; overflow: hidden; z-index: 140; }
-    .modal-bg.chat-open .chat-modal { position: absolute; inset: 0; width: 100%; max-width: none; height: 100%; border: 0; border-radius: 0; }
+    /* teclado iOS (modais normais, ex: login): dimensiona o modal-bg pela area visivel e centraliza acima do teclado */
+    .modal-bg.vv-sized:not(.chat-open) { bottom: auto; overflow-y: auto; }
+    /* chat: FUNDO escuro cobre a tela toda (nao vaza feed); so o PAINEL branco e dimensionado pelo teclado */
+    .modal-bg.chat-open { position: fixed; inset: 0; padding: 0; display: block; overflow: hidden; z-index: 140; }
+    .modal-bg.chat-open .chat-modal { position: fixed; top: 0; left: 0; right: 0; width: 100%; max-width: none; height: 100dvh; border: 0; border-radius: 0; }
   }
 
   /* ---------- shell ---------- */
@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b24"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b25"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2664,21 +2664,25 @@ fbq('track', 'PageView');
   } catch (e) {}
   /* chat em tela cheia no celular: ancora no visualViewport pra o teclado do iOS nao cobrir o composer */
   // --- teclado do iOS: dimensiona QUALQUER modal aberto pela area visivel (gate de login, chat, etc) ---
-  var _vvFit = null, _vvBg = null, _vvFocusIn = null, _vvTimers = [];
+  var _vvFit = null, _vvBg = null, _vvTarget = null, _vvFocusIn = null, _vvTimers = [];
   function attachVV(bg) {
     try {
       if (!bg) return;
       if (!window.matchMedia("(max-width:560px)").matches) return;
       _vvBg = bg;
+      var isChat = bg.classList.contains("chat-open");
+      // chat: o fundo escuro cobre a tela toda e eu dimensiono so o PAINEL branco (sem feed vazando)
+      // outros modais: dimensiono o proprio modal-bg pra centralizar acima do teclado
+      var target = isChat ? bg.querySelector(".chat-modal") : bg;
+      if (!target) return;
+      _vvTarget = target;
       bg.classList.add("vv-sized");
       var vv = window.visualViewport;
       _vvFit = function () {
-        if (vv) {
-          bg.style.height = vv.height + "px";
-          bg.style.transform = vv.offsetTop ? ("translateY(" + vv.offsetTop + "px)") : "none";
-        } else {
-          bg.style.height = window.innerHeight + "px";
-        }
+        var h = vv ? vv.height : window.innerHeight;
+        var ot = vv ? vv.offsetTop : 0;
+        target.style.height = h + "px";
+        target.style.transform = ot ? ("translateY(" + ot + "px)") : "none";
       };
       if (vv) { vv.addEventListener("resize", _vvFit); vv.addEventListener("scroll", _vvFit); }
       window.addEventListener("resize", _vvFit);
@@ -2696,9 +2700,10 @@ fbq('track', 'PageView');
         window.removeEventListener("resize", _vvFit);
       }
       if (_vvBg && _vvFocusIn) _vvBg.removeEventListener("focusin", _vvFocusIn);
+      if (_vvTarget) { _vvTarget.style.height = ""; _vvTarget.style.transform = ""; }
       _vvTimers.forEach(function (t) { clearTimeout(t); });
     } catch (e) {}
-    _vvFit = null; _vvBg = null; _vvFocusIn = null; _vvTimers = [];
+    _vvFit = null; _vvBg = null; _vvTarget = null; _vvFocusIn = null; _vvTimers = [];
   }
   function closeModal() { detachVV(); if (chatCh && sb) { try { sb.removeChannel(chatCh); } catch (e) {} chatCh = null; } modalRoot.innerHTML = ""; }
 
@@ -2983,7 +2988,7 @@ fbq('track', 'PageView');
       if (chatOnly) {
         var freeOnly = (pr.data || []).filter(function (p) { return p.is_free; }).slice(0, 3);
         if (!freeOnly.length) { b.innerHTML = '<p class="muted-note">' + L("Fala com ela no chat — o resto ela te mostra lá. 😏", "Talk to her in the chat — she shows you the rest there. 😏", "Habla con ella en el chat — el resto te lo muestra ahí. 😏") + '</p>'; return; }
-        b.innerHTML = '<div style="display:grid;grid-template-columns:repeat(' + Math.min(freeOnly.length, 3) + ',1fr);gap:.4rem">' + freeOnly.map(function (p) {
+        b.innerHTML = '<div class="pf-gallery" style="display:grid;grid-template-columns:repeat(' + Math.min(freeOnly.length, 3) + ',1fr);gap:.4rem">' + freeOnly.map(function (p) {
           return '<div class="rc-media" id="rc-' + p.id + '" style="aspect-ratio:1;border-radius:10px;overflow:hidden"></div>';
         }).join("") + '</div><p class="muted-note" style="margin-top:.55rem;font-size:.82rem">' + L("Só uma amostra. As fotos de verdade ela manda na conversa. 😏", "Just a taste. The real photos she sends in the chat. 😏", "Solo una muestra. Las fotos de verdad las manda en la charla. 😏") + '</p>';
         freeOnly.forEach(showFree);
@@ -4090,10 +4095,12 @@ fbq('track', 'PageView');
     next.onclick = function (e) { e.stopPropagation(); go(1); };
     close.onclick = function (e) { e.stopPropagation(); destroy(); };
     img.onclick = function (e) { e.stopPropagation(); };
-    ov.onclick = destroy;
-    var x0 = null, y0 = null;
-    ov.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+    // swipe navega; fechar so com toque curto no fundo (um arrasto NAO fecha mais)
+    var x0 = null, y0 = null, moved = false;
+    ov.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; moved = false; }, { passive: true });
+    ov.addEventListener("touchmove", function (e) { if (x0 !== null && (Math.abs(e.touches[0].clientX - x0) > 8 || Math.abs(e.touches[0].clientY - y0) > 8)) moved = true; }, { passive: true });
     ov.addEventListener("touchend", function (e) { if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1); x0 = null; }, { passive: true });
+    ov.addEventListener("click", function (e) { if (!moved && e.target === ov) destroy(); });
     document.addEventListener("keydown", onKey);
     ov.appendChild(img); ov.appendChild(prev); ov.appendChild(next); ov.appendChild(close); ov.appendChild(dotWrap); ov.appendChild(hint);
     document.body.appendChild(ov); paint();
@@ -4195,8 +4202,11 @@ fbq('track', 'PageView');
       setTimeout(function () { if (inp) inp.focus(); }, 60);
     }
     // depois do teste grátis já gasto + e-mail já capturado: só avisa que o pagamento abre em breve
+    var _fdCaptured = false;
     function fakeDoorCapture(min, price) {
       logPaywall();
+      if (_fdCaptured) { body.scrollTop = body.scrollHeight; return; } // nao duplica a mensagem
+      _fdCaptured = true;
       var h = '<div class="bub her" style="max-width:92%">' +
         '<div style="font-weight:700;margin-bottom:.3rem">' + L("Já anotei teu tempo comigo 💜", "I've noted your time with me 💜", "Ya anoté tu tiempo conmigo 💜") + '</div>' +
         '<div style="font-size:.84rem;opacity:.9">' + L("Os pagamentos estão abrindo — te chamo no teu e-mail no segundo que liberar, viu? 😏", "Payments are opening — I'll ping your email the second it unlocks, ok? 😏", "Los pagos se están abriendo — te aviso a tu e-mail en cuanto se libere 😏") + '</div></div>';
