@@ -2452,6 +2452,10 @@
       '<p class="muted-note" style="margin-top:-0.3rem">Conversas em andamento. As marcadas 🔴 citaram cancelamento, reembolso, chargeback ou sofrimento — entre, <b>assuma a conversa</b> (o robô para na hora) e fale você mesmo pra resolver e evitar o estorno. Pra ele, continua sendo a modelo.</p>' +
       '<div id="live-list"><p class="muted-note">Carregando…</p></div></div>';
 
+    html += '<div class="card" style="margin-top:1.2rem"><div class="card-head"><h3>Desempenho por modelo</h3><button class="btn btn-ghost btn-sm" id="ms-refresh">↻ Atualizar</button></div>' +
+      '<p class="muted-note" style="margin-top:-0.3rem">Qual modelo engaja mais — conversas, mensagens, minutos grátis dados e minutos consumidos. Ranqueado por quem mais prende no chat. A receita em R$/US$ entra junto com o pagamento (cada compra já fica marcada por modelo).</p>' +
+      '<div id="ms-list"><p class="muted-note">Carregando…</p></div></div>';
+
     html += '<div class="card"><div class="card-head"><h3>Campanhas · Brasil × EUA</h3><span class="hint">links pro anúncio</span></div>' +
       '<p class="muted-note" style="margin-top:-0.3rem">Cada link abre o site já na moeda e nos meios de pagamento certos. Use um por público no tráfego pago.</p>' +
       '<div class="ladder">' +
@@ -2545,6 +2549,7 @@
     loadCrm();
     loadWinback();
     loadLiveChats();
+    loadModelStats();
     loadAdminReview();
     loadApplications();
     loadWebhooks();
@@ -3146,6 +3151,28 @@
     });
   }
 
+  function loadModelStats() {
+    var btn = document.getElementById("ms-refresh"); if (btn) btn.onclick = loadModelStats;
+    if (!sb) return;
+    sb.rpc("admin_model_stats").then(function (r) {
+      var box = document.getElementById("ms-list"); if (!box) return;
+      if (r.error) { box.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
+      var rows = r.data || [];
+      if (!rows.length) { box.innerHTML = '<p class="muted-note">Sem dados ainda.</p>'; return; }
+      function mins(s) { return Math.round((s || 0) / 60 * 10) / 10; }
+      var h = '<div class="table-wrap"><table><thead><tr><th>Modelo</th><th class="num">Conversas</th><th class="num">Msgs</th><th class="num">Min. grátis</th><th class="num">Min. consumidos</th><th class="num">Saldo ativo</th></tr></thead><tbody>';
+      rows.forEach(function (m, i) {
+        h += '<tr><td><div style="font-weight:600;font-size:.86rem">' + (i === 0 && (m.sec_consumed || 0) > 0 ? '🏆 ' : '') + escHtml(m.display_name || m.creator_key) + '</div></td>' +
+          '<td class="num">' + (m.threads || 0) + '</td>' +
+          '<td class="num">' + (m.user_msgs || 0) + '</td>' +
+          '<td class="num">' + (m.free_trials || 0) + '</td>' +
+          '<td class="num"><b>' + mins(m.sec_consumed) + '</b> min</td>' +
+          '<td class="num">' + mins(m.sec_active) + ' min</td></tr>';
+      });
+      h += '</tbody></table></div>';
+      box.innerHTML = h;
+    });
+  }
   function loadLiveChats() {
     var btn = document.getElementById("live-refresh"); if (btn) btn.onclick = loadLiveChats;
     if (!sb) return;
