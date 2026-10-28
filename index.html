@@ -888,6 +888,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
+  var BUILD = "b18"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4148,7 +4149,8 @@ fbq('track', 'PageView');
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal chat-modal">' +
       '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + avatar(c) +
       '<div><div class="ch-name">' + escHtml(first) + '</div><div class="ch-stat" id="ch-stat">' + L("online agora", "online now", "en línea ahora") + '</div></div>' +
-      '<span id="ch-time" style="margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
+      '<span style="font-size:9px;color:var(--faint);align-self:flex-start;margin-left:auto">' + BUILD + '</span>' +
+      '<span id="ch-time" style="margin-left:6px;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
       '<button class="ch-x" data-close>' + XICON + '</button></div>' +
       '<div class="chat-body" id="chat-body"></div>' +
       '<div class="chat-input"><input id="chat-text" placeholder="' + escHtml(L("Escreve pra ", "Message ", "Escribe a ") + first) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
@@ -4542,7 +4544,7 @@ fbq('track', 'PageView');
         (mode === "signup" ? '<div class="field"><label>Você é</label><div class="roles" id="ag-roles" style="margin:0"><button data-r="buyer" class="' + (regRole === "buyer" ? "on" : "") + '">Comprador</button><button data-r="creator" class="' + (regRole === "creator" ? "on" : "") + '">Criadora</button></div></div>' : "") +
         '<button class="btn btn-primary btn-block" id="ag-go">' + (mode === "login" ? L("Entrar", "Sign in", "Entrar") : L("Criar conta e entrar", "Create account and enter", "Crear cuenta y entrar")) + '</button>' +
         '<div id="ag-msg"></div>' +
-        '<div style="margin-top:1.4rem;font-size:.72rem;color:var(--faint);text-align:center;border-top:1px solid var(--line);padding-top:.8rem">' + L("Contas de demonstração (teste):", "Demo accounts (test):", "Cuentas de demostración (prueba):") + '<div style="display:flex;gap:.5rem;margin-top:.5rem"><button class="btn btn-ghost btn-sm" data-login="luna@aura.test" style="flex:1">' + L("Criadora", "Creator", "Creadora") + '</button><button class="btn btn-ghost btn-sm" data-login="guest@aura.test" style="flex:1">' + L("Comprador", "Buyer", "Comprador") + '</button></div></div>' +
+        ((function(){ try { return new URLSearchParams(location.search).has("demo"); } catch(e){ return false; } })() ? '<div style="margin-top:1.4rem;font-size:.72rem;color:var(--faint);text-align:center;border-top:1px solid var(--line);padding-top:.8rem">' + L("Contas de demonstração (teste):", "Demo accounts (test):", "Cuentas de demostración (prueba):") + '<div style="display:flex;gap:.5rem;margin-top:.5rem"><button class="btn btn-ghost btn-sm" data-login="luna@aura.test" style="flex:1">' + L("Criadora", "Creator", "Creadora") + '</button><button class="btn btn-ghost btn-sm" data-login="guest@aura.test" style="flex:1">' + L("Comprador", "Buyer", "Comprador") + '</button></div></div>' : "") +
       '</div></div>';
     n.querySelectorAll("[data-am]").forEach(function (b) { b.onclick = function () { showAuthGate(b.getAttribute("data-am"), regRole); }; });
     var agx = document.getElementById("ag-close"); if (agx) agx.onclick = hideAuthGate;
