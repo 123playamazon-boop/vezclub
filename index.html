@@ -1849,20 +1849,29 @@
     html += '<div class="pf-hook">' + c.hook + '</div>';
     html += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), "assinantes") + st(nfmt(c.likes), "curtidas") + '</div>';
     if (c.hasChat) {
-      if (c.online) html += '<div class="pf-status"><span class="live-dot"></span>Online · responde em ' + c.responds + '</div>';
-      else html += '<div class="pf-status" style="color:var(--muted)">' + I.clock + ' Costuma responder em ' + c.responds + '</div>';
+      if (c.online) html += '<div class="pf-status"><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + '</div>';
+      else html += '<div class="pf-status" style="color:var(--muted)">' + I.clock + ' ' + L("Costuma responder em ", "Usually replies in ", "Suele responder en ") + c.responds + '</div>';
     } else {
       html += '<div class="pf-status"><span class="live-dot"></span>' + L("Online · conteúdo novo toda semana", "Online · new content every week", "Online · contenido nuevo cada semana") + '</div>';
     }
 
-    // live ticker
-    html += '<div class="ticker" id="live-ticker" style="margin-top:1rem"><span class="d"></span><span>' + tickerLine() + '</span></div>';
+    // live ticker — escondido no funil de chat: ver os outros fãs quebra a sensação de ser o único
+    if (!chatOnly) html += '<div class="ticker" id="live-ticker" style="margin-top:1rem"><span class="d"></span><span>' + tickerLine() + '</span></div>';
 
     // fan status (gamified loyalty)
     var fl = fanLevel(state.fanXP[c.id] || 0), fxp = state.fanXP[c.id] || 0, unr = state.unread[c.id] || 0;
-    var msgBtn = '<button class="btn btn-primary btn-block" data-chat-open="' + c.id + '">' + I.chatic + ' Mandar mensagem' + (unr ? ' · ' + unr + ' nova' + (unr > 1 ? 's' : '') : '') + '</button>';
+    var unrTxt = unr ? ' · ' + unr + L(" nova", " new", " nueva") + (unr > 1 ? 's' : '') : '';
+    var msgBtn = '<button class="btn btn-primary btn-block" data-chat-open="' + c.id + '">' + I.chatic + ' ' + L("Mandar mensagem", "Send a message", "Enviar mensaje") + unrTxt + '</button>';
     if (c.hasChat) {
-    if (subbed || fxp > 0) {
+    if (chatOnly) {
+      // apelo 1:1 — ela está online, te esperando, e é só com você (Amanda + Hormozi: desejo + exclusividade + ação na hora)
+      html += '<div class="pf-section"><div style="border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;background:var(--surface-2,rgba(127,127,127,.06))">' +
+        '<div style="display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:1.02rem"><span class="live-dot"></span>' + escHtml(c.name) + ' ' + L("está online agora", "is online now", "está en línea ahora") + '</div>' +
+        '<p style="margin:.4rem 0 .9rem;font-size:.95rem;font-style:italic;color:var(--muted)">"' + L("Tô aqui te esperando. Vem falar comigo? 🙈", "I'm right here waiting for you. Come talk to me? 🙈", "Estoy aquí esperándote. ¿Vienes a hablar conmigo? 🙈") + '"</p>' +
+        '<button class="btn btn-primary btn-block" data-chat-open="' + c.id + '">' + I.chatic + ' ' + L("Começar a conversar", "Start chatting", "Empezar a charlar") + unrTxt + '</button>' +
+        '<div style="text-align:center;font-size:.78rem;color:var(--faint);margin-top:.55rem">' + L("agora é só você e ela", "now it's just you and her", "ahora son solo tú y ella") + '</div>' +
+        '</div></div>';
+    } else if (subbed || fxp > 0) {
       html += '<div class="pf-section"><div class="fan-status">' +
         '<div class="fs-top"><span class="fan-badge" style="background:' + grad(fl.cur.color) + '">Fã ' + fl.cur.name + '</span><span class="fs-pct">Você está no <b>top ' + fl.cur.pct + '</b> dos fãs dela</span></div>' +
         '<div class="fan-bar"><i style="width:' + fl.prog + '%"></i></div>' +
@@ -2799,11 +2808,11 @@
       if (pr.error) { b.innerHTML = '<p class="muted-note">Erro: ' + escHtml(pr.error.message) + '</p>'; return; }
       var chatOnly = !!AI_PERSONAS[creatorKey];
       if (chatOnly) {
-        var freeOnly = (pr.data || []).filter(function (p) { return p.is_free; });
+        var freeOnly = (pr.data || []).filter(function (p) { return p.is_free; }).slice(0, 3);
         if (!freeOnly.length) { b.innerHTML = '<p class="muted-note">' + L("Fala com ela no chat — o resto ela te mostra lá. 😏", "Talk to her in the chat — she shows you the rest there. 😏", "Habla con ella en el chat — el resto te lo muestra ahí. 😏") + '</p>'; return; }
-        b.innerHTML = '<div class="rc-grid">' + freeOnly.map(function (p) {
-          return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div></div>';
-        }).join("") + '</div><p class="muted-note" style="margin-top:.6rem">' + L("Isso é só a prévia. As fotos de verdade ela manda na conversa.", "This is just the preview. The real photos she sends in the chat.", "Esto es solo la prévia. Las fotos de verdad las manda en la charla.") + '</p>';
+        b.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem">' + freeOnly.map(function (p) {
+          return '<div class="rc-media" id="rc-' + p.id + '" style="aspect-ratio:1;border-radius:10px;overflow:hidden"></div>';
+        }).join("") + '</div><p class="muted-note" style="margin-top:.55rem;font-size:.82rem">' + L("Só uma amostra. As fotos de verdade ela manda na conversa. 😏", "Just a taste. The real photos she sends in the chat. 😏", "Solo una muestra. Las fotos de verdad las manda en la charla. 😏") + '</p>';
         freeOnly.forEach(showFree);
         return;
       }
@@ -3734,7 +3743,7 @@
         }
         her(d.reply);
         if (!tick && bal > 0) startClock();
-        if (d.gift && d.gift.url) { setTimeout(function () { if (d.gift.caption) her(d.gift.caption); body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:4px;max-width:72%"><img src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block"></div>'); body.scrollTop = body.scrollHeight; }, 800); }
+        if (d.gift && d.gift.url) { setTimeout(function () { if (d.gift.caption) her(d.gift.caption); body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:200px"><img src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block"></div>'); body.scrollTop = body.scrollHeight; }, 800); }
         if (typeof d.balance === "number") setBal(d.balance);
         try { document.getElementById("chat-text").focus(); } catch (_) {}
       }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
