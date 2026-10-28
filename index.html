@@ -3166,7 +3166,7 @@
           '<td style="font-size:.82rem">' + escHtml(t.creator_key || '') + '</td>' +
           '<td style="font-size:.8rem;color:var(--mut);max-width:220px">' + escHtml(snippet) + (snippet.length >= 46 ? '…' : '') + '</td>' +
           '<td>' + badge + '</td>' +
-          '<td><button class="btn ' + (t.flagged || t.human_mode ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '">' + (t.human_mode ? 'Continuar' : 'Entrar') + '</button></td></tr>';
+          '<td><button class="btn ' + (t.flagged || t.human_mode ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '">' + (t.human_mode ? 'Continuar' : 'Intervir') + '</button></td></tr>';
       });
       h += '</tbody></table></div><p class="muted-note" style="margin-top:.5rem">' + rows.length + ' conversa(s) · flagadas no topo.</p>';
       box.innerHTML = h;
