@@ -192,6 +192,8 @@ fbq('track', 'PageView');
     .roles button { padding: 0.42rem 0.6rem; }
     .top-actions { gap: 0.35rem; }
     .icon-btn { width: 36px; height: 36px; }
+    /* CRITICO iOS: fonte >=16px em TODO campo evita o zoom-on-focus do Safari (que desloca o site e baguncava o teclado) */
+    input, textarea, select { font-size: 16px !important; }
     /* teclado iOS: QUALQUER modal e dimensionado pela area visivel (height/transform via JS) e centraliza acima do teclado */
     .modal-bg.vv-sized { bottom: auto; overflow-y: auto; }
     /* chat em tela cheia: o wrapper vira a area visivel e o chat preenche ele */
@@ -835,8 +837,8 @@ fbq('track', 'PageView');
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(5,8,16,0.94); display: flex; align-items: center; justify-content: center; padding: 16px; -webkit-user-select: none; user-select: none; }
   .lightbox .lb-wrap { position: relative; max-width: 100%; max-height: 100%; display: flex; }
   .lightbox img { max-width: 92vw; max-height: 82vh; object-fit: contain; border-radius: 10px; -webkit-user-drag: none; }
-  .lightbox .lb-close { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); z-index: 3; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; cursor: pointer; }
-  .lightbox .lb-close svg { width: 18px; height: 18px; }
+  .lightbox .lb-close { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); z-index: 3; width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.9); background: rgba(0,0,0,0.75); color: #fff; display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+  .lightbox .lb-close svg { width: 26px; height: 26px; }
   .lightbox .wm { border-radius: 10px; }
   .lightbox .lb-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.7); font-size: 0.74rem; z-index: 3; }
   .rc-sub { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0.7rem 0.9rem; margin-bottom: 0.8rem; font-size: 0.86rem; }
@@ -852,8 +854,8 @@ fbq('track', 'PageView');
   #panic-btn { position: fixed; left: max(14px, env(safe-area-inset-left, 0px)); bottom: calc(1.3rem + env(safe-area-inset-bottom, 0px)); z-index: 400; display: inline-flex; align-items: center; gap: 0.4rem; border: 0; border-radius: 999px; background: #1b2230; color: #fff; font-family: var(--font-body); font-weight: 700; font-size: 0.78rem; padding: 0.55rem 0.9rem; box-shadow: 0 6px 20px rgba(0,0,0,0.35); opacity: 0.82; }
   #panic-btn:hover { opacity: 1; }
   #panic-btn svg { width: 15px; height: 15px; }
-  /* quando um gate/modal esta aberto: trava o fundo (nao arrasta pra lado/cima) e some com o botao flutuante */
-  body.modal-open { position: fixed; left: 0; right: 0; width: 100%; overflow: hidden; }
+  /* quando um gate/modal esta aberto: trava o scroll do fundo (leve, nao quebra o teclado do iOS) e some com o botao flutuante */
+  body.modal-open { overflow: hidden; }
   body.modal-open #panic-btn, body.modal-open .chat-fab { display: none !important; }
   #ag-go { margin-top: 0.7rem; }
   .live-sale { animation: rise .4s ease both; }
@@ -890,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b19"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b20"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2642,17 +2644,11 @@ fbq('track', 'PageView');
     new MutationObserver(function () {
       var bg = modalRoot.querySelector(".modal-bg");
       if (bg && bg !== _vvBg) {
-        // um modal (novo) abriu — trava o fundo uma vez e (re)conecta o ajuste de teclado nesse modal
-        if (!document.body.classList.contains("modal-open")) {
-          _mScrollY = window.scrollY || window.pageYOffset || 0;
-          document.body.style.top = (-_mScrollY) + "px";
-          document.body.classList.add("modal-open");
-        }
+        // um modal (novo) abriu — trava o scroll do fundo e (re)conecta o ajuste de teclado nesse modal
+        document.body.classList.add("modal-open");
         detachVV(); attachVV(bg);
       } else if (!bg && document.body.classList.contains("modal-open")) {
         document.body.classList.remove("modal-open");
-        document.body.style.top = "";
-        try { window.scrollTo(0, _mScrollY); } catch (e) {}
         detachVV();
       }
     }).observe(modalRoot, { childList: true });
