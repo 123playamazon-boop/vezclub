@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b22"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b23"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1090,11 +1090,20 @@ fbq('track', 'PageView');
     var likes = Math.floor(subs * (14 + seedRand(key, "l") * 38)); // curtidas ~14–52x os assinantes
     return { subs: subs, likes: likes };
   }
+  function pickI18n(row, base) { return (lang === "en" ? (row[base + "_en"] || row[base]) : lang === "es" ? (row[base + "_es"] || row[base]) : row[base]) || ""; }
   function buildCreatorFromDb(row) {
-    if (DEMO[row.key]) { var d = DEMO[row.key]; d.ai = !!row.is_ai; d.hasChat = (row.has_chat !== false); d.hasSub = (row.has_subscription !== false); if (row.avatar_path) { d.avatarUrl = mediaUrl(row.avatar_path); d.avatarPath = row.avatar_path; } if (row.cover_path) { d.coverUrl = mediaUrl(row.cover_path); d.coverPath = row.cover_path; } return d; }
+    var hook = pickI18n(row, "hook"), tg = pickI18n(row, "tag");
+    if (DEMO[row.key]) {
+      var d = DEMO[row.key]; d.ai = !!row.is_ai; d.hasChat = (row.has_chat !== false); d.hasSub = (row.has_subscription !== false);
+      // texto sempre do banco no idioma certo (evita bio em PT com UI em EN)
+      if (hook) { d.hook = hook; d.story = hook; d.offerLine = hook; } if (tg) d.tag = tg;
+      if (row.avatar_path) { d.avatarUrl = mediaUrl(row.avatar_path); d.avatarPath = row.avatar_path; }
+      if (row.cover_path) { d.coverUrl = mediaUrl(row.cover_path); d.coverPath = row.cover_path; }
+      return d;
+    }
     var color = [row.color1 || "#2f6bff", row.color2 || "#7a3cff"];
     var vs = vanityStats(row.key);
-    var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: row.tag || "", color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: row.hook || "", story: row.hook || "", interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: row.hook || "Entra no meu mundo.", stack: ["Meu feed completo", "Conteúdo novo toda semana", "Chat direto comigo", "Desconto em tudo"], bonus: ["Pack de boas-vindas"], guarantee: "7 dias de garantia.", left: 20, fans: [] };
+    var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: tg, color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: hook, story: hook, interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: hook || L("Entra no meu mundo.", "Step into my world.", "Entra en mi mundo."), stack: [L("Meu feed completo", "My full feed", "Mi feed completo"), L("Conteúdo novo toda semana", "New content every week", "Contenido nuevo cada semana"), L("Chat direto comigo", "Chat directly with me", "Chat directo conmigo"), L("Desconto em tudo", "Discount on everything", "Descuento en todo")], bonus: [L("Pack de boas-vindas", "Welcome pack", "Pack de bienvenida")], guarantee: L("7 dias de garantia.", "7-day guarantee.", "7 días de garantía."), left: 20, fans: [] };
     if (row.avatar_path) { c.avatarUrl = mediaUrl(row.avatar_path); c.avatarPath = row.avatar_path; }
     if (row.cover_path) { c.coverUrl = mediaUrl(row.cover_path); c.coverPath = row.cover_path; }
     c.hasChat = (row.has_chat !== false);
@@ -1105,14 +1114,14 @@ fbq('track', 'PageView');
   var AI_PERSONAS = {};
   function loadPersonas() {
     if (!sb) return;
-    sb.from("chat_personas").select("creator_key,greeting,credit_cost_per_msg").eq("active", true).then(function (r) {
+    sb.from("chat_personas").select("creator_key,greeting,greeting_en,greeting_es,credit_cost_per_msg").eq("active", true).then(function (r) {
       if (r.error || !r.data) return;
-      var m = {}; r.data.forEach(function (p) { m[p.creator_key] = p; }); AI_PERSONAS = m;
+      var m = {}; r.data.forEach(function (p) { p.greeting = (lang === "en" ? (p.greeting_en || p.greeting) : lang === "es" ? (p.greeting_es || p.greeting) : p.greeting); m[p.creator_key] = p; }); AI_PERSONAS = m;
     });
   }
   function loadCreators(cb) {
     if (!sb) { if (cb) cb(); return; }
-    sb.from("creators").select("key,display_name,handle,tag,sub_price_cents,is_ai,online,hook,color1,color2,avatar_path,cover_path,has_chat,has_subscription").then(function (r) {
+    sb.from("creators").select("key,display_name,handle,tag,tag_en,tag_es,sub_price_cents,is_ai,online,hook,hook_en,hook_es,color1,color2,avatar_path,cover_path,has_chat,has_subscription").then(function (r) {
       if (!r.error && r.data && r.data.length) {
         // modelos com fotos em baixa resolução vão pro final do feed até serem atualizadas
         var LOWRES = { nina: 1, sofia: 1, emma: 1, maya: 1 };
@@ -1741,7 +1750,7 @@ fbq('track', 'PageView');
   }
   function applyDynTranslation() {
     var tl = lang;
-    var nodes = document.querySelectorAll(".pf-hook, .pf-about, .cc-hook2, .sv-hook, .rc-cap, .ph-time ~ .post-cap, .post-cap");
+    var nodes = document.querySelectorAll(".rc-cap, .ph-time ~ .post-cap, .post-cap");
     nodes.forEach(function (el) {
       if (el.querySelector && el.querySelector("*")) return; // only plain-text nodes
       var orig = el.getAttribute("data-orig");
@@ -4245,7 +4254,7 @@ fbq('track', 'PageView');
         else { setBal((d && d.balance) || 0); showBuy(); }
       }).catch(function () { setBal(0); showBuy(); });
     });
-    function showGreeting() { if (lang !== "pt") { translateOne(greeting, lang, function (t) { her(t || greeting); }); } else { her(greeting); } }
+    function showGreeting() { her(greeting); } // greeting ja vem no idioma do app (banco), sem traducao no cliente
     sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) {
       if (!tr.data) { showGreeting(); startPoll(); return; }
       threadId = tr.data.id;
