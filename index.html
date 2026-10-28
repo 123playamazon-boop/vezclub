@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Vezclub</title>
 <!-- Meta Pixel Code -->
@@ -776,7 +776,7 @@ fbq('track', 'PageView');
   .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); animation: typedot 1.2s infinite; }
   .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
   @keyframes typedot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
-  .chat-input { display: flex; gap: 0.5rem; padding: 0.7rem; border-top: 1px solid var(--line); background: var(--surface); }
+  .chat-input { display: flex; gap: 0.5rem; padding: 0.7rem; border-top: 1px solid var(--line); background: var(--surface); flex: none; }
   .chat-input input { flex: 1; min-width: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 0.6rem 0.95rem; color: var(--fg); font-family: inherit; font-size: 0.9rem; }
   .chat-input input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .chat-input button { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: grid; place-items: center; }
@@ -850,7 +850,8 @@ fbq('track', 'PageView');
   #panic-btn { position: fixed; left: max(14px, env(safe-area-inset-left, 0px)); bottom: calc(1.3rem + env(safe-area-inset-bottom, 0px)); z-index: 400; display: inline-flex; align-items: center; gap: 0.4rem; border: 0; border-radius: 999px; background: #1b2230; color: #fff; font-family: var(--font-body); font-weight: 700; font-size: 0.78rem; padding: 0.55rem 0.9rem; box-shadow: 0 6px 20px rgba(0,0,0,0.35); opacity: 0.82; }
   #panic-btn:hover { opacity: 1; }
   #panic-btn svg { width: 15px; height: 15px; }
-  /* quando um gate/modal esta aberto, some com o botao flutuante pra nao cobrir conteudo (termos, login) */
+  /* quando um gate/modal esta aberto: trava o fundo (nao arrasta pra lado/cima) e some com o botao flutuante */
+  body.modal-open { position: fixed; left: 0; right: 0; width: 100%; overflow: hidden; }
   body.modal-open #panic-btn, body.modal-open .chat-fab { display: none !important; }
   #ag-go { margin-top: 0.7rem; }
   .live-sale { animation: rise .4s ease both; }
@@ -2633,41 +2634,72 @@ fbq('track', 'PageView');
 
   /* ---------------- modals ---------------- */
   var modalRoot = document.getElementById("modal-root");
+  var _mScrollY = 0;
   try {
     new MutationObserver(function () {
-      document.body.classList.toggle("modal-open", modalRoot.childElementCount > 0);
+      var open = modalRoot.childElementCount > 0;
+      var has = document.body.classList.contains("modal-open");
+      if (open && !has) {
+        _mScrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.style.top = (-_mScrollY) + "px";
+        document.body.classList.add("modal-open");
+      } else if (!open && has) {
+        document.body.classList.remove("modal-open");
+        document.body.style.top = "";
+        try { window.scrollTo(0, _mScrollY); } catch (e) {}
+      }
     }).observe(modalRoot, { childList: true });
   } catch (e) {}
   /* chat em tela cheia no celular: ancora no visualViewport pra o teclado do iOS nao cobrir o composer */
-  var _vvFit = null;
+  var _vvFit = null, _vvEl = null, _vvRAF = 0, _vvFocusIn = null;
   function installChatVV() {
     try {
-      if (!window.visualViewport) return;
       if (!window.matchMedia("(max-width:560px)").matches) return;
       var bg = modalRoot.querySelector(".modal-bg");
       var el = modalRoot.querySelector(".chat-modal");
       if (!el) return;
+      _vvEl = el;
       if (bg) bg.classList.add("chat-open");
-      try { document.body.style.overflow = "hidden"; } catch (e) {}
+      try { document.body.style.overflow = "hidden"; document.documentElement.style.overflow = "hidden"; } catch (e) {}
+      var vv = window.visualViewport;
       _vvFit = function () {
-        var vv = window.visualViewport;
-        el.style.height = vv.height + "px";
-        el.style.top = vv.offsetTop + "px";
+        try { window.scrollTo(0, 0); } catch (e) {}
+        if (vv) {
+          el.style.height = vv.height + "px";
+          el.style.top = vv.offsetTop + "px";
+          el.style.left = vv.offsetLeft + "px";
+          el.style.width = vv.width + "px";
+        } else {
+          el.style.height = window.innerHeight + "px";
+          el.style.top = "0px";
+        }
       };
-      window.visualViewport.addEventListener("resize", _vvFit);
-      window.visualViewport.addEventListener("scroll", _vvFit);
+      if (vv) { vv.addEventListener("resize", _vvFit); vv.addEventListener("scroll", _vvFit); }
+      window.addEventListener("resize", _vvFit);
+      // iOS dispara o resize atrasado e empurra a pagina: refit acompanhando a animacao do teclado
+      _vvFocusIn = function () {
+        var t0 = Date.now();
+        (function loop() {
+          _vvFit();
+          if (Date.now() - t0 < 800) _vvRAF = requestAnimationFrame(loop);
+        })();
+      };
+      el.addEventListener("focusin", _vvFocusIn);
       _vvFit();
     } catch (e) {}
   }
   function removeChatVV() {
     try {
-      if (_vvFit && window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", _vvFit);
-        window.visualViewport.removeEventListener("scroll", _vvFit);
+      var vv = window.visualViewport;
+      if (_vvFit) {
+        if (vv) { vv.removeEventListener("resize", _vvFit); vv.removeEventListener("scroll", _vvFit); }
+        window.removeEventListener("resize", _vvFit);
       }
+      if (_vvEl && _vvFocusIn) _vvEl.removeEventListener("focusin", _vvFocusIn);
+      if (_vvRAF) cancelAnimationFrame(_vvRAF);
     } catch (e) {}
-    _vvFit = null;
-    try { document.body.style.overflow = ""; } catch (e) {}
+    _vvFit = null; _vvEl = null; _vvFocusIn = null; _vvRAF = 0;
+    try { document.body.style.overflow = ""; document.documentElement.style.overflow = ""; } catch (e) {}
   }
   function closeModal() { removeChatVV(); if (chatCh && sb) { try { sb.removeChannel(chatCh); } catch (e) {} chatCh = null; } modalRoot.innerHTML = ""; }
 
