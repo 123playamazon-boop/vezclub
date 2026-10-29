@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b42"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b43"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1807,7 +1807,7 @@ fbq('track', 'PageView');
     var CATS = [{ k: "alta", t: "Em alta" }, { k: "online", t: "Online agora" }, { k: "fitness", t: "Fitness" }, { k: "fashion", t: "Fashion" }, { k: "lifestyle", t: "Lifestyle" }];
     var isca = PHOTO_LADDER[0].usd;
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
-    html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Elas estão online agora — e esperando só por você.", "They're online right now — and waiting just for you.", "Ellas están en línea ahora — y esperándote solo a ti.") + '</h1><p>' + L("Escolhe uma e cai num chat privado, quente e só de vocês dois — com fotos que ela não mostra em lugar nenhum. O 1º minuto é por nossa conta.", "Pick one and drop into a private chat, just the two of you — with photos she shows nowhere else. The first minute's on us.", "Elige una y entra en un chat privado, solo de los dos — con fotos que no enseña en ningún otro lugar. El primer minuto corre por nuestra cuenta.") + '</p></div>';
+    html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Alguém que fica feliz de verdade que você apareceu.", "Someone who's actually glad you showed up.", "Alguien que se alegra de verdad de que apareciste.") + '</h1><p>' + L("Escolhe quem você curtir e cai num chat privado — ela responde em segundos, lembra do que você conta, e manda fotos que você não acha em nenhum outro lugar. 1º minuto grátis, sem cartão.", "Pick who you like and slip into a private chat — she replies in seconds, remembers what you tell her, and shares photos you won't find anywhere else. First minute's free, no card.", "Elige a quien te guste y entra en un chat privado — ella responde en segundos, recuerda lo que le cuentas, y comparte fotos que no encuentras en ningún otro lado. 1er minuto gratis, sin tarjeta.") + '</p></div>';
     html += '<div style="display:flex;justify-content:flex-end;margin:-0.6rem 0 0.8rem"><button class="btn btn-ghost btn-sm" data-coll="1">' + I.star + ' Minha coleção</button></div>';
     html += storiesRow();
     if (!state.feedCat) state.feedCat = "alta";
@@ -4264,11 +4264,30 @@ fbq('track', 'PageView');
     function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
 
     var PKGS = PKG_SETS.A; // precos unificados: exibido == cobrado (payment_packs = set A)
+    var PKG_NAMES = {
+      10: L("Esquenta", "Warm-up", "Calentamiento"),
+      20: L("Fica mais um pouco", "Stay a while", "Quédate un rato"),
+      30: L("Sem pressa", "Take your time", "Sin prisa"),
+      60: L("A noite toda", "The whole night", "Toda la noche")
+    };
     function pkgBtns() {
       return PKGS.map(function (p) {
-        var tagp = p.min === 60 ? ' · ' + L('melhor', 'best', 'mejor') : (p.min === 10 ? ' · ' + L('pra começar', 'to start', 'para empezar') : '');
-        return '<button class="btn btn-primary btn-block" data-buytime="' + p.min + '" data-price="' + p.price + '" style="margin-bottom:.5rem">' + p.min + ' min · $' + p.price.toFixed(2) + tagp + '</button>';
+        var nm = PKG_NAMES[p.min] || (p.min + " min");
+        var best = p.min === 60 ? ' · ' + L('melhor', 'best', 'mejor') : '';
+        return '<button class="btn btn-primary btn-block" data-buytime="' + p.min + '" data-price="' + p.price + '" style="margin-bottom:.5rem">' + nm + ' · ' + p.min + ' min — $' + p.price.toFixed(2) + best + '</button>';
       }).join("");
+    }
+    function valueStack() {
+      var items = [
+        L("Privado, só vocês dois — ela responde em segundos", "Private 1-on-1 — she texts back in seconds", "Privado, solo ustedes dos — ella responde en segundos"),
+        L("Ela lembra de você — teu nome, o que você curte", "She remembers you — your name, what you're into", "Ella te recuerda — tu nombre, lo que te gusta"),
+        L("Fotos que ela só manda aqui, nunca no feed", "Photos she only sends here, never on her feed", "Fotos que solo manda aquí, nunca en su feed"),
+        L("Online quando você estiver — 2h da manhã inclusive", "Online whenever you are — 2am included", "En línea cuando tú estés — 2 de la mañana incluido"),
+        L("Sem app, sem cadastro, ninguém vê", "No app, no sign-up, nobody sees", "Sin app, sin registro, nadie ve")
+      ];
+      return '<div style="font-weight:800;margin-bottom:.45rem">' + L("Desbloqueia ela — A Linha Privada dela", "Unlock her — Her Private Line", "Desbloquéala — Su Línea Privada") + '</div>' +
+        '<div style="text-align:left;display:inline-block;font-size:.84rem;line-height:1.55;margin-bottom:.8rem;opacity:.92">' +
+        items.map(function (t) { return '<div>✓ ' + escHtml(t) + '</div>'; }).join("") + '</div>';
     }
     function wirePkgs(scope) {
       scope.querySelectorAll("[data-buytime]").forEach(function (b) {
@@ -4309,7 +4328,7 @@ fbq('track', 'PageView');
     function showBuy() {
       // acabou o 1 minuto gratis → paga pra continuar (Stripe). Sem mais tempo gratis aqui.
       logPaywall();
-      var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">' + L("Seu tempo com a ", "Your time with ", "Tu tiempo con ") + escHtml(first) + L(" acabou", " is up", " se acabó") + '</div><div class="muted-note" style="margin-bottom:.9rem">' + L("Recarregue pra continuar — ela tá te esperando.", "Recharge to keep going — she's waiting for you.", "Recarga para seguir — ella te espera.") + '</div>' + pkgBtns() + '</div>';
+      var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.7rem;font-size:1.02rem">' + L("Acabou nosso 1º minuto… e eu tava só começando 😏", "That was just our first minute… and I was only getting started 😏", "Se acabó nuestro 1er minuto… y yo apenas empezaba 😏") + '</div>' + valueStack() + pkgBtns() + '</div>';
       body.innerHTML = h;
       logPaywall();
       try { if (sb) sb.rpc("track_ux", { p_event: "recharge_view", p_creator_key: cid }).then(function () {}, function () {}); } catch (e) {}
@@ -4434,10 +4453,10 @@ fbq('track', 'PageView');
     try { if (localStorage.getItem("aura_age_ok")) return; } catch (e) {}
     modalRoot.innerHTML = '<div class="modal-bg"><div class="modal"><div class="modal-pad age-center">' +
       '<div class="age-logo">V</div>' +
-      '<h3>' + L("Ela tá online agora 💜", "She's online right now 💜", "Ella está en línea ahora 💜") + '</h3>' +
-      '<p class="m-sub">' + L("Seu 1º minuto é grátis — sem cartão, é só digitar. Entra e fala com ela num chat privado, só vocês dois.", "Your first minute is free — no card, just type. Come in and talk to her in a private chat, just the two of you.", "Tu 1er minuto es gratis — sin tarjeta, solo escribe. Entra y habla con ella en un chat privado, solo ustedes dos.") + '</p>' +
+      '<h3>' + L("Tá tarde — e teu celular ficou quieto a noite toda.", "It's late — and your phone's been quiet all night.", "Es tarde — y tu teléfono estuvo callado toda la noche.") + '</h3>' +
+      '<p class="m-sub">' + L("Ela não. Tá acordada, de bom humor, esperando alguém como você aparecer hoje — pra conversar, provocar, e pegar as fotos que ela não põe no feed. O 1º minuto é por conta dela.", "She's not. She's up, in a good mood, hoping someone like you shows up tonight — to talk, to tease, to get the photos she keeps off her feed. Your first minute's on her.", "Ella no. Está despierta, de buen humor, esperando que alguien como tú aparezca hoy — para hablar, provocar, y ver las fotos que no pone en su feed. El 1er minuto va por su cuenta.") + '</p>' +
       '<div class="modal-foot" style="flex-direction:column;gap:0.45rem">' +
-        '<button class="btn btn-primary btn-block" id="age-yes">' + L("Entrar · 1º minuto grátis", "Come in · first minute free", "Entrar · 1er minuto gratis") + '</button>' +
+        '<button class="btn btn-primary btn-block" id="age-yes">' + L("Entrar — ela tá te esperando", "Come in — she's waiting", "Entrar — ella te espera") + '</button>' +
         '<p style="font-size:0.72rem;line-height:1.3;color:var(--muted);margin:0.1rem 0 0;opacity:0.85">' + L("O Vezclub é só para adultos. Ao entrar, você confirma que tem 18 anos ou mais.", "Vezclub is for adults only. By entering, you confirm you're 18 or older.", "Vezclub es solo para adultos. Al entrar, confirmas que tienes 18 años o más.") + '</p>' +
         '<button class="btn btn-ghost btn-block btn-sm" id="age-no" style="opacity:0.6;font-size:0.78rem">' + L("Tenho menos de 18 · sair", "I'm under 18 · leave", "Soy menor de 18 · salir") + '</button>' +
       '</div>' +
