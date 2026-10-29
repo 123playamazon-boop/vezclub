@@ -828,9 +828,10 @@ fbq('track', 'PageView');
   .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
   @keyframes typedot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
   .chat-input { display: flex; gap: 0.5rem; padding: 0.7rem; border-top: 1px solid var(--line); background: var(--surface); flex: none; }
-  .chat-input input { flex: 1; min-width: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 0.6rem 0.95rem; color: var(--fg); font-family: inherit; font-size: 0.9rem; }
+  .chat-input input { flex: 1; min-width: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 0.6rem 0.95rem; color: var(--fg); font-family: inherit; font-size: 0.9rem; touch-action: manipulation; }
   .chat-input input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .chat-input button { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: grid; place-items: center; }
+  .chat-input button { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: grid; place-items: center; touch-action: manipulation; }
+  button, .btn, .chip, input, a { touch-action: manipulation; }
   .chat-input button svg { width: 18px; height: 18px; }
   .chat-tip { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--good); font-weight: 800; font-size: 1.05rem; }
   .tip-row { display: none; gap: 0.4rem; padding: 0.5rem 0.7rem; border-top: 1px solid var(--line); background: var(--surface); flex-wrap: wrap; }
@@ -939,7 +940,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b57"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b58"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4690,9 +4691,12 @@ fbq('track', 'PageView');
       }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
     }
     var _sendBtn = document.getElementById("chat-send");
-    // impede que tocar no botao tire o foco do campo (mantem o teclado aberto e o envio dispara no 1o toque)
+    // mobile: dispara no touchend (sem os ~300ms de atraso do duplo-toque) e nao tira o foco do campo
+    _sendBtn.style.touchAction = "manipulation";
     _sendBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
-    _sendBtn.onclick = doSend;
+    var _stouch = 0;
+    _sendBtn.addEventListener("touchend", function (e) { e.preventDefault(); _stouch = Date.now(); doSend(); }, { passive: false });
+    _sendBtn.onclick = function () { if (Date.now() - _stouch < 800) return; doSend(); };
     document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
     document.getElementById("ch-back").onclick = function () { closeModal(); };
     // no mobile nao foca automatico (evita o teclado abrir na hora e baguncar o layout); o usuario toca no campo
