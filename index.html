@@ -941,7 +941,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b61"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b62"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -3545,7 +3545,7 @@ fbq('track', 'PageView');
           var snippet = (t.last_msg || '').slice(0, 40);
           var badge = t.human_mode ? '<span style="color:#2563eb">🙋 você</span>' : t.flagged ? '<span style="color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>' : '<span style="color:var(--mut)">🤖 robô</span>';
           var sel = t.thread_id === ivSelTid;
-          h += '<div class="liv-item' + (sel ? ' on' : '') + (t.flagged ? ' flag' : '') + '" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '" data-iname="' + escHtml(livName(t)) + '" data-igeo="' + escHtml(geoTxt) + '">' +
+          h += '<div class="liv-item' + (sel ? ' on' : '') + (t.flagged ? ' flag' : '') + '" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '" data-iname="' + escHtml(livName(t)) + '" data-igeo="' + escHtml(geoTxt) + '" data-icc="' + escHtml(t.country || '') + '">' +
             '<div class="liv-ava"><img src="' + modelAv(t.creator_key) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">' + (on ? '<span class="liv-dot"></span>' : '') + '</div>' +
             '<div class="liv-main">' +
               '<div class="liv-top"><b>' + escHtml(livName(t)) + '</b>' + (geoTxt ? '<span class="liv-geo" title="localização aproximada (IP)">' + escHtml(geoTxt) + '</span>' : '') + '<span class="liv-time">' + livAgo(t.last_message_at) + '</span></div>' +
@@ -3559,7 +3559,7 @@ fbq('track', 'PageView');
             ivSelTid = b.getAttribute('data-interv');
             box2.querySelectorAll('.liv-item').forEach(function (x) { x.classList.toggle('on', x === b); });
             var conv = document.getElementById('live-conv');
-            openIntervene(b.getAttribute('data-interv'), b.getAttribute('data-icreator'), b.getAttribute('data-iemail'), b.getAttribute('data-ihuman') === '1', conv, b.getAttribute('data-iname'), b.getAttribute('data-igeo'));
+            openIntervene(b.getAttribute('data-interv'), b.getAttribute('data-icreator'), b.getAttribute('data-iemail'), b.getAttribute('data-ihuman') === '1', conv, b.getAttribute('data-iname'), b.getAttribute('data-igeo'), b.getAttribute('data-icc'));
           };
         });
       });
@@ -3567,7 +3567,14 @@ fbq('track', 'PageView');
     paintThreads();
     liveListPoll = setInterval(paintThreads, 5000);
   }
-  function openIntervene(tid, creatorKey, email, human, mountEl, custDisplayName, custGeo) {
+  function countryToLang(cc) {
+    cc = (cc || "").toUpperCase();
+    if (["BR", "PT", "AO", "MZ"].indexOf(cc) >= 0) return "pt";
+    if (["ES", "MX", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU", "BO", "DO", "HN", "PY", "SV", "NI", "CR", "PA", "UY"].indexOf(cc) >= 0) return "es";
+    if (cc) return "en"; // qualquer outro país (EUA etc.) → inglês
+    return null;
+  }
+  function openIntervene(tid, creatorKey, email, human, mountEl, custDisplayName, custGeo, custCountry) {
     var ipoll = null, shownMax = 0, msgsArr = [];
     var LGS = { pt: "PT", en: "EN", es: "ES" };
     var attLang = "pt"; try { attLang = localStorage.getItem("vez_att_lang") || "pt"; } catch (e) {}
@@ -3689,7 +3696,7 @@ fbq('track', 'PageView');
       var counts = {}, last = null;
       msgsArr.forEach(function (m) { if (m.role === "user") { var g = guessLang(m.content); if (g) { counts[g] = (counts[g] || 0) + 1; last = g; } } });
       var best = null, bc = 0; Object.keys(counts).forEach(function (k) { if (counts[k] > bc) { bc = counts[k]; best = k; } });
-      custLang = best || last || null;
+      custLang = best || last || countryToLang(custCountry) || null; // reforço: se o texto não revelou, usa o país (EUA → inglês)
     }
     function sync() {
       sb.rpc("admin_thread_msgs", { p_thread: tid }).then(function (r) {
