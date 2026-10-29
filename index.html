@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b36"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b37"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4299,7 +4299,7 @@ fbq('track', 'PageView');
     function showOpenPacks() {
       if (document.getElementById("open-packs")) return;
       logPaywall();
-      var h = '<div id="open-packs" class="bub her" style="max-width:92%"><div style="font-weight:700;margin-bottom:.3rem">' + L("Seu 1º minuto é por minha conta 💜", "Your 1st minute is on me 💜", "Tu 1er minuto va por mi cuenta 💜") + '</div><div style="font-size:.82rem;margin-bottom:.5rem;opacity:.85">' + L("Depois é só escolher seu tempo comigo 👇", "After that, just pick your time with me 👇", "Después solo elige tu tiempo conmigo 👇") + '</div>' + pkgBtns() + '</div>';
+      var h = '<div id="open-packs" class="bub her" style="max-width:92%"><div style="font-weight:700;margin-bottom:.3rem">' + L("Seu 1º minuto é GRÁTIS 💜", "Your 1st minute is FREE 💜", "Tu 1er minuto es GRATIS 💜") + '</div><div style="font-size:.82rem;margin-bottom:.5rem;opacity:.85">' + L("Não paga nada, nem precisa de cartão — é só digitar e falar comigo. Quando acabar, você escolhe mais tempo 👇", "You pay nothing, no card needed — just type and talk to me. When it runs out, you pick more time 👇", "No pagas nada, sin tarjeta — solo escribe y habla conmigo. Cuando se acabe, eliges más tiempo 👇") + '</div>' + pkgBtns() + '</div>';
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
       wirePkgs(body);
     }
@@ -4323,7 +4323,7 @@ fbq('track', 'PageView');
       // sem saldo PRA ESTA MODELO: oferece 1 minuto grátis, uma vez por modelo (fisga antes de cobrar)
       sb.rpc("claim_free_trial_m", { p_creator_key: cid, p_seconds: 60 }).then(function (r) {
         var d = r && r.data;
-        if (d && d.granted) { setBal(d.balance || 60); priceBanner(true); note(L("Ganhou 1 minuto comigo — aproveita 😏", "You got 1 minute with me — enjoy 😏", "Ganaste 1 minuto conmigo — aprovecha 😏")); setTimeout(showOpenPacks, 1200); startClock(); }
+        if (d && d.granted) { setBal(d.balance || 60); priceBanner(true); note(L("Ganhou 1 minuto GRÁTIS comigo — é só escrever, sem pagar nada 😏", "You got 1 FREE minute with me — just start typing, no payment 😏", "Ganaste 1 minuto GRATIS conmigo — solo escribe, sin pagar nada 😏")); setTimeout(showOpenPacks, 1200); startClock(); }
         else { setBal((d && d.balance) || 0); showBuy(); }
       }).catch(function () { setBal(0); showBuy(); });
     });
