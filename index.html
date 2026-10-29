@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b41"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b42"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1470,15 +1470,22 @@ fbq('track', 'PageView');
       return '<div class="cc-foot" style="margin-top:0.95rem"><button class="btn btn-primary btn-block btn-sm" data-open="' + c.id + '">' + L("Ver perfil", "View profile", "Ver perfil") + '</button></div>';
     }
     var avBg = c.avatarUrl ? ("center/cover no-repeat url('" + avThumb(c, 90) + "')") : grad(c.color);
-    var invite = c.online
-      ? (c.name + ' <b>' + L("tá online te esperando", "is online waiting for you", "está en línea esperándote") + '</b> 💬')
-      : (c.name + ' ' + L("quer te conhecer — manda a primeira", "wants to meet you — send the first", "quiere conocerte — manda el primero") + ' 💬');
+    var teaser = c.online
+      ? L("oi 👀 tô bem aqui… me manda uma mensagem", "hey 👀 I'm right here… send me a message", "hola 👀 estoy aquí… mándame un mensaje")
+      : L("manda a primeira — respondo quando voltar 💬", "send the first one — I reply when I'm back 💬", "manda el primero — respondo cuando vuelva 💬");
     var sub = (c.online ? L("online agora", "online now", "en línea ahora") : L("responde quando voltar", "replies when she's back", "responde cuando vuelva"))
       + ' · <b>' + L("o 1º minuto é grátis", "the 1st minute is free", "el 1er minuto es gratis") + '</b>';
-    return '<div class="cc-invite"><div class="ci-av" style="background:' + avBg + '"></div>' +
-        '<div class="cc-invite-txt">' + invite + '</div></div>' +
-      '<div class="cc-foot" style="margin-top:0.6rem"><button class="btn btn-primary btn-block cc-chatbtn" data-chat-open="' + c.id + '">' + I.chatic + ' ' + L("Conversar com ", "Chat with ", "Charlar con ") + c.name + '</button></div>' +
-      '<div class="cc-invite-sub">' + sub + '</div>' +
+    return '<div class="cc-chat" data-ccid="' + c.id + '" style="margin-top:0.9rem">' +
+        '<div style="display:flex;gap:.5rem;align-items:center">' +
+          '<div class="ci-av" style="background:' + avBg + '"></div>' +
+          '<div style="flex:1;background:var(--surface-2);border-radius:13px;border-top-left-radius:4px;padding:.5rem .72rem;font-size:.86rem;line-height:1.3">' + escHtml(teaser) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:.4rem;margin-top:.5rem">' +
+          '<input class="cc-chat-inp" data-ccid="' + c.id + '" placeholder="' + escHtml(L("Escreve pra ", "Message ", "Escribe a ") + c.name) + '…" autocomplete="off" style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:.58rem .85rem;color:var(--fg);font-family:inherit;font-size:.88rem">' +
+          '<button class="btn btn-primary cc-chat-send" data-cc-go="' + c.id + '" aria-label="' + L("Enviar", "Send", "Enviar") + '" style="padding:.5rem .72rem;border-radius:999px;flex:none">' + I.send + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cc-invite-sub" style="margin-top:.45rem">' + sub + '</div>' +
       '<div class="cc-foot" style="margin-top:0.5rem"><button class="btn btn-ghost btn-block btn-sm" data-open="' + c.id + '">' + L("Ver perfil", "View profile", "Ver perfil") + '</button></div>';
   }
   function tickerLine() {
@@ -4129,11 +4136,11 @@ fbq('track', 'PageView');
     e.preventDefault(); e.stopPropagation();
     window.__gallery(srcs, imgs.indexOf(im));
   }, true);
-  function openAiChat(cid) {
+  function openAiChat(cid, firstMsg) {
     var c = CREATORS.find(function (x) { return x.id === cid; });
     if (!c) return;
     if (!sb) return;
-    if (!account) { ensureSessionThen(function () { openAiChat(cid); }); return; }
+    if (!account) { ensureSessionThen(function () { openAiChat(cid, firstMsg); }); return; }
     var persona = AI_PERSONAS[cid] || {};
     var greeting = persona.greeting || "oi 🌙";
     var first = (c.name || "").split(" ")[0];
@@ -4314,11 +4321,11 @@ fbq('track', 'PageView');
 
     sb.from("chat_credits_m").select("seconds_balance").eq("creator_key", cid).maybeSingle().then(function (cr) {
       var b0 = (cr.data && cr.data.seconds_balance) || 0;
-      if (b0 > 0) { setBal(b0); priceBanner(false); startClock(); return; }
+      if (b0 > 0) { setBal(b0); priceBanner(false); startClock(); maybeAutoSend(); return; }
       // sem saldo PRA ESTA MODELO: oferece 1 minuto grátis, uma vez por modelo (fisga antes de cobrar)
       sb.rpc("claim_free_trial_m", { p_creator_key: cid, p_seconds: 60 }).then(function (r) {
         var d = r && r.data;
-        if (d && d.granted) { setBal(d.balance || 60); priceBanner(true); note(L("Ganhou 1 minuto GRÁTIS comigo — é só escrever, sem pagar nada 😏", "You got 1 FREE minute with me — just start typing, no payment 😏", "Ganaste 1 minuto GRATIS conmigo — solo escribe, sin pagar nada 😏")); setTimeout(showOpenPacks, 1200); startClock(); }
+        if (d && d.granted) { setBal(d.balance || 60); priceBanner(true); note(L("Ganhou 1 minuto GRÁTIS comigo — é só escrever, sem pagar nada 😏", "You got 1 FREE minute with me — just start typing, no payment 😏", "Ganaste 1 minuto GRATIS conmigo — solo escribe, sin pagar nada 😏")); setTimeout(showOpenPacks, 1200); startClock(); maybeAutoSend(); }
         else { setBal((d && d.balance) || 0); showBuy(); }
       }).catch(function () { setBal(0); showBuy(); });
     });
@@ -4346,6 +4353,16 @@ fbq('track', 'PageView');
       }, 3000);
     }
 
+    function maybeAutoSend() {
+      if (!firstMsg) return;
+      var v = String(firstMsg).trim(); firstMsg = null;
+      if (!v) return;
+      // pequeno atraso: deixa a saudação dela renderizar antes da 1ª mensagem do usuário
+      setTimeout(function () {
+        var inp = document.getElementById("chat-text"); if (!inp) return;
+        inp.value = v; doSend();
+      }, 650);
+    }
     var sending = false;
     function doSend() {
       var inp = document.getElementById("chat-text"); if (!inp) return;
@@ -4471,7 +4488,29 @@ fbq('track', 'PageView');
     render();
   });
 
+  // Enter no mini-chat inline do card abre o chat com a mensagem digitada
+  app.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var inp = e.target.closest && e.target.closest(".cc-chat-inp");
+    if (!inp) return;
+    e.preventDefault();
+    var _ccid = inp.getAttribute("data-ccid");
+    var _v = (inp.value || "").trim();
+    openAiChat(_ccid, _v || null);
+  });
   app.addEventListener("click", function (e) {
+    // mini-chat inline no card do feed: enviar leva a 1ª mensagem direto pro chat
+    var ccGo = e.target.closest("[data-cc-go]");
+    if (ccGo) {
+      var _ccid = ccGo.getAttribute("data-cc-go");
+      var _wrap = ccGo.closest(".cc-chat");
+      var _inp = _wrap && _wrap.querySelector(".cc-chat-inp");
+      var _v = _inp ? (_inp.value || "").trim() : "";
+      openAiChat(_ccid, _v || null);
+      return;
+    }
+    // clique dentro do mini-chat (ex.: focar o campo) nao deve abrir o card
+    if (e.target.closest(".cc-chat")) return;
     var open = e.target.closest("[data-open]") || e.target.closest("[data-creator]");
     var buy = e.target.closest("[data-buy]");
     var tile = e.target.closest("[data-tile]");
