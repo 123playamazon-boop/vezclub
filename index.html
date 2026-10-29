@@ -939,9 +939,17 @@ fbq('track', 'PageView');
   var lang = (function () {
     try { var q = new URLSearchParams(location.search).get("lang"); if (q && LANGS.indexOf(q) >= 0) return q; } catch (e) {}
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
-    return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
+    // sem ?lang e sem preferencia salva: detecta pelo idioma do navegador.
+    // ESSENCIAL p/ o Brasil — navegador pt-BR cai no PT e ve o Pix (isPix depende de lang==="pt").
+    // en-US continua em ingles/Stripe. ?lang e o seletor sempre tem prioridade.
+    try {
+      var nv = ((navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage || "").toLowerCase();
+      if (nv.indexOf("pt") === 0) return "pt";
+      if (nv.indexOf("es") === 0) return "es";
+    } catch (e) {}
+    return "en"; // padrao final: ingles
   })();
-  var BUILD = "b65"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b66"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
