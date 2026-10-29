@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b44"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b45"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1872,7 +1872,7 @@ fbq('track', 'PageView');
         '<div class="cc-body">' +
           avatar(c) +
           '<div class="cc-name">' + c.name + '<span class="verif">' + I.verif + '</span></div>' +
-          '<div class="cc-handle">' + c.handle + ' · ' + c.city + '</div>' +
+          '<div class="cc-handle">' + escHtml(c.city || c.tag || '') + '</div>' +
           '<div class="cc-hook2">' + c.hook + '</div>' +
           status +
           '<div class="cc-live"><span class="d"></span>' + liveCount(c) + ' pessoas vendo agora</div>' +
@@ -1978,7 +1978,7 @@ fbq('track', 'PageView');
     // identity
     html += '<div class="pf-top">' + avatar(c) + (c.hasSub ? '<div class="pf-sub-btn">' + subBtn(false) + '</div>' : '') + '</div>';
     html += '<div class="pf-name">' + c.name + '<span class="verif">' + I.verif + '</span></div>';
-    var pfBits = [c.handle];
+    var pfBits = [];
     var pfLoc = [c.city, (c.age ? (c.age + ' ' + L("anos", "y/o", "años")) : "")].filter(Boolean).join(", ");
     if (pfLoc) pfBits.push(pfLoc);
     if (c.tag) pfBits.push(c.tag);
