@@ -941,7 +941,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b60"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b61"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4567,6 +4567,9 @@ fbq('track', 'PageView');
     }
 
     var PKGS = PKG_SETS.A; // precos unificados: exibido == cobrado (payment_packs = set A)
+    var PKGS_BRL = { 10: 19.90, 20: 34.90, 30: 49.90, 60: 89.90 }; // precos Pix (Brasil)
+    var isPix = (lang === "pt"); // publico BR paga via Pix inline (SyncPay); resto via Stripe
+    function brl(v) { return "R$ " + (v || 0).toFixed(2).replace(".", ","); }
     var PKG_NAMES = {
       10: L("Esquenta", "Warm-up", "Calentamiento"),
       20: L("Fica mais um pouco", "Stay a while", "Quédate un rato"),
@@ -4577,7 +4580,8 @@ fbq('track', 'PageView');
       return PKGS.map(function (p) {
         var nm = PKG_NAMES[p.min] || (p.min + " min");
         var best = p.min === 60 ? ' · ' + L('melhor', 'best', 'mejor') : '';
-        return '<button class="btn btn-primary btn-block" data-buytime="' + p.min + '" data-price="' + p.price + '" style="margin-bottom:.5rem">' + nm + ' · ' + p.min + ' min — $' + p.price.toFixed(2) + best + '</button>';
+        var priceTxt = isPix ? brl(PKGS_BRL[p.min] || p.price) : ('$' + p.price.toFixed(2));
+        return '<button class="btn btn-primary btn-block" data-buytime="' + p.min + '" data-price="' + p.price + '" style="margin-bottom:.5rem">' + nm + ' · ' + p.min + ' min — ' + priceTxt + best + '</button>';
       }).join("");
     }
     function valueStack() {
@@ -4602,11 +4606,12 @@ fbq('track', 'PageView');
           logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
           fbt("InitiateCheckout", { content_name: cid, value: _price, currency: "USD", contents: [{ id: _min + "min", quantity: 1 }] }); // clicou num pacote (intenção de pagar)
           clar("event", "buy_click"); clar("set", "funnel_stage", "buy_intent");
-          // SEMPRE pagamento real no Stripe. Garante a sessao (convidado cria anonima) e abre o checkout. Sem tempo gratis aqui.
           try { b.disabled = true; } catch (e) {}
           var _payErr = function () { try { b.disabled = false; } catch (e) {} toast(L("Não consegui abrir o pagamento. Tenta de novo 🙏", "Couldn't open checkout. Please try again 🙏", "No pude abrir el pago. Inténtalo de nuevo 🙏")); };
           ensureSessionThen(function () {
             if (!sb || !account) { _payErr(); return; }
+            if (isPix) { openPixPanel(_min, PKGS_BRL[_min] || _price, b); return; } // Brasil → Pix inline (sem redirect)
+            // resto → Stripe (cartao)
             sb.functions.invoke("stripe_checkout", { body: { pack_code: "vex" + _min, creator_key: cid } }).then(function (res) {
               if (res && res.data && res.data.url) { window.location.href = res.data.url; }
               else { _payErr(); }
@@ -4614,6 +4619,51 @@ fbq('track', 'PageView');
           });
         };
       });
+    }
+    function openPixPanel(min, priceBRL, btn) {
+      var pid = "pix-" + Date.now();
+      body.insertAdjacentHTML("beforeend", '<div id="' + pid + '" style="margin:.7rem 0 .2rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-2,rgba(127,127,127,.06));text-align:center"><div style="font-weight:800;margin-bottom:.4rem">Pix · ' + min + ' min — ' + brl(priceBRL) + '</div><div class="muted-note">Gerando seu Pix…</div></div>');
+      body.scrollTop = body.scrollHeight;
+      sb.functions.invoke("syncpay_pix", { body: { pack_code: "pix" + min, creator_key: cid } }).then(function (res) {
+        var d = res && res.data;
+        if ((res && res.error) || !d || !d.pix_code) {
+          var el = document.getElementById(pid); if (el) el.innerHTML = '<div class="muted-note">Não consegui gerar o Pix agora. Tenta de novo 🙏</div>';
+          try { btn.disabled = false; } catch (e) {}
+          return;
+        }
+        renderPix(pid, d.pix_code, d.identifier, min, priceBRL);
+      }).catch(function () {
+        var el = document.getElementById(pid); if (el) el.innerHTML = '<div class="muted-note">Falha de conexão. Tenta de novo 🙏</div>';
+        try { btn.disabled = false; } catch (e) {}
+      });
+    }
+    function renderPix(pid, code, identifier, min, priceBRL) {
+      var el = document.getElementById(pid); if (!el) return;
+      var qr = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=" + encodeURIComponent(code);
+      el.innerHTML =
+        '<div style="font-weight:800;margin-bottom:.5rem">Pix · ' + min + ' min — ' + brl(priceBRL) + '</div>' +
+        '<div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.style.display=\'none\'"></div>' +
+        '<div style="font-size:.82rem;margin:.6rem 0 .35rem;opacity:.92">Abra o app do seu banco → Pix → <b>Pagar com QR Code</b>, ou copie o código:</div>' +
+        '<div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.55rem"><input readonly value="' + escHtml(code) + '" id="' + pid + '-code" style="flex:1;min-width:0;font-size:.7rem;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);color:inherit"><button id="' + pid + '-copy" class="btn btn-primary btn-sm" style="white-space:nowrap">Copiar</button></div>' +
+        '<div id="' + pid + '-status" style="font-size:.84rem;font-weight:700;color:var(--muted)">⏳ Aguardando o pagamento… (confirma sozinho)</div>';
+      body.scrollTop = body.scrollHeight;
+      var cp = document.getElementById(pid + "-copy");
+      if (cp) cp.onclick = function () { try { var i = document.getElementById(pid + "-code"); i.select(); navigator.clipboard.writeText(code); } catch (e) {} cp.textContent = "Copiado ✓"; setTimeout(function () { cp.textContent = "Copiar"; }, 1500); };
+      var tries = 0, pp = setInterval(function () {
+        tries++;
+        if (!document.body.contains(el) || tries > 150) { clearInterval(pp); return; } // ~10 min
+        sb.functions.invoke("syncpay_status", { body: { identifier: identifier } }).then(function (r) {
+          var d = r && r.data;
+          if (d && d.status === "completed") {
+            clearInterval(pp);
+            var st = document.getElementById(pid + "-status"); if (st) st.innerHTML = '✅ <span style="color:#16a34a">Pagamento confirmado!</span>';
+            if (typeof d.balance === "number") setBal(d.balance);
+            try { fbt("Purchase", { value: priceBRL, currency: "BRL", content_name: cid }); } catch (e) {}
+            try { clar("event", "purchase"); } catch (e) {}
+            setTimeout(function () { var e2 = document.getElementById(pid); if (e2) e2.remove(); note(L("Tempo liberado 💜 tô toda sua agora 😏", "Time unlocked 💜 I'm all yours now 😏", "Tiempo liberado 💜 soy toda tuya ahora 😏")); if (!tick && bal > 0) startClock(); try { document.getElementById("chat-text").focus(); } catch (_) {} }, 1200);
+          }
+        }, function () {});
+      }, 4000);
     }
     function priceBanner(freeNote) { /* faixa de preco removida do topo do chat (pedido do Bruno) — os pacotes aparecem quando o tempo acaba */ }
     function showMenu() {
