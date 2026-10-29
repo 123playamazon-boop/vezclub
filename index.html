@@ -570,6 +570,7 @@ fbq('track', 'PageView');
   .liv-top { display: flex; align-items: center; gap: .35rem; }
   .liv-top b { font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .liv-flag { font-size: .62rem; font-weight: 700; color: var(--muted); flex: 0 0 auto; }
+  .liv-geo { font-size: .62rem; font-weight: 700; color: var(--muted); flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
   .liv-time { margin-left: auto; font-size: .62rem; color: var(--muted); white-space: nowrap; flex: 0 0 auto; }
   .liv-sub { font-size: .74rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
   .liv-badge { font-size: .62rem; margin-top: 2px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -940,7 +941,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b59"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b60"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -3507,7 +3508,8 @@ fbq('track', 'PageView');
     if (/^[\x00-\x7f]+$/.test(t) && /[a-z]{2,}/.test(t)) return 'en';
     return null;
   }
-  function livFlag(l) { return l === 'pt' ? '🇧🇷 PT' : l === 'en' ? '🇺🇸 EN' : l === 'es' ? '🇪🇸 ES' : '🌐 ?'; }
+  function livLangLabel(l) { return l === 'pt' ? 'PT' : l === 'en' ? 'EN' : l === 'es' ? 'ES' : '?'; }
+  function flagEmoji(cc) { if (!cc || cc.length !== 2) return ''; try { return cc.toUpperCase().replace(/./g, function (c) { return String.fromCodePoint(127397 + c.charCodeAt(0)); }); } catch (e) { return ''; } }
   function modelAv(key) { return SUPA_URL + "/storage/v1/object/public/avatars/" + encodeURIComponent(key || "") + "/avatar.webp"; }
   function livName(t) {
     var e = t.email || '';
@@ -3538,16 +3540,17 @@ fbq('track', 'PageView');
         if (!list.length) { h += '<p class="muted-note" style="padding:.9rem .7rem">Ninguém online agora. Quando alguém estiver conversando, aparece aqui na hora. 🟢</p>'; }
         list.forEach(function (t) {
           var on = livIsOnline(t.last_message_at);
-          var clang = livLangDetect(t.last_user_msg) || livLangDetect(t.last_msg);
+          var clang = livLangDetect(t.user_sample) || livLangDetect(t.last_user_msg) || livLangDetect(t.last_msg);
+          var geoTxt = t.country ? (flagEmoji(t.country) + ' ' + (t.city || t.country)) : '';
           var snippet = (t.last_msg || '').slice(0, 40);
           var badge = t.human_mode ? '<span style="color:#2563eb">🙋 você</span>' : t.flagged ? '<span style="color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>' : '<span style="color:var(--mut)">🤖 robô</span>';
           var sel = t.thread_id === ivSelTid;
-          h += '<div class="liv-item' + (sel ? ' on' : '') + (t.flagged ? ' flag' : '') + '" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '" data-iname="' + escHtml(livName(t)) + '">' +
+          h += '<div class="liv-item' + (sel ? ' on' : '') + (t.flagged ? ' flag' : '') + '" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '" data-iname="' + escHtml(livName(t)) + '" data-igeo="' + escHtml(geoTxt) + '">' +
             '<div class="liv-ava"><img src="' + modelAv(t.creator_key) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">' + (on ? '<span class="liv-dot"></span>' : '') + '</div>' +
             '<div class="liv-main">' +
-              '<div class="liv-top"><b>' + escHtml(livName(t)) + '</b><span class="liv-flag">' + livFlag(clang) + '</span><span class="liv-time">' + livAgo(t.last_message_at) + '</span></div>' +
+              '<div class="liv-top"><b>' + escHtml(livName(t)) + '</b>' + (geoTxt ? '<span class="liv-geo" title="localização aproximada (IP)">' + escHtml(geoTxt) + '</span>' : '') + '<span class="liv-time">' + livAgo(t.last_message_at) + '</span></div>' +
               '<div class="liv-sub">' + escHtml(snippet) + (snippet.length >= 40 ? '…' : '') + '</div>' +
-              '<div class="liv-badge">' + badge + ' · ' + escHtml(t.creator_key || '') + ' · ' + (t.user_msgs || 0) + ' msgs</div>' +
+              '<div class="liv-badge">' + badge + ' · ' + escHtml(t.creator_key || '') + ' · <span title="idioma que ele escreve">💬 ' + livLangLabel(clang) + '</span> · ' + (t.user_msgs || 0) + ' msgs</div>' +
             '</div></div>';
         });
         box2.innerHTML = h;
@@ -3556,7 +3559,7 @@ fbq('track', 'PageView');
             ivSelTid = b.getAttribute('data-interv');
             box2.querySelectorAll('.liv-item').forEach(function (x) { x.classList.toggle('on', x === b); });
             var conv = document.getElementById('live-conv');
-            openIntervene(b.getAttribute('data-interv'), b.getAttribute('data-icreator'), b.getAttribute('data-iemail'), b.getAttribute('data-ihuman') === '1', conv, b.getAttribute('data-iname'));
+            openIntervene(b.getAttribute('data-interv'), b.getAttribute('data-icreator'), b.getAttribute('data-iemail'), b.getAttribute('data-ihuman') === '1', conv, b.getAttribute('data-iname'), b.getAttribute('data-igeo'));
           };
         });
       });
@@ -3564,7 +3567,7 @@ fbq('track', 'PageView');
     paintThreads();
     liveListPoll = setInterval(paintThreads, 5000);
   }
-  function openIntervene(tid, creatorKey, email, human, mountEl, custDisplayName) {
+  function openIntervene(tid, creatorKey, email, human, mountEl, custDisplayName, custGeo) {
     var ipoll = null, shownMax = 0, msgsArr = [];
     var LGS = { pt: "PT", en: "EN", es: "ES" };
     var attLang = "pt"; try { attLang = localStorage.getItem("vez_att_lang") || "pt"; } catch (e) {}
@@ -3603,7 +3606,7 @@ fbq('track', 'PageView');
     var modelName = (creatorKey || "").replace(/_ai$/, "").replace(/_/g, " ").replace(/^./, function (c) { return c.toUpperCase(); });
     var panelInner = '<div style="display:flex;align-items:center;gap:.55rem;padding:.6rem .9rem;border-bottom:1px solid var(--line,#eee)">' +
       '<img src="' + modelAv(creatorKey) + '" alt="" onerror="this.style.visibility=\'hidden\'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:rgba(109,40,217,.15)">' +
-      '<div style="flex:1;min-width:0"><b>' + escHtml(modelName) + '</b> <span id="iv-mode-badge" style="font-size:.6rem"></span> <span style="color:var(--mut);font-size:.73rem">· atendendo ' + escHtml(custDisplayName || email || "Visitante") + '</span><div id="iv-mode" style="font-size:.72rem"></div></div>' +
+      '<div style="flex:1;min-width:0"><b>' + escHtml(modelName) + '</b> <span id="iv-mode-badge" style="font-size:.6rem"></span> <span style="color:var(--mut);font-size:.73rem">· atendendo ' + escHtml(custDisplayName || email || "Visitante") + (custGeo ? ' · ' + escHtml(custGeo) : '') + '</span><div id="iv-mode" style="font-size:.72rem"></div></div>' +
       '<button id="iv-prof" title="perfil da modelo — como ela fala" style="border:1px solid var(--line,#ddd);background:transparent;color:inherit;font-size:.8rem;cursor:pointer;border-radius:8px;padding:.15rem .4rem;margin-right:.2rem">ℹ</button>' +
       '<button id="iv-toggle" class="btn btn-sm"></button>' +
       '<button id="iv-close" title="fechar" style="border:0;background:none;font-size:1.25rem;cursor:pointer;color:inherit;margin-left:.3rem">✕</button></div>' +
@@ -4426,6 +4429,20 @@ fbq('track', 'PageView');
     var EMAIL_TRIAL_SECONDS = 300; // 5 min grátis após o e-mail (limita custo de API)
     function fbt(ev, p) { try { if (window.fbq) fbq("track", ev, p || {}); } catch (e) {} }
     function clar() { try { if (window.clarity) window.clarity.apply(null, arguments); } catch (e) {} }
+    // captura país/cidade por IP (uma vez por sessão) e salva na conversa pro painel de intervenção
+    function captureGeo() {
+      function send(c, city) { try { if (sb) sb.rpc("set_thread_geo", { p_creator_key: cid, p_country: c || "", p_city: city || "" }).then(function () {}, function () {}); } catch (e) {} }
+      var cached = null; try { cached = JSON.parse(localStorage.getItem("vez_geo") || "null"); } catch (e) {}
+      if (cached && cached.c) { send(cached.c, cached.city); return; }
+      try {
+        fetch("https://ipwho.is/").then(function (r) { return r.json(); }).then(function (d) {
+          if (!d || d.success === false) return;
+          var c = d.country_code || "", city = d.city || "";
+          try { localStorage.setItem("vez_geo", JSON.stringify({ c: c, city: city })); } catch (e) {}
+          send(c, city);
+        }).catch(function () {});
+      } catch (e) {}
+    }
     var PKG_SETS = {
       A: [{ min: 10, price: 9.9 }, { min: 20, price: 17.9 }, { min: 30, price: 24.9 }, { min: 60, price: 44.9 }],
       B: [{ min: 10, price: 12.9 }, { min: 20, price: 22.9 }, { min: 30, price: 32.9 }, { min: 60, price: 59.9 }]
@@ -4641,6 +4658,7 @@ fbq('track', 'PageView');
     sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) {
       if (!tr.data) { showGreeting(); startPoll(); startBalance(); return; }
       threadId = tr.data.id;
+      captureGeo();
       sb.from("chat_messages").select("id,role,content").eq("thread_id", tr.data.id).order("created_at", { ascending: true }).limit(200).then(function (r) {
         var rows = (r.data || []);
         if (!rows.length) { showGreeting(); startPoll(); startBalance(); return; }
@@ -4696,7 +4714,7 @@ fbq('track', 'PageView');
           if (d && d.error === "no_model_key") { note("(motor sem chave configurada)"); return; }
           note("(não consegui responder agora)"); return;
         }
-        if (!threadId) sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) threadId = tr.data.id; });
+        if (!threadId) sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) { threadId = tr.data.id; captureGeo(); } });
         if (d.human) { // um atendente assumiu — a resposta vem pelo poll, sem quebrar o clima
           if (typeof d.balance === "number") setBal(d.balance);
           if (!tick && bal > 0) startClock();
