@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b37"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b38"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4271,22 +4271,19 @@ fbq('track', 'PageView');
         b.onclick = function () {
           var _min = +b.getAttribute("data-buytime"), _price = +b.getAttribute("data-price");
           try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_click", meta: { min: _min, price: _price } }); } catch (e) {}
-          // antes do e-mail: o clique vira o gate de e-mail (libera mais tempo grátis). Depois do e-mail: é intenção real de pagar.
-          if (!emailDone) { emailGate(); return; }
           logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
           fbt("InitiateCheckout", { content_name: cid, value: _price, currency: "USD", contents: [{ id: _min + "min", quantity: 1 }] }); // clicou num pacote (intenção de pagar)
           clar("event", "buy_click"); clar("set", "funnel_stage", "buy_intent");
-          // pagamento real: Stripe Checkout. Se o Stripe ainda nao estiver configurado (sem chave), cai no fake-door.
-          if (sb && account) {
-            try { b.disabled = true; } catch (e) {}
+          // SEMPRE pagamento real no Stripe. Garante a sessao (convidado cria anonima) e abre o checkout. Sem tempo gratis aqui.
+          try { b.disabled = true; } catch (e) {}
+          var _payErr = function () { try { b.disabled = false; } catch (e) {} toast(L("Não consegui abrir o pagamento. Tenta de novo 🙏", "Couldn't open checkout. Please try again 🙏", "No pude abrir el pago. Inténtalo de nuevo 🙏")); };
+          ensureSessionThen(function () {
+            if (!sb || !account) { _payErr(); return; }
             sb.functions.invoke("stripe_checkout", { body: { pack_code: "vex" + _min, creator_key: cid } }).then(function (res) {
               if (res && res.data && res.data.url) { window.location.href = res.data.url; }
-              else { try { b.disabled = false; } catch (e) {} fakeDoorCapture(_min, _price); }
-            }).catch(function () { try { b.disabled = false; } catch (e) {} fakeDoorCapture(_min, _price); });
-            return;
-          }
-          if (FAKE_DOOR) { fakeDoorCapture(_min, _price); return; }
-          purchaseModal({ id: "chattime-" + cid + "-" + _min, title: _min + " min de chat com " + first, price: _price, icon: "call", creator: c.name });
+              else { _payErr(); }
+            }).catch(_payErr);
+          });
         };
       });
     }
@@ -4304,8 +4301,7 @@ fbq('track', 'PageView');
       wirePkgs(body);
     }
     function showBuy() {
-      // primeiro esgotamento + sem e-mail ainda → gate de e-mail (acesso grátis em troca do contato)
-      if (!emailDone) { emailGate(); return; }
+      // acabou o 1 minuto gratis → paga pra continuar (Stripe). Sem mais tempo gratis aqui.
       logPaywall();
       var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">' + L("Seu tempo com a ", "Your time with ", "Tu tiempo con ") + escHtml(first) + L(" acabou", " is up", " se acabó") + '</div><div class="muted-note" style="margin-bottom:.9rem">' + L("Recarregue pra continuar — ela tá te esperando.", "Recharge to keep going — she's waiting for you.", "Recarga para seguir — ella te espera.") + '</div>' + pkgBtns() + '</div>';
       body.innerHTML = h;
