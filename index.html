@@ -552,6 +552,33 @@ fbq('track', 'PageView');
   .adm-tabs button:hover { color: var(--text); }
   .adm-tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
   [data-pane][hidden] { display: none !important; }
+
+  /* ---------- intervenção humana · inbox estilo WhatsApp ---------- */
+  .liv-inbox { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; height: 540px; margin-top: .3rem; }
+  .liv-threads { width: 304px; flex: 0 0 304px; overflow-y: auto; border-right: 1px solid var(--line); background: var(--surface); }
+  .liv-conv { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
+  .liv-empty { margin: auto; color: var(--muted); font-size: .86rem; padding: 2rem 1.4rem; text-align: center; max-width: 320px; }
+  .liv-head { padding: .5rem .75rem; font-size: .8rem; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+  .liv-item { display: flex; gap: .55rem; padding: .6rem .7rem; border-bottom: 1px solid var(--line); cursor: pointer; align-items: flex-start; }
+  .liv-item:hover { background: rgba(127, 127, 127, .06); }
+  .liv-item.on { background: rgba(109, 40, 217, .12); }
+  .liv-item.flag { background: rgba(220, 38, 38, .07); }
+  .liv-item.flag.on { background: rgba(109, 40, 217, .14); }
+  .liv-ava { position: relative; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; background: rgba(109, 40, 217, .15); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; }
+  .liv-dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; background: #16a34a; border: 2px solid var(--surface); }
+  .liv-main { flex: 1; min-width: 0; }
+  .liv-top { display: flex; align-items: center; gap: .35rem; }
+  .liv-top b { font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .liv-flag { font-size: .62rem; font-weight: 700; color: var(--muted); flex: 0 0 auto; }
+  .liv-time { margin-left: auto; font-size: .62rem; color: var(--muted); white-space: nowrap; flex: 0 0 auto; }
+  .liv-sub { font-size: .74rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .liv-badge { font-size: .62rem; margin-top: 2px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 720px) {
+    .liv-inbox { flex-direction: column; height: auto; }
+    .liv-threads { width: auto; flex: none; max-height: 260px; border-right: 0; border-bottom: 1px solid var(--line); }
+    .liv-conv { min-height: 440px; }
+  }
+
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.4rem; }
   @media (max-width: 820px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
   .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.05rem; box-shadow: var(--shadow); }
@@ -912,7 +939,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b54"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b55"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2604,7 +2631,7 @@ fbq('track', 'PageView');
 
     html += '<div class="card" data-pane="chats" style="margin-top:1.2rem"><div class="card-head"><h3>Chats ao vivo · intervenção humana</h3><button class="btn btn-ghost btn-sm" id="live-refresh">↻ Atualizar</button></div>' +
       '<p class="muted-note" style="margin-top:-0.3rem">Conversas em andamento. As marcadas 🔴 citaram cancelamento, reembolso, chargeback ou sofrimento — entre, <b>assuma a conversa</b> (o robô para na hora) e fale você mesmo pra resolver e evitar o estorno. Pra ele, continua sendo a modelo.</p>' +
-      '<div id="live-list"><p class="muted-note">Carregando…</p></div></div>';
+      '<div id="live-inbox" class="liv-inbox"><div id="live-threads" class="liv-threads"><p class="muted-note" style="padding:.7rem">Carregando…</p></div><div id="live-conv" class="liv-conv"><div class="liv-empty">👈 Escolhe uma conversa à esquerda pra entrar. Só aparece quem está online agora.</div></div></div></div>';
 
     html += '<div class="card" data-pane="chats" style="margin-top:1.2rem"><div class="card-head"><h3>Desempenho por modelo</h3><button class="btn btn-ghost btn-sm" id="ms-refresh">↻ Atualizar</button></div>' +
       '<p class="muted-note" style="margin-top:-0.3rem">Qual modelo engaja mais — conversas, mensagens, minutos grátis dados e minutos consumidos. Ranqueado por quem mais prende no chat. A receita em R$/US$ entra junto com o pagamento (cada compra já fica marcada por modelo).</p>' +
@@ -3463,67 +3490,77 @@ fbq('track', 'PageView');
       box.innerHTML = h;
     });
   }
+  var ivSelTid = null;      // thread aberta no painel direito (WhatsApp-style)
+  var liveListPoll = null;  // atualiza a lista da esquerda sozinha
+  var ivPanePoll = null;    // poll da conversa aberta inline
+  function livMinsAgo(ts) { return ts ? Math.floor((Date.now() - new Date(ts).getTime()) / 60000) : null; }
+  function livIsOnline(ts) { var m = livMinsAgo(ts); return m != null && m < 3; }
+  function livAgo(ts) { var m = livMinsAgo(ts); if (m == null) return '—'; if (m < 1) return 'agora'; if (m < 60) return 'há ' + m + 'm'; var hh = Math.floor(m / 60); return hh < 24 ? ('há ' + hh + 'h') : ('há ' + Math.floor(hh / 24) + 'd'); }
+  function livLangDetect(txt) {
+    var t = (txt || '').toLowerCase();
+    if (/[ãõ]/.test(t) || /\b(você|voce|não|nao|obrigad|vamos|cadê|beleza|né|tá|pra|cê|saudade|quero|dinheiro|reembolso|golpe|cancelar|oi|oii|bom dia|boa noite|tudo bem)\b/.test(t)) return 'pt';
+    if (/[ñ¿¡]/.test(t) || /\b(hola|gracias|quiero|dinero|cómo|cuánto|por favor|guap|cariño|buenas|qué|estás|amor)\b/.test(t)) return 'es';
+    if (/\b(the|you|your|how|are|please|want|money|refund|hello|hey|babe|love|what|really|thanks|just|yeah|good morning)\b/.test(t)) return 'en';
+    if (/[áàâéêíóôúç]/.test(t)) return 'pt';
+    return null;
+  }
+  function livFlag(l) { return l === 'pt' ? '🇧🇷 PT' : l === 'en' ? '🇺🇸 EN' : l === 'es' ? '🇪🇸 ES' : '🌐 ?'; }
+  function livName(t) {
+    var e = t.email || '';
+    if (e && e.indexOf('@') > 0) { var p = e.split('@')[0]; if (p && !/^(anon|guest|user|temp|null)/i.test(p)) return p; }
+    var uid = String(t.user_id || t.thread_id || '').replace(/-/g, '');
+    return 'Visitante #' + (uid.slice(-4).toUpperCase() || '----');
+  }
   function loadLiveChats() {
     var btn = document.getElementById("live-refresh"); if (btn) btn.onclick = loadLiveChats;
     if (!sb) return;
-    sb.rpc("admin_live_threads", { p_limit: 80 }).then(function (r) {
-      var box = document.getElementById("live-list"); if (!box) return;
-      if (r.error) { box.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
-      var rows = r.data || [];
-      if (!rows.length) { box.innerHTML = '<p class="muted-note">Nenhuma conversa ainda. As conversas aparecem aqui conforme as pessoas falam com as modelos.</p>'; return; }
-      var nowMs = Date.now();
-      function minsAgo(ts) { return ts ? Math.floor((nowMs - new Date(ts).getTime()) / 60000) : null; }
-      function isOnline(ts) { var m = minsAgo(ts); return m != null && m < 3; } // ativo nos ultimos 3 min
-      function agoTxt(ts) { var m = minsAgo(ts); if (m == null) return '—'; if (m < 1) return 'agora'; if (m < 60) return 'há ' + m + 'm'; var hh = Math.floor(m / 60); return hh < 24 ? ('há ' + hh + 'h') : ('há ' + Math.floor(hh / 24) + 'd'); }
-      function detectLangQuick(txt) {
-        var t = (txt || '').toLowerCase();
-        if (/[ãõ]/.test(t) || /\b(você|voce|não|nao|obrigad|vamos|cadê|beleza|né|tá|pra|cê|saudade|quero|dinheiro|reembolso|golpe|cancelar|oi|oii|bom dia|boa noite|tudo bem)\b/.test(t)) return 'pt';
-        if (/[ñ¿¡]/.test(t) || /\b(hola|gracias|quiero|dinero|cómo|cuánto|por favor|guap|cariño|buenas|qué|estás|amor)\b/.test(t)) return 'es';
-        if (/\b(the|you|your|how|are|please|want|money|refund|hello|hey|babe|love|what|really|thanks|just|yeah|good morning)\b/.test(t)) return 'en';
-        if (/[áàâéêíóôúç]/.test(t)) return 'pt';
-        return null;
-      }
-      function langFlag(l) { return l === 'pt' ? '🇧🇷 PT' : l === 'en' ? '🇺🇸 EN' : l === 'es' ? '🇪🇸 ES' : '🌐 ?'; }
-      function custName(t) {
-        var e = t.email || '';
-        if (e && e.indexOf('@') > 0) { var p = e.split('@')[0]; if (p && !/^(anon|guest|user|temp|null)/i.test(p)) return p; }
-        var uid = String(t.user_id || t.thread_id || '').replace(/-/g, '');
-        return 'Visitante #' + (uid.slice(-4).toUpperCase() || '----');
-      }
-      // ordena: flagadas primeiro, depois online agora, depois por recencia
-      rows.sort(function (a, b) {
-        if (!!b.flagged - !!a.flagged) return (!!b.flagged) - (!!a.flagged);
-        if (isOnline(b.last_message_at) - isOnline(a.last_message_at)) return isOnline(b.last_message_at) - isOnline(a.last_message_at);
-        return new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0);
+    if (liveListPoll) { clearInterval(liveListPoll); liveListPoll = null; }
+    function paintThreads() {
+      var box = document.getElementById("live-threads");
+      if (!box) { if (liveListPoll) { clearInterval(liveListPoll); liveListPoll = null; } return; }
+      sb.rpc("admin_live_threads", { p_limit: 80 }).then(function (r) {
+        var box2 = document.getElementById("live-threads"); if (!box2) return;
+        if (r.error) { box2.innerHTML = '<p class="muted-note" style="padding:.7rem">Não foi possível carregar.</p>'; return; }
+        var rows = r.data || [];
+        // SÓ online — mais a conversa aberta, pra não sumir no meio do atendimento
+        var list = rows.filter(function (x) { return livIsOnline(x.last_message_at) || x.thread_id === ivSelTid; });
+        list.sort(function (a, b) {
+          if (!!b.flagged - !!a.flagged) return (!!b.flagged) - (!!a.flagged);
+          return new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0);
+        });
+        var onlineN = rows.filter(function (x) { return livIsOnline(x.last_message_at); }).length;
+        var flaggedN = list.filter(function (x) { return x.flagged; }).length;
+        var h = '<div class="liv-head"><span style="color:#16a34a">🟢 <b>' + onlineN + '</b> online</span>' + (flaggedN ? ' · <span style="color:#dc2626">🔴 <b>' + flaggedN + '</b></span>' : '') + '</div>';
+        if (!list.length) { h += '<p class="muted-note" style="padding:.9rem .7rem">Ninguém online agora. Quando alguém estiver conversando, aparece aqui na hora. 🟢</p>'; }
+        list.forEach(function (t) {
+          var on = livIsOnline(t.last_message_at);
+          var clang = livLangDetect(t.last_user_msg) || livLangDetect(t.last_msg);
+          var snippet = (t.last_msg || '').slice(0, 40);
+          var badge = t.human_mode ? '<span style="color:#2563eb">🙋 você</span>' : t.flagged ? '<span style="color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>' : '<span style="color:var(--mut)">🤖 robô</span>';
+          var sel = t.thread_id === ivSelTid;
+          h += '<div class="liv-item' + (sel ? ' on' : '') + (t.flagged ? ' flag' : '') + '" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '" data-iname="' + escHtml(livName(t)) + '">' +
+            '<div class="liv-ava">👤' + (on ? '<span class="liv-dot"></span>' : '') + '</div>' +
+            '<div class="liv-main">' +
+              '<div class="liv-top"><b>' + escHtml(livName(t)) + '</b><span class="liv-flag">' + livFlag(clang) + '</span><span class="liv-time">' + livAgo(t.last_message_at) + '</span></div>' +
+              '<div class="liv-sub">' + escHtml(snippet) + (snippet.length >= 40 ? '…' : '') + '</div>' +
+              '<div class="liv-badge">' + badge + ' · ' + escHtml(t.creator_key || '') + ' · ' + (t.user_msgs || 0) + ' msgs</div>' +
+            '</div></div>';
+        });
+        box2.innerHTML = h;
+        box2.querySelectorAll('[data-interv]').forEach(function (b) {
+          b.onclick = function () {
+            ivSelTid = b.getAttribute('data-interv');
+            box2.querySelectorAll('.liv-item').forEach(function (x) { x.classList.toggle('on', x === b); });
+            var conv = document.getElementById('live-conv');
+            openIntervene(b.getAttribute('data-interv'), b.getAttribute('data-icreator'), b.getAttribute('data-iemail'), b.getAttribute('data-ihuman') === '1', conv, b.getAttribute('data-iname'));
+          };
+        });
       });
-      var flagged = rows.filter(function (x) { return x.flagged; }).length;
-      var onlineN = rows.filter(function (x) { return isOnline(x.last_message_at); }).length;
-      var h = '<div style="font-size:.82rem;margin-bottom:.55rem">' +
-        '<span style="color:#16a34a">🟢 <b>' + onlineN + '</b> online agora</span>' +
-        (flagged ? '  ·  <span style="color:#dc2626">🔴 <b>' + flagged + '</b> pedindo atenção</span>' : '') + '</div>';
-      h += '<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Modelo</th><th>Última mensagem</th><th>Status</th><th></th></tr></thead><tbody>';
-      rows.forEach(function (t) {
-        var on = isOnline(t.last_message_at);
-        var onDot = on
-          ? '<span style="color:#16a34a;font-weight:700;font-size:.68rem">● online agora</span>'
-          : '<span style="color:var(--mut);font-size:.68rem">● offline · ' + agoTxt(t.last_message_at) + '</span>';
-        var badge = t.human_mode ? '<span style="font-size:.66rem;color:#2563eb">🙋 você no controle</span>'
-          : t.flagged ? '<span style="font-size:.66rem;color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>'
-          : '<span style="font-size:.66rem;color:var(--mut)">🤖 robô</span>';
-        var snippet = (t.last_msg || '').slice(0, 46);
-        var clang = detectLangQuick(t.last_user_msg) || detectLangQuick(t.last_msg);
-        h += '<tr' + (t.flagged ? ' style="background:rgba(220,38,38,.06)"' : (on ? ' style="background:rgba(22,163,74,.05)"' : '')) + '><td><div style="font-weight:600;font-size:.82rem">' + escHtml(custName(t)) + '</div><div style="margin:1px 0;font-size:.7rem;font-weight:700;color:var(--mut)">' + langFlag(clang) + '</div><div style="margin:1px 0">' + onDot + '</div><small style="color:var(--mut)">' + Math.floor((t.balance_sec || 0) / 60) + ' min · ' + (t.user_msgs || 0) + ' msgs</small></td>' +
-          '<td style="font-size:.82rem">' + escHtml(t.creator_key || '') + '</td>' +
-          '<td style="font-size:.8rem;color:var(--mut);max-width:220px">' + escHtml(snippet) + (snippet.length >= 46 ? '…' : '') + '<div style="font-size:.7rem;opacity:.7;margin-top:1px">' + agoTxt(t.last_message_at) + '</div></td>' +
-          '<td>' + badge + '</td>' +
-          '<td><button class="btn ' + (t.flagged || t.human_mode ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '">' + (t.human_mode ? 'Continuar' : 'Intervir') + '</button></td></tr>';
-      });
-      h += '</tbody></table></div><p class="muted-note" style="margin-top:.5rem">' + rows.length + ' conversa(s) · flagadas no topo.</p>';
-      box.innerHTML = h;
-      box.querySelectorAll('[data-interv]').forEach(function (b) { b.onclick = function () { openIntervene(b.getAttribute('data-interv'), b.getAttribute('data-icreator'), b.getAttribute('data-iemail'), b.getAttribute('data-ihuman') === '1'); }; });
-    });
+    }
+    paintThreads();
+    liveListPoll = setInterval(paintThreads, 5000);
   }
-  function openIntervene(tid, creatorKey, email, human) {
+  function openIntervene(tid, creatorKey, email, human, mountEl, custDisplayName) {
     var ipoll = null, shownMax = 0, msgsArr = [];
     var LGS = { pt: "PT", en: "EN", es: "ES" };
     var attLang = "pt"; try { attLang = localStorage.getItem("vez_att_lang") || "pt"; } catch (e) {}
@@ -3556,21 +3593,39 @@ fbq('track', 'PageView');
       if (transCache[key] != null) return Promise.resolve(transCache[key]);
       return tr(s.txt, lang).then(function (t) { transCache[key] = t; return t; });
     }
-    var ov = document.createElement("div");
-    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem";
-    ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:560px;width:100%;max-height:88vh;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
-      '<div style="display:flex;align-items:center;gap:.5rem;padding:.9rem 1rem;border-bottom:1px solid var(--line,#eee)"><div style="flex:1;min-width:0"><b>' + escHtml(creatorKey) + '</b> · <span style="color:var(--mut)">' + escHtml(email || "") + '</span><div id="iv-mode" style="font-size:.72rem"></div></div>' +
+    function mediaOf(content) { var mm = /^\[\[media:(img|vid)\]\]([\s\S]+)$/.exec(content || ""); return mm ? { kind: mm[1], url: mm[2] } : null; }
+    var panelInner = '<div style="display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--line,#eee)"><div style="flex:1;min-width:0"><b>' + escHtml(custDisplayName || email || "Visitante") + '</b> <span style="color:var(--mut);font-size:.78rem">· ' + escHtml(creatorKey) + '</span><div id="iv-mode" style="font-size:.72rem"></div></div>' +
       '<button id="iv-toggle" class="btn btn-sm"></button>' +
-      '<button id="iv-close" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit;margin-left:.3rem">✕</button></div>' +
-      '<div style="display:flex;align-items:center;gap:.4rem;padding:.4rem 1rem;border-bottom:1px solid var(--line,#eee);font-size:.72rem;color:var(--mut)"><span>Seu idioma:</span><span id="iv-langs"></span><span id="iv-cust" style="margin-left:auto"></span></div>' +
-      '<div id="iv-body" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.5rem;min-height:240px"><p class="muted-note">Carregando…</p></div>' +
-      '<div id="iv-quick" style="display:flex;flex-wrap:wrap;gap:.35rem;padding:.55rem 1rem 0;max-height:118px;overflow-y:auto;border-top:1px solid var(--line,#eee)"></div>' +
-      '<div style="display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line,#eee)"><input id="iv-text" placeholder="Escreva no seu idioma…" style="flex:1;padding:.6rem .8rem;border:1px solid var(--line,#ddd);border-radius:10px;font-size:.9rem;background:transparent;color:inherit" autocomplete="off"><button id="iv-send" class="btn btn-primary btn-sm">Enviar</button></div></div>';
-    document.body.appendChild(ov);
+      '<button id="iv-close" title="fechar" style="border:0;background:none;font-size:1.25rem;cursor:pointer;color:inherit;margin-left:.3rem">✕</button></div>' +
+      '<div style="display:flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-bottom:1px solid var(--line,#eee);font-size:.72rem;color:var(--mut)"><span>Seu idioma:</span><span id="iv-langs"></span><span id="iv-cust" style="margin-left:auto"></span></div>' +
+      '<div id="iv-body" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.5rem;min-height:160px"><p class="muted-note">Carregando…</p></div>' +
+      '<div id="iv-quick" style="display:flex;flex-wrap:wrap;gap:.35rem;padding:.55rem .9rem 0;max-height:108px;overflow-y:auto;border-top:1px solid var(--line,#eee)"></div>' +
+      '<div style="display:flex;gap:.45rem;align-items:center;padding:.6rem .9rem;border-top:1px solid var(--line,#eee)">' +
+        '<label id="iv-attach" title="Enviar foto ou vídeo" style="flex:0 0 auto;cursor:pointer;font-size:1.25rem;line-height:1;padding:.25rem .3rem;border-radius:8px">📎<input id="iv-file" type="file" accept="image/*,video/*" hidden></label>' +
+        '<input id="iv-text" placeholder="Escreva no seu idioma…" style="flex:1;min-width:0;padding:.6rem .8rem;border:1px solid var(--line,#ddd);border-radius:10px;font-size:.9rem;background:transparent;color:inherit" autocomplete="off">' +
+        '<button id="iv-send" class="btn btn-primary btn-sm">Enviar</button></div>';
+    var ov, isPane = !!mountEl;
+    if (isPane) {
+      if (ivPanePoll) { clearInterval(ivPanePoll); ivPanePoll = null; }
+      mountEl.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;min-height:0">' + panelInner + '</div>';
+      ov = mountEl;
+    } else {
+      ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem";
+      ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:560px;width:100%;max-height:88vh;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4)">' + panelInner + '</div>';
+      document.body.appendChild(ov);
+    }
     var body = ov.querySelector("#iv-body"), tgl = ov.querySelector("#iv-toggle"), modeEl = ov.querySelector("#iv-mode");
     var custEl = ov.querySelector("#iv-cust"), langsEl = ov.querySelector("#iv-langs");
-    function cleanup() { if (ipoll) { clearInterval(ipoll); ipoll = null; } if (ov.parentNode) document.body.removeChild(ov); loadLiveChats(); }
-    ov.onclick = function (e) { if (e.target === ov) cleanup(); };
+    function cleanup() {
+      if (ipoll) { clearInterval(ipoll); ipoll = null; }
+      if (isPane) {
+        if (ivPanePoll) { clearInterval(ivPanePoll); ivPanePoll = null; }
+        ivSelTid = null;
+        mountEl.innerHTML = '<div class="liv-empty">👈 Escolhe uma conversa à esquerda pra entrar.</div>';
+      } else { if (ov.parentNode) document.body.removeChild(ov); loadLiveChats(); }
+    }
+    if (!isPane) ov.onclick = function (e) { if (e.target === ov) cleanup(); };
     ov.querySelector("#iv-close").onclick = cleanup;
     function paintMode() {
       tgl.textContent = human ? '✓ Você no controle · devolver ao robô' : 'Assumir conversa';
@@ -3579,7 +3634,7 @@ fbq('track', 'PageView');
     }
     function updatePlaceholder() { var i = ov.querySelector("#iv-text"); if (i) i.placeholder = (attLang === "en" ? "Write in your language…" : attLang === "es" ? "Escribe en tu idioma…" : "Escreva no seu idioma…"); }
     function paintCust() { custEl.innerHTML = custLang ? ('cliente fala: <b>' + LGS[custLang] + '</b>' + (custLang !== attLang ? ' · 🌐 traduzindo' : '')) : ''; }
-    function fillText(m) { displayText(m, attLang).then(function (t) { var el = body.querySelector('[data-mid="' + m.id + '"] .ivtext'); if (el) el.textContent = t; }); }
+    function fillText(m) { if (mediaOf(m.content)) return; displayText(m, attLang).then(function (t) { var el = body.querySelector('[data-mid="' + m.id + '"] .ivtext'); if (el) el.textContent = t; }); }
     function retranslateAll() { msgsArr.forEach(fillText); paintCust(); }
     function paintLangs() {
       langsEl.innerHTML = ["pt", "en", "es"].map(function (l) {
@@ -3592,6 +3647,13 @@ fbq('track', 'PageView');
     function bubbleHtml(m) {
       var mine = m.role === "user";
       var tag = (!mine && m.by_human) ? '<div style="font-size:.6rem;color:#2563eb;margin-bottom:1px">você</div>' : '';
+      var md = mediaOf(m.content);
+      if (md) {
+        var inner = md.kind === "vid"
+          ? '<video src="' + escHtml(md.url) + '" controls playsinline style="max-width:210px;border-radius:12px;display:block;background:#000"></video>'
+          : '<img src="' + escHtml(md.url) + '" alt="" style="max-width:210px;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">';
+        return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="padding:3px;border-radius:14px;background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + '">' + inner + '</div></div>';
+      }
       return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + ';color:' + (mine ? "inherit" : "#fff") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word"><span class="ivtext">' + escHtml(sourceOf(m).txt || "") + '</span></div></div>';
     }
     function detectCust() {
@@ -3628,16 +3690,16 @@ fbq('track', 'PageView');
     ];
     function paintQuick() {
       var q = ov.querySelector("#iv-quick"); if (!q) return;
-      q.innerHTML = '<span style="font-size:.64rem;color:var(--mut);width:100%;margin-bottom:.1rem">Respostas rápidas · clique pra enviar</span>' +
+      q.innerHTML = '<span style="font-size:.64rem;color:var(--mut);width:100%;margin-bottom:.1rem">Respostas rápidas · clique pra preencher, aí você revisa e envia</span>' +
         QUICK_REPLIES.map(function (r, i) {
-          return '<button data-qr="' + i + '" title="clique pra enviar" style="border:1px solid var(--line,#ddd);background:rgba(109,40,217,.07);color:inherit;font-size:.72rem;padding:.3rem .55rem;border-radius:999px;cursor:pointer;line-height:1.15;text-align:left">' + escHtml(r[attLang] || r.pt) + '</button>';
+          return '<button data-qr="' + i + '" title="clique pra preencher o campo" style="border:1px solid var(--line,#ddd);background:rgba(109,40,217,.07);color:inherit;font-size:.72rem;padding:.3rem .55rem;border-radius:999px;cursor:pointer;line-height:1.15;text-align:left">' + escHtml(r[attLang] || r.pt) + '</button>';
         }).join("");
       q.querySelectorAll("[data-qr]").forEach(function (b) {
-        b.onclick = function () { var r = QUICK_REPLIES[+b.getAttribute("data-qr")]; var inp = ov.querySelector("#iv-text"); inp.value = r[attLang] || r.pt; ivSend(); };
+        b.onclick = function () { var r = QUICK_REPLIES[+b.getAttribute("data-qr")]; var inp = ov.querySelector("#iv-text"); inp.value = r[attLang] || r.pt; try { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {} };
       });
     }
     paintMode(); paintLangs(); updatePlaceholder(); paintQuick();
-    sync(); ipoll = setInterval(sync, 3000);
+    sync(); ipoll = setInterval(sync, 3000); if (isPane) ivPanePoll = ipoll;
     tgl.onclick = function () {
       var target = !human; tgl.disabled = true;
       sb.rpc("admin_set_human_mode", { p_thread: tid, p_on: target }).then(function (r) {
@@ -3663,6 +3725,29 @@ fbq('track', 'PageView');
     }
     ov.querySelector("#iv-send").onclick = ivSend;
     ov.querySelector("#iv-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); ivSend(); } });
+    // ---- enviar foto / vídeo ----
+    var fileInp = ov.querySelector("#iv-file"), attachLbl = ov.querySelector("#iv-attach");
+    if (fileInp) fileInp.addEventListener("change", function () {
+      var f = fileInp.files && fileInp.files[0]; if (!f) return;
+      if (f.size > 25 * 1024 * 1024) { toast("Arquivo muito grande (máx 25MB)"); fileInp.value = ""; return; }
+      var kind = (f.type.indexOf("video") === 0) ? "vid" : "img";
+      if (attachLbl) attachLbl.textContent = "⏳";
+      var rd = new FileReader();
+      rd.onload = function () {
+        var b64 = String(rd.result || "").split(",")[1] || "";
+        function doUp() {
+          sb.functions.invoke("op_media", { body: { thread_id: tid, b64: b64, content_type: f.type, kind: kind } }).then(function (r) {
+            if (attachLbl) attachLbl.textContent = "📎"; fileInp.value = "";
+            if (r.error || !r.data || r.data.error) { toast("não enviou o arquivo"); return; }
+            human = true; paintMode(); sync();
+          }).catch(function () { if (attachLbl) attachLbl.textContent = "📎"; fileInp.value = ""; toast("falha ao enviar o arquivo"); });
+        }
+        if (!human) { sb.rpc("admin_set_human_mode", { p_thread: tid, p_on: true }).then(function () { human = true; paintMode(); doUp(); }); }
+        else doUp();
+      };
+      rd.onerror = function () { if (attachLbl) attachLbl.textContent = "📎"; toast("não li o arquivo"); };
+      rd.readAsDataURL(f);
+    });
   }
 
   var WB_TARGETS = [];
@@ -4398,6 +4483,12 @@ fbq('track', 'PageView');
     function her(t) { body.insertAdjacentHTML("beforeend", '<div class="bub her">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function me(t) { body.insertAdjacentHTML("beforeend", '<div class="bub me">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
+    function herMedia(url, kind) {
+      var inner = kind === "vid"
+        ? '<video src="' + url + '" controls playsinline style="width:100%;border-radius:12px;display:block;background:#000"></video>'
+        : '<img class="chat-img" src="' + url + '" alt="" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">';
+      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:230px">' + inner + '</div>'); body.scrollTop = body.scrollHeight;
+    }
 
     var PKGS = PKG_SETS.A; // precos unificados: exibido == cobrado (payment_packs = set A)
     var PKG_NAMES = {
@@ -4503,7 +4594,7 @@ fbq('track', 'PageView');
         if (!document.body.contains(body)) { clearInterval(poll); poll = null; return; }
         if (!threadId) { sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) threadId = tr.data.id; }); return; }
         sb.from("chat_messages").select("id,content,by_human").eq("thread_id", threadId).gt("id", lastSeenId).order("id", { ascending: true }).then(function (r) {
-          (r.data || []).forEach(function (m3) { if (m3.id > lastSeenId) lastSeenId = m3.id; if (m3.by_human) her(m3.content); });
+          (r.data || []).forEach(function (m3) { if (m3.id > lastSeenId) lastSeenId = m3.id; if (m3.by_human) { var mm = /^\[\[media:(img|vid)\]\]([\s\S]+)$/.exec(m3.content || ""); if (mm) herMedia(mm[2], mm[1]); else her(m3.content); } });
         });
       }, 3000);
     }
