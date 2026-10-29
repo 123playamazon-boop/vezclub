@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b38"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b39"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4257,7 +4257,7 @@ fbq('track', 'PageView');
     function me(t) { body.insertAdjacentHTML("beforeend", '<div class="bub me">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
 
-    var PKGS = PKG_SETS[FD_VAR] || PKG_SETS.A;
+    var PKGS = PKG_SETS.A; // precos unificados: exibido == cobrado (payment_packs = set A)
     function pkgBtns() {
       return PKGS.map(function (p) {
         var tagp = p.min === 60 ? ' · ' + L('melhor', 'best', 'mejor') : (p.min === 10 ? ' · ' + L('pra começar', 'to start', 'para empezar') : '');
