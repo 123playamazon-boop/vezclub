@@ -912,7 +912,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b53"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b54"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -3564,6 +3564,7 @@ fbq('track', 'PageView');
       '<button id="iv-close" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit;margin-left:.3rem">✕</button></div>' +
       '<div style="display:flex;align-items:center;gap:.4rem;padding:.4rem 1rem;border-bottom:1px solid var(--line,#eee);font-size:.72rem;color:var(--mut)"><span>Seu idioma:</span><span id="iv-langs"></span><span id="iv-cust" style="margin-left:auto"></span></div>' +
       '<div id="iv-body" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.5rem;min-height:240px"><p class="muted-note">Carregando…</p></div>' +
+      '<div id="iv-quick" style="display:flex;flex-wrap:wrap;gap:.35rem;padding:.55rem 1rem 0;max-height:118px;overflow-y:auto;border-top:1px solid var(--line,#eee)"></div>' +
       '<div style="display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line,#eee)"><input id="iv-text" placeholder="Escreva no seu idioma…" style="flex:1;padding:.6rem .8rem;border:1px solid var(--line,#ddd);border-radius:10px;font-size:.9rem;background:transparent;color:inherit" autocomplete="off"><button id="iv-send" class="btn btn-primary btn-sm">Enviar</button></div></div>';
     document.body.appendChild(ov);
     var body = ov.querySelector("#iv-body"), tgl = ov.querySelector("#iv-toggle"), modeEl = ov.querySelector("#iv-mode");
@@ -3585,7 +3586,7 @@ fbq('track', 'PageView');
         return '<button data-lg="' + l + '" style="border:0;cursor:pointer;padding:.1rem .45rem;border-radius:6px;font-size:.7rem;font-weight:700;margin-left:.2rem;' + (l === attLang ? 'background:#6d28d9;color:#fff' : 'background:rgba(127,127,127,.15);color:inherit') + '">' + LGS[l] + '</button>';
       }).join("");
       langsEl.querySelectorAll("[data-lg]").forEach(function (b) {
-        b.onclick = function () { attLang = b.getAttribute("data-lg"); try { localStorage.setItem("vez_att_lang", attLang); } catch (e) {} paintLangs(); updatePlaceholder(); retranslateAll(); };
+        b.onclick = function () { attLang = b.getAttribute("data-lg"); try { localStorage.setItem("vez_att_lang", attLang); } catch (e) {} paintLangs(); updatePlaceholder(); retranslateAll(); paintQuick(); };
       });
     }
     function bubbleHtml(m) {
@@ -3614,7 +3615,28 @@ fbq('track', 'PageView');
         fresh.forEach(fillText);
       });
     }
-    paintMode(); paintLangs(); updatePlaceholder();
+    var QUICK_REPLIES = [
+      { pt: "O que você tá buscando aqui comigo?", en: "What are you looking for here with me?", es: "¿Qué estás buscando aquí conmigo?" },
+      { pt: "Tá sozinho hoje? Me faz companhia…", en: "Are you alone tonight? Keep me company…", es: "¿Estás solo hoy? Hazme compañía…" },
+      { pt: "O que mais te excita numa mulher?", en: "What turns you on most in a woman?", es: "¿Qué es lo que más te excita de una mujer?" },
+      { pt: "Me conta uma fantasia que você nunca contou pra ninguém…", en: "Tell me a fantasy you've never told anyone…", es: "Cuéntame una fantasía que nunca le contaste a nadie…" },
+      { pt: "Como você gosta de ser provocado?", en: "How do you like to be teased?", es: "¿Cómo te gusta que te provoquen?" },
+      { pt: "Se eu tivesse aí agora, o que você faria comigo?", en: "If I were there right now, what would you do to me?", es: "Si estuviera ahí ahora, ¿qué me harías?" },
+      { pt: "Fica mais um pouco comigo, tô curtindo muito você…", en: "Stay a little longer with me, I'm really into you…", es: "Quédate un poco más conmigo, me estás gustando mucho…" },
+      { pt: "Quero te conhecer melhor… me conta mais de você.", en: "I want to know you better… tell me more about you.", es: "Quiero conocerte mejor… cuéntame más de ti." },
+      { pt: "Tô ficando com vontade de te mandar uma surpresa…", en: "I'm starting to want to send you a little surprise…", es: "Me están dando ganas de mandarte una sorpresita…" }
+    ];
+    function paintQuick() {
+      var q = ov.querySelector("#iv-quick"); if (!q) return;
+      q.innerHTML = '<span style="font-size:.64rem;color:var(--mut);width:100%;margin-bottom:.1rem">Respostas rápidas · clique pra enviar</span>' +
+        QUICK_REPLIES.map(function (r, i) {
+          return '<button data-qr="' + i + '" title="clique pra enviar" style="border:1px solid var(--line,#ddd);background:rgba(109,40,217,.07);color:inherit;font-size:.72rem;padding:.3rem .55rem;border-radius:999px;cursor:pointer;line-height:1.15;text-align:left">' + escHtml(r[attLang] || r.pt) + '</button>';
+        }).join("");
+      q.querySelectorAll("[data-qr]").forEach(function (b) {
+        b.onclick = function () { var r = QUICK_REPLIES[+b.getAttribute("data-qr")]; var inp = ov.querySelector("#iv-text"); inp.value = r[attLang] || r.pt; ivSend(); };
+      });
+    }
+    paintMode(); paintLangs(); updatePlaceholder(); paintQuick();
     sync(); ipoll = setInterval(sync, 3000);
     tgl.onclick = function () {
       var target = !human; tgl.disabled = true;
