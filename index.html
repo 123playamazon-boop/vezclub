@@ -941,7 +941,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b63"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b64"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -3609,7 +3609,7 @@ fbq('track', 'PageView');
       if (transCache[key] != null) return Promise.resolve(transCache[key]);
       return tr(s.txt, lang).then(function (t) { transCache[key] = t; return t; });
     }
-    function mediaOf(content) { var mm = /^\[\[media:(img|vid)\]\]([\s\S]+)$/.exec(content || ""); return mm ? { kind: mm[1], url: mm[2] } : null; }
+    function mediaOf(content) { var mm = /^\[\[media:(img|vid|aud)\]\]([\s\S]+)$/.exec(content || ""); return mm ? { kind: mm[1], url: mm[2] } : null; }
     var modelName = (creatorKey || "").replace(/_ai$/, "").replace(/_/g, " ").replace(/^./, function (c) { return c.toUpperCase(); });
     var panelInner = '<div style="display:flex;align-items:center;gap:.55rem;padding:.6rem .9rem;border-bottom:1px solid var(--line,#eee)">' +
       '<img src="' + modelAv(creatorKey) + '" alt="" onerror="this.style.visibility=\'hidden\'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:rgba(109,40,217,.15)">' +
@@ -3623,6 +3623,7 @@ fbq('track', 'PageView');
       '<div id="iv-quick" style="display:flex;flex-wrap:wrap;gap:.35rem;padding:.55rem .9rem 0;max-height:108px;overflow-y:auto;border-top:1px solid var(--line,#eee)"></div>' +
       '<div style="display:flex;gap:.45rem;align-items:center;padding:.6rem .9rem;border-top:1px solid var(--line,#eee)">' +
         '<label id="iv-attach" title="Enviar foto ou vídeo" style="flex:0 0 auto;cursor:pointer;font-size:1.25rem;line-height:1;padding:.25rem .3rem;border-radius:8px">📎<input id="iv-file" type="file" accept="image/*,video/*" hidden></label>' +
+        '<button id="iv-mic" title="Enviar como áudio de voz (traduz sozinho pro cliente)" style="flex:0 0 auto;cursor:pointer;font-size:1.25rem;line-height:1;padding:.25rem .3rem;border-radius:8px;border:0;background:transparent;color:inherit">🎤</button>' +
         '<input id="iv-text" placeholder="Escreva no seu idioma…" style="flex:1;min-width:0;padding:.6rem .8rem;border:1px solid var(--line,#ddd);border-radius:10px;font-size:.9rem;background:transparent;color:inherit" autocomplete="off">' +
         '<button id="iv-send" class="btn btn-primary btn-sm">Enviar</button></div>';
     var ov, isPane = !!mountEl;
@@ -3677,7 +3678,7 @@ fbq('track', 'PageView');
       var tag = (!mine && m.by_human) ? '<div style="font-size:.6rem;color:#2563eb;margin-bottom:1px">você</div>' : '';
       var md = mediaOf(m.content);
       if (md) {
-        return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="padding:3px;border-radius:14px;background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + '"><div class="ivmedia"><span style="font-size:.76rem;color:' + (mine ? "var(--mut)" : "#fff") + '">📷 carregando…</span></div></div></div>';
+        return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="padding:3px;border-radius:14px;background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + '"><div class="ivmedia"><span style="font-size:.76rem;color:' + (mine ? "var(--mut)" : "#fff") + '">' + (md.kind === "aud" ? "🎤" : "📷") + ' carregando…</span></div></div></div>';
       }
       return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + ';color:' + (mine ? "inherit" : "#fff") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word"><span class="ivtext">' + escHtml(sourceOf(m).txt || "") + '</span></div></div>';
     }
@@ -3688,6 +3689,8 @@ fbq('track', 'PageView');
         if (!url) { holder.innerHTML = '<span style="font-size:.76rem;color:var(--mut)">(mídia indisponível)</span>'; return; }
         holder.innerHTML = md.kind === "vid"
           ? '<video src="' + url + '" controls playsinline style="max-width:210px;border-radius:12px;display:block;background:#000"></video>'
+          : md.kind === "aud"
+          ? '<div style="display:flex;align-items:center;gap:.35rem;padding:.1rem .15rem"><span style="font-size:1rem">🎤</span><audio src="' + url + '" controls preload="none" style="height:34px;max-width:200px"></audio></div>'
           : '<img src="' + url + '" alt="" style="max-width:210px;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">';
         body.scrollTop = body.scrollHeight;
       }).catch(function () { holder.innerHTML = '<span style="font-size:.76rem;color:var(--mut)">(mídia indisponível)</span>'; });
@@ -3809,6 +3812,23 @@ fbq('track', 'PageView');
       rd.onerror = function () { if (attachLbl) attachLbl.textContent = "📎"; toast("não li o arquivo"); };
       rd.readAsDataURL(f);
     });
+    // ---- enviar ÁUDIO de voz (op_tts): operador digita PT, sai voz feminina da modelo; traduz se o cliente for EN/ES ----
+    var micBtn = ov.querySelector("#iv-mic");
+    if (micBtn) micBtn.onclick = function () {
+      var inp = ov.querySelector("#iv-text"); var v = (inp.value || "").trim();
+      if (!v) { toast("Escreve a mensagem primeiro, aí eu gero o áudio."); return; }
+      var toLang = custLangManual || custLang || "pt"; // áudio no idioma do cliente (texto PT é traduzido pelo op_tts)
+      micBtn.disabled = true; var prev = micBtn.textContent; micBtn.textContent = "⏳";
+      function doTts() {
+        sb.functions.invoke("op_tts", { body: { thread_id: tid, text: v, creator_key: creatorKey, to_lang: toLang } }).then(function (r) {
+          micBtn.disabled = false; micBtn.textContent = prev;
+          if (r.error || !r.data || r.data.error) { toast("não gerou o áudio"); return; }
+          inp.value = ""; sync();
+        }).catch(function () { micBtn.disabled = false; micBtn.textContent = prev; toast("falha ao gerar o áudio"); });
+      }
+      if (!human) { sb.rpc("admin_set_human_mode", { p_thread: tid, p_on: true }).then(function () { human = true; paintMode(); doTts(); }); }
+      else doTts();
+    };
   }
 
   var WB_TARGETS = [];
@@ -4568,6 +4588,8 @@ fbq('track', 'PageView');
         if (!url) { el.innerHTML = '<div style="padding:.8rem 1rem;color:var(--faint);font-size:.78rem">(mídia indisponível)</div>'; return; }
         el.innerHTML = kind === "vid"
           ? '<video src="' + url + '" controls playsinline style="width:100%;border-radius:12px;display:block;background:#000"></video>'
+          : kind === "aud"
+          ? '<div style="display:flex;align-items:center;gap:.4rem;padding:.45rem .5rem"><span style="font-size:1.15rem">🎤</span><audio src="' + url + '" controls preload="none" style="height:36px;width:180px"></audio></div>'
           : '<img class="chat-img" src="' + url + '" alt="" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">';
         body.scrollTop = body.scrollHeight;
       }).catch(function () { var el = document.getElementById(id); if (el) el.innerHTML = '<div style="padding:.8rem 1rem;color:var(--faint);font-size:.78rem">(mídia indisponível)</div>'; });
@@ -4722,7 +4744,7 @@ fbq('track', 'PageView');
         rows.forEach(function (m2) {
           if (m2.id > lastSeenId) lastSeenId = m2.id;
           if (m2.role === "user") { me(m2.content); return; }
-          var mm = /^\[\[media:(img|vid)\]\]([\s\S]+)$/.exec(m2.content || "");
+          var mm = /^\[\[media:(img|vid|aud)\]\]([\s\S]+)$/.exec(m2.content || "");
           if (mm) herMedia(mm[2], mm[1]); else her(m2.content);
         });
         startPoll(); startBalance();
@@ -4736,7 +4758,7 @@ fbq('track', 'PageView');
         if (!document.body.contains(body)) { clearInterval(poll); poll = null; return; }
         if (!threadId) { sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) threadId = tr.data.id; }); return; }
         sb.from("chat_messages").select("id,content,by_human").eq("thread_id", threadId).gt("id", lastSeenId).order("id", { ascending: true }).then(function (r) {
-          (r.data || []).forEach(function (m3) { if (m3.id > lastSeenId) lastSeenId = m3.id; if (m3.by_human) { var mm = /^\[\[media:(img|vid)\]\]([\s\S]+)$/.exec(m3.content || ""); if (mm) herMedia(mm[2], mm[1]); else her(m3.content); } });
+          (r.data || []).forEach(function (m3) { if (m3.id > lastSeenId) lastSeenId = m3.id; if (m3.by_human) { var mm = /^\[\[media:(img|vid|aud)\]\]([\s\S]+)$/.exec(m3.content || ""); if (mm) herMedia(mm[2], mm[1]); else her(m3.content); } });
         });
       }, 3000);
     }
