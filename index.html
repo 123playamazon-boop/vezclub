@@ -13,6 +13,7 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1109695255258457');
+try{if(new URLSearchParams(location.search).get('lang')==='pt'){fbq('init','2281654486022933');}}catch(e){}
 fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1109695255258457&ev=PageView&noscript=1"/></noscript>
@@ -892,7 +893,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b47"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b48"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
