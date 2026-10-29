@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b32"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b33"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4129,7 +4129,8 @@ fbq('track', 'PageView');
   function openAiChat(cid) {
     var c = CREATORS.find(function (x) { return x.id === cid; });
     if (!c) return;
-    if (!sb || !account) { showAuthGate("login"); return; }
+    if (!sb) return;
+    if (!account) { ensureSessionThen(function () { openAiChat(cid); }); return; }
     var persona = AI_PERSONAS[cid] || {};
     var greeting = persona.greeting || "oi 🌙";
     var first = (c.name || "").split(" ")[0];
@@ -4503,9 +4504,9 @@ fbq('track', 'PageView');
       if (needLogin()) return;
       openChatList();
     } else if (chatOpen) {
-      if (needLogin()) return;
       var _coid = chatOpen.getAttribute("data-chat-open");
-      if (AI_PERSONAS[_coid]) openAiChat(_coid); else openChatThread(_coid);
+      if (AI_PERSONAS[_coid]) { openAiChat(_coid); } // chat de convidado: cria sessao anonima sozinho
+      else { if (needLogin()) return; openChatThread(_coid); }
     } else if (gift) {
       claimGift(gift.getAttribute("data-gift"));
     } else if (story) {
@@ -4627,6 +4628,31 @@ fbq('track', 'PageView');
   function acctFrom(session) {
     var u = session.user, md = u.user_metadata || {};
     return { id: u.id, email: u.email, name: (md.display_name && String(md.display_name).trim()) || (u.email || "").split("@")[0], role: md.role === "creator" ? "creator" : "buyer" };
+  }
+
+  // conta leve a partir de uma sessao (usada pelo chat de convidado / login anonimo)
+  function adoptSession(s) {
+    if (account || !s || !s.user) return;
+    account = acctFrom(s);
+    account.creatorKey = account.id;
+    account.isAdmin = false;
+    account.isAnon = !!s.user.is_anonymous;
+    try { renderAccountBadge(); } catch (e) {}
+  }
+  // garante uma sessao antes de abrir o chat: reusa a existente, senao cria uma anonima.
+  // se o login anonimo estiver desligado/indisponivel, cai no gate de cadastro (comportamento antigo).
+  function ensureSessionThen(cb) {
+    if (account) { cb(); return; }
+    if (!sb) { showAuthGate("signup", "buyer"); return; }
+    sb.auth.getSession().then(function (g) {
+      var s = g && g.data && g.data.session;
+      if (s && s.user) { adoptSession(s); cb(); return; }
+      if (!sb.auth || typeof sb.auth.signInAnonymously !== "function") { showAuthGate("signup", "buyer"); return; }
+      sb.auth.signInAnonymously().then(function (r) {
+        if (r && !r.error && r.data && r.data.session) { adoptSession(r.data.session); cb(); }
+        else { showAuthGate("signup", "buyer"); }
+      }).catch(function () { showAuthGate("signup", "buyer"); });
+    }).catch(function () { showAuthGate("signup", "buyer"); });
   }
 
   function gateNode() { var n = document.getElementById("auth-gate"); if (!n) { n = document.createElement("div"); n.id = "auth-gate"; document.body.appendChild(n); } return n; }
@@ -5047,10 +5073,15 @@ fbq('track', 'PageView');
   /* boot */
   if (sb) {
     sb.auth.onAuthStateChange(function (_e, session) {
-      if (session) { if (!account) enterPlatform(session); }
+      // sessao anonima (chat de convidado) NAO entra pelo enterPlatform (evita gate de TOS + re-render); e tratada no ensureSessionThen
+      if (session) { if (!account && !(session.user && session.user.is_anonymous)) enterPlatform(session); }
       else { account = null; stopSalesWatch(); var ab = document.getElementById("acct-badge"); if (ab) ab.remove(); enterGuest(); }
     });
-    sb.auth.getSession().then(function (r) { if (r.data.session) enterPlatform(r.data.session); else { enterGuest(); if (isAdminHash()) showAuthGate("login"); } });
+    sb.auth.getSession().then(function (r) {
+      var s = r.data && r.data.session;
+      if (s && !(s.user && s.user.is_anonymous)) enterPlatform(s);
+      else { enterGuest(); if (isAdminHash()) showAuthGate("login"); }
+    });
   } else {
     render();
     ageGate();
