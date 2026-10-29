@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b33"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b34"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2896,6 +2896,8 @@ fbq('track', 'PageView');
     applyDynTranslation();
     var b = modalRoot.querySelector("[data-story-go]");
     if (b) b.onclick = function () { closeModal(); state.creatorId = cid; state.view = "store"; render(); };
+    var cb = modalRoot.querySelector("[data-chat-open]");
+    if (cb) cb.onclick = function () { closeModal(); if (AI_PERSONAS[cid]) openAiChat(cid); else { if (needLogin()) return; openChatThread(cid); } };
   }
 
   var chatCh = null, chatTypingTimer = null;
