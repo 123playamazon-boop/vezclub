@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b43"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b44"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1465,13 +1465,42 @@ fbq('track', 'PageView');
 
   function unreadTotal() { var n = 0; for (var k in state.unread) n += state.unread[k] || 0; return n; }
   function liveCount(c) { return Math.round(c.subs * 0.012) + (c.online ? 8 : 2); }
+  // frase provocativa do card, uma por modelo (na vibe dela) — suggestive, nao explicito
+  var CARD_TEASERS = {
+    alina: L("de folga e meio entediada… acha que dá conta de me ocupar? 😏", "off duty and a little bored… think you can keep me busy? 😏", "libre y algo aburrida… ¿crees que puedes mantenerme ocupada? 😏"),
+    ana: L("pequena, doce e mais encrenca do que pareço 😇 duvido você falar oi", "small, sweet and more trouble than I look 😇 dare you to say hi", "pequeña, dulce y más problema de lo que parezco 😇 a que no dices hola"),
+    bella: L("ainda de figurino… ou tiro pra você? 🎀", "still in costume… or should I take it off for you? 🎀", "aún con el disfraz… ¿o me lo quito para ti? 🎀"),
+    chloe: L("saí da live só por você 😏 não me faz me arrepender", "I logged off the live just for you 😏 don't make me regret it", "salí del vivo solo por ti 😏 no me hagas arrepentirme"),
+    emily: L("tô toda soltinha depois do yoga… vem me distrair 😏", "all loose and warm after yoga… come distract me 😏", "toda relajada después del yoga… ven a distraerme 😏"),
+    emma: L("saí da praia, pele quente e meio inquieta… fala algo 🌊", "sandy, sun-warm and a little restless… say something 🌊", "recién de la playa, piel tibia e inquieta… di algo 🌊"),
+    emmac: L("saí do plantão e larguei o jaleco 😏 vem falar comigo", "off my shift and out of the scrubs 😏 come talk to me", "salí del turno y me quité la bata 😏 ven a hablarme"),
+    emmav: L("ainda na cama e sem vontade de levantar… vem? 🙈", "still in bed, not planning to get up… join me? 🙈", "aún en la cama, sin ganas de levantarme… ¿vienes? 🙈"),
+    hailey: L("tirei a bota, o mau humor passou… tô a fim de brincar 🤠", "boots off, bad mood gone… I'm in the mood to play 🤠", "me quité las botas, se fue el mal humor… con ganas de jugar 🤠"),
+    karen: L("ainda ligada do treino 😏 tenho energia sobrando, cola", "still buzzing from the gym 😏 I've got energy to burn, come here", "aún encendida del gym 😏 me sobra energía, ven"),
+    lexi: L("toda suada do treino… e ainda não acabei 🔥 me faz companhia", "all sweaty from training… and not done yet 🔥 keep me company", "toda sudada del entreno… y no he terminado 🔥 acompáñame"),
+    lia: L("ganhei a partida, agora quero outro tipo de jogo 😏 topa?", "won my match, now I want a different kind of game 😏 play?", "gané el partido, ahora quiero otro tipo de juego 😏 ¿juegas?"),
+    linda: L("chega mais perto, querido… só mordo se você pedir 🌷", "come closer, sweetheart… I only bite if you ask 🌷", "acércate, cariño… solo muerdo si me lo pides 🌷"),
+    livia: L("cabelo bagunçado, mal vestida depois do treino 😏 não seja tímido", "messy hair, barely dressed after training 😏 don't be shy", "pelo alborotado, apenas vestida tras el entreno 😏 no seas tímido"),
+    luna_ai: L("a lua saiu e eu também… me acha antes que eu suma 🌙", "the moon's out and so am I… find me before I vanish 🌙", "salió la luna y yo también… encuéntrame antes de que desaparezca 🌙"),
+    maya: L("larguei meu livro por você 🤎 faz valer a pena", "I put my book down for you 🤎 make it worth it", "dejé mi libro por ti 🤎 haz que valga la pena"),
+    mel: L("saí da praia e ainda tô meio selvagem 😏 vem brincar comigo", "fresh from the beach, still a little wild 😏 come play with me", "recién de la playa y aún algo salvaje 😏 ven a jugar conmigo"),
+    mia: L("toda aconchegada e entediada… você é a encrenca que eu queria 🎀", "all cozy and bored… you're exactly the trouble I wanted 🎀", "toda cómoda y aburrida… eres el problema que quería 🎀"),
+    nia: L("direto da academia, ainda ofegante 💪 agora é sua vez", "straight out of the gym, still breathing hard 💪 your turn", "directo del gym, aún agitada 💪 tu turno"),
+    nina: L("perdi minha ranqueada… me distrai que eu te perdoo 😏", "lost my ranked match… distract me and I'll forgive you 😏", "perdí mi ranked… distráeme y te perdono 😏"),
+    patricia: L("fechei o escritório e cansei de ser a boa moça 😏", "office is closed and I'm done being the good girl 😏", "cerré la oficina y me cansé de ser la niña buena 😏"),
+    ruby: L("a live acabou mas eu ainda tô acesa 🔥 vem reacender", "the live's over but I'm still lit 🔥 come turn it back up", "el vivo acabó pero sigo encendida 🔥 ven a reavivarlo"),
+    skyler: L("ainda ligada da transmissão 😜 não me deixa esfriar", "still buzzing from the stream 😜 don't let me cool down", "aún acelerada del directo 😜 no dejes que me enfríe"),
+    sofia_ai: L("troquei minha pausa de estudo por você 🥰 faz valer", "ditching my study break for you 🥰 make it count", "cambié mi pausa de estudio por ti 🥰 que valga la pena"),
+    valentina: L("voltei da praia, salgada e inquieta 🌴 me provoca", "just back from the beach, salty and restless 🌴 tempt me", "volví de la playa, salada e inquieta 🌴 provócame"),
+    violet: L("eu nunca falo com estranhos… mas você é meio fofo 🙈", "I never talk to strangers… but you're kind of cute 🙈", "nunca hablo con extraños… pero eres algo lindo 🙈")
+  };
   function ccFoot(c) {
     if (!c.hasChat) {
       return '<div class="cc-foot" style="margin-top:0.95rem"><button class="btn btn-primary btn-block btn-sm" data-open="' + c.id + '">' + L("Ver perfil", "View profile", "Ver perfil") + '</button></div>';
     }
     var avBg = c.avatarUrl ? ("center/cover no-repeat url('" + avThumb(c, 90) + "')") : grad(c.color);
     var teaser = c.online
-      ? L("oi 👀 tô bem aqui… me manda uma mensagem", "hey 👀 I'm right here… send me a message", "hola 👀 estoy aquí… mándame un mensaje")
+      ? (CARD_TEASERS[c.id] || L("oi 👀 tô bem aqui… me manda uma mensagem", "hey 👀 I'm right here… send me a message", "hola 👀 estoy aquí… mándame un mensaje"))
       : L("manda a primeira — respondo quando voltar 💬", "send the first one — I reply when I'm back 💬", "manda el primero — respondo cuando vuelva 💬");
     var sub = (c.online ? L("online agora", "online now", "en línea ahora") : L("responde quando voltar", "replies when she's back", "responde cuando vuelva"))
       + ' · <b>' + L("o 1º minuto é grátis", "the 1st minute is free", "el 1er minuto es gratis") + '</b>';
