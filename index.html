@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b39"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b40"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4164,17 +4164,16 @@ fbq('track', 'PageView');
       ctx = ctx || {};
       try {
         if (!sb) return;
-        sb.from("intent_events").insert({
-          user_id: (account && account.id) || null,
-          creator_key: ctx.creator_key || null,
-          event_type: type,
-          pack: ctx.pack || null,
-          price_cents: (ctx.price_cents != null ? ctx.price_cents : null),
-          currency: ctx.currency || "USD",
-          variant: ctx.variant || null,
-          contact: ctx.contact || null,
-          meta: ctx.meta || null
-        });
+        sb.rpc("track_intent", {
+          p_event_type: type,
+          p_creator_key: ctx.creator_key || null,
+          p_pack: ctx.pack || null,
+          p_price_cents: (ctx.price_cents != null ? ctx.price_cents : null),
+          p_currency: ctx.currency || "USD",
+          p_variant: ctx.variant || null,
+          p_contact: ctx.contact || null,
+          p_meta: ctx.meta || null
+        }).then(function () {}, function () {});
       } catch (e) {}
     }
     var fdPaywallLogged = false;
@@ -4270,7 +4269,7 @@ fbq('track', 'PageView');
         b.addEventListener("mousedown", function (e) { e.preventDefault(); });
         b.onclick = function () {
           var _min = +b.getAttribute("data-buytime"), _price = +b.getAttribute("data-price");
-          try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_click", meta: { min: _min, price: _price } }); } catch (e) {}
+          try { if (sb) sb.rpc("track_ux", { p_event: "recharge_click", p_creator_key: cid, p_meta: { min: _min, price: _price } }).then(function () {}, function () {}); } catch (e) {}
           logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
           fbt("InitiateCheckout", { content_name: cid, value: _price, currency: "USD", contents: [{ id: _min + "min", quantity: 1 }] }); // clicou num pacote (intenção de pagar)
           clar("event", "buy_click"); clar("set", "funnel_stage", "buy_intent");
@@ -4306,7 +4305,7 @@ fbq('track', 'PageView');
       var h = '<div style="padding:1.1rem;text-align:center"><div style="font-weight:800;margin-bottom:.25rem">' + L("Seu tempo com a ", "Your time with ", "Tu tiempo con ") + escHtml(first) + L(" acabou", " is up", " se acabó") + '</div><div class="muted-note" style="margin-bottom:.9rem">' + L("Recarregue pra continuar — ela tá te esperando.", "Recharge to keep going — she's waiting for you.", "Recarga para seguir — ella te espera.") + '</div>' + pkgBtns() + '</div>';
       body.innerHTML = h;
       logPaywall();
-      try { if (account && sb) sb.from("ux_events").insert({ user_id: account.id, creator_key: cid, event: "recharge_view" }); } catch (e) {}
+      try { if (sb) sb.rpc("track_ux", { p_event: "recharge_view", p_creator_key: cid }).then(function () {}, function () {}); } catch (e) {}
       wirePkgs(body);
     }
 
@@ -4531,7 +4530,9 @@ fbq('track', 'PageView');
       if (t && !state.purchased[t.id]) purchaseModal({ id: t.id, title: "Conteúdo exclusivo", price: t.price, icon: "tile", tile: true, creator: c.name });
     } else if (open) {
       var id = open.getAttribute("data-open") || open.getAttribute("data-creator");
-      state.creatorId = id; state.view = "store"; render();
+      // 1 toque: clicar no card de uma persona de IA abre o chat direto. O botao "Ver perfil" (data-open) ainda vai pro perfil.
+      if (!open.hasAttribute("data-open") && AI_PERSONAS[id]) { openAiChat(id); }
+      else { state.creatorId = id; state.view = "store"; render(); }
     } else if (sub) {
       if (needLogin()) return;
       var cid = sub.getAttribute("data-sub");
