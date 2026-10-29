@@ -893,7 +893,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b49"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b50"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -3423,17 +3423,34 @@ fbq('track', 'PageView');
       if (r.error) { box.innerHTML = '<p class="muted-note">Não foi possível carregar (' + escHtml(r.error.message) + ').</p>'; return; }
       var rows = r.data || [];
       if (!rows.length) { box.innerHTML = '<p class="muted-note">Nenhuma conversa ainda. As conversas aparecem aqui conforme as pessoas falam com as modelos.</p>'; return; }
+      var nowMs = Date.now();
+      function minsAgo(ts) { return ts ? Math.floor((nowMs - new Date(ts).getTime()) / 60000) : null; }
+      function isOnline(ts) { var m = minsAgo(ts); return m != null && m < 3; } // ativo nos ultimos 3 min
+      function agoTxt(ts) { var m = minsAgo(ts); if (m == null) return '—'; if (m < 1) return 'agora'; if (m < 60) return 'há ' + m + 'm'; var hh = Math.floor(m / 60); return hh < 24 ? ('há ' + hh + 'h') : ('há ' + Math.floor(hh / 24) + 'd'); }
+      // ordena: flagadas primeiro, depois online agora, depois por recencia
+      rows.sort(function (a, b) {
+        if (!!b.flagged - !!a.flagged) return (!!b.flagged) - (!!a.flagged);
+        if (isOnline(b.last_message_at) - isOnline(a.last_message_at)) return isOnline(b.last_message_at) - isOnline(a.last_message_at);
+        return new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0);
+      });
       var flagged = rows.filter(function (x) { return x.flagged; }).length;
-      var h = (flagged ? '<div style="font-size:.82rem;color:#dc2626;margin-bottom:.5rem">🔴 <b>' + flagged + '</b> conversa(s) pedindo atenção agora.</div>' : '');
+      var onlineN = rows.filter(function (x) { return isOnline(x.last_message_at); }).length;
+      var h = '<div style="font-size:.82rem;margin-bottom:.55rem">' +
+        '<span style="color:#16a34a">🟢 <b>' + onlineN + '</b> online agora</span>' +
+        (flagged ? '  ·  <span style="color:#dc2626">🔴 <b>' + flagged + '</b> pedindo atenção</span>' : '') + '</div>';
       h += '<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Modelo</th><th>Última mensagem</th><th>Status</th><th></th></tr></thead><tbody>';
       rows.forEach(function (t) {
+        var on = isOnline(t.last_message_at);
+        var onDot = on
+          ? '<span style="color:#16a34a;font-weight:700;font-size:.68rem">● online agora</span>'
+          : '<span style="color:var(--mut);font-size:.68rem">● offline · ' + agoTxt(t.last_message_at) + '</span>';
         var badge = t.human_mode ? '<span style="font-size:.66rem;color:#2563eb">🙋 você no controle</span>'
           : t.flagged ? '<span style="font-size:.66rem;color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>'
           : '<span style="font-size:.66rem;color:var(--mut)">🤖 robô</span>';
         var snippet = (t.last_msg || '').slice(0, 46);
-        h += '<tr' + (t.flagged ? ' style="background:rgba(220,38,38,.06)"' : '') + '><td><div style="font-weight:600;font-size:.82rem">' + escHtml((t.email || '—').split('@')[0]) + '</div><small style="color:var(--mut)">' + Math.floor((t.balance_sec || 0) / 60) + ' min · ' + (t.user_msgs || 0) + ' msgs</small></td>' +
+        h += '<tr' + (t.flagged ? ' style="background:rgba(220,38,38,.06)"' : (on ? ' style="background:rgba(22,163,74,.05)"' : '')) + '><td><div style="font-weight:600;font-size:.82rem">' + escHtml((t.email || '—').split('@')[0]) + '</div><div style="margin:1px 0">' + onDot + '</div><small style="color:var(--mut)">' + Math.floor((t.balance_sec || 0) / 60) + ' min · ' + (t.user_msgs || 0) + ' msgs</small></td>' +
           '<td style="font-size:.82rem">' + escHtml(t.creator_key || '') + '</td>' +
-          '<td style="font-size:.8rem;color:var(--mut);max-width:220px">' + escHtml(snippet) + (snippet.length >= 46 ? '…' : '') + '</td>' +
+          '<td style="font-size:.8rem;color:var(--mut);max-width:220px">' + escHtml(snippet) + (snippet.length >= 46 ? '…' : '') + '<div style="font-size:.7rem;opacity:.7;margin-top:1px">' + agoTxt(t.last_message_at) + '</div></td>' +
           '<td>' + badge + '</td>' +
           '<td><button class="btn ' + (t.flagged || t.human_mode ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '">' + (t.human_mode ? 'Continuar' : 'Intervir') + '</button></td></tr>';
       });
