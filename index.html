@@ -3514,7 +3514,7 @@ fbq('track', 'PageView');
           : t.flagged ? '<span style="font-size:.66rem;color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>'
           : '<span style="font-size:.66rem;color:var(--mut)">🤖 robô</span>';
         var snippet = (t.last_msg || '').slice(0, 46);
-        var clang = detectLangQuick(t.last_user_msg || t.last_msg);
+        var clang = detectLangQuick(t.last_user_msg) || detectLangQuick(t.last_msg);
         h += '<tr' + (t.flagged ? ' style="background:rgba(220,38,38,.06)"' : (on ? ' style="background:rgba(22,163,74,.05)"' : '')) + '><td><div style="font-weight:600;font-size:.82rem">' + escHtml(custName(t)) + '</div><div style="margin:1px 0;font-size:.7rem;font-weight:700;color:var(--mut)">' + langFlag(clang) + '</div><div style="margin:1px 0">' + onDot + '</div><small style="color:var(--mut)">' + Math.floor((t.balance_sec || 0) / 60) + ' min · ' + (t.user_msgs || 0) + ' msgs</small></td>' +
           '<td style="font-size:.82rem">' + escHtml(t.creator_key || '') + '</td>' +
           '<td style="font-size:.8rem;color:var(--mut);max-width:220px">' + escHtml(snippet) + (snippet.length >= 46 ? '…' : '') + '<div style="font-size:.7rem;opacity:.7;margin-top:1px">' + agoTxt(t.last_message_at) + '</div></td>' +
