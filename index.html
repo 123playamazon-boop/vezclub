@@ -941,7 +941,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b64"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b65"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4848,8 +4848,17 @@ fbq('track', 'PageView');
   // tambem e exigida antes de abrir um chat (mantem legal + regra do Stripe).
   function ageGate(onOk) {
     if (ageOk()) { if (typeof onOk === "function") onOk(); return; }
+    var actionTriggered = typeof onOk === "function"; // veio de um envio/clique (nao do load passivo)
+    function pulseAge() {
+      if (!actionTriggered) return;
+      var b = document.getElementById("age-bar"); if (!b) return;
+      try { b.animate([{ transform: "translateY(0)" }, { transform: "translateY(-7px)" }, { transform: "translateY(0)" }], { duration: 440, iterations: 2, easing: "ease-in-out" }); } catch (e) {}
+      var y = document.getElementById("age-yes");
+      if (y) { try { y.animate([{ boxShadow: "0 0 0 0 rgba(109,40,217,.55)" }, { boxShadow: "0 0 0 12px rgba(109,40,217,0)" }], { duration: 950, iterations: 2 }); } catch (e) {} }
+      toast(L("Confirme que você tem 18+ pra entrar no chat 👆", "Confirm you're 18+ to enter the chat 👆", "Confirma que tienes 18+ para entrar al chat 👆"));
+    }
     var existing = document.getElementById("age-bar");
-    if (existing) { if (typeof onOk === "function") existing.__onOk = onOk; return; }
+    if (existing) { if (actionTriggered) existing.__onOk = onOk; pulseAge(); return; }
     var bar = document.createElement("div");
     bar.id = "age-bar";
     bar.setAttribute("style", "position:fixed;left:0;right:0;bottom:0;z-index:9999;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:.7rem 1rem;padding-bottom:calc(.7rem + env(safe-area-inset-bottom));display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;justify-content:center");
@@ -4869,6 +4878,7 @@ fbq('track', 'PageView');
       try { if (bar.parentNode) bar.parentNode.removeChild(bar); } catch (e) {}
       app.innerHTML = '<div style="text-align:center;padding:4rem 1rem;color:var(--muted)">' + L("Você precisa ter 18 anos ou mais para acessar.", "You must be 18 or older to access.", "Debes tener 18 años o más para acceder.") + '</div>';
     };
+    pulseAge();
   }
 
   /* ---------------- toast ---------------- */
@@ -4923,10 +4933,30 @@ fbq('track', 'PageView');
     var _v = (inp.value || "").trim();
     openAiChat(_ccid, _v || null);
   });
+  // mobile (iOS): com o teclado aberto, o clique no botao de enviar do card as vezes nao dispara —
+  // garante o envio no touchend (mesmo padrao do botao do chat cheio). Guarda evita disparo duplo com o click.
+  var _ccTouch = 0;
+  function _ccGoFrom(target) {
+    var ccGo = target && target.closest && target.closest("[data-cc-go]");
+    if (!ccGo) return false;
+    var _ccid = ccGo.getAttribute("data-cc-go");
+    var _wrap = ccGo.closest(".cc-chat");
+    var _inp = _wrap && _wrap.querySelector(".cc-chat-inp");
+    var _v = _inp ? (_inp.value || "").trim() : "";
+    openAiChat(_ccid, _v || null);
+    return true;
+  }
+  app.addEventListener("touchend", function (e) {
+    if (!(e.target && e.target.closest && e.target.closest("[data-cc-go]"))) return;
+    e.preventDefault();
+    _ccTouch = Date.now();
+    _ccGoFrom(e.target);
+  }, { passive: false });
   app.addEventListener("click", function (e) {
     // mini-chat inline no card do feed: enviar leva a 1ª mensagem direto pro chat
     var ccGo = e.target.closest("[data-cc-go]");
     if (ccGo) {
+      if (Date.now() - _ccTouch < 800) return; // ja tratado no touchend (mobile)
       var _ccid = ccGo.getAttribute("data-cc-go");
       var _wrap = ccGo.closest(".cc-chat");
       var _inp = _wrap && _wrap.querySelector(".cc-chat-inp");
