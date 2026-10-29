@@ -938,10 +938,11 @@ fbq('track', 'PageView');
   var LANGS = ["pt", "en", "es"];
   var lang = (function () {
     try { var q = new URLSearchParams(location.search).get("lang"); if (q && LANGS.indexOf(q) >= 0) return q; } catch (e) {}
-    try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
-    // sem ?lang e sem preferencia salva: detecta pelo idioma do navegador.
-    // ESSENCIAL p/ o Brasil — navegador pt-BR cai no PT e ve o Pix (isPix depende de lang==="pt").
-    // en-US continua em ingles/Stripe. ?lang e o seletor sempre tem prioridade.
+    try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {} // escolha manual (seletor) vence
+    // idioma detectado por IP numa visita anterior (cache) — aplica na hora, sem piscar
+    try { var g = localStorage.getItem("vez_geo_lang"); if (g && LANGS.indexOf(g) >= 0) return g; } catch (e) {}
+    // 1a visita sem cache: chuta pelo idioma do navegador; a deteccao por IP (geoLangInit) corrige logo em seguida.
+    // ESSENCIAL p/ o Brasil — BR cai no PT e ve o Pix (isPix depende de lang==="pt"); en-US fica em ingles/Stripe.
     try {
       var nv = ((navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage || "").toLowerCase();
       if (nv.indexOf("pt") === 0) return "pt";
@@ -949,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b66"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b67"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1814,12 +1815,44 @@ fbq('track', 'PageView');
   function setLang(l) {
     if (LANGS.indexOf(l) < 0) return;
     lang = l; try { localStorage.setItem("aura_lang", l); } catch (e) {}
+    applyLangDom();
+  }
+  // troca o idioma e re-renderiza SEM salvar como escolha manual (usado pela deteccao por IP)
+  function applyLangDom() {
     applyPersonaLang();
     paintTopbarPt();
     if (typeof render === "function") render();
     rebuildGates();
     syncLangSel();
     i18nApply(document.body);
+  }
+  // Detecta o pais pelo IP e ajusta idioma + moeda/fluxo automaticamente:
+  // BR -> PT + Pix/BRL; paises hispanos -> ES; resto -> EN/USD. Rede de seguranca pro link do
+  // Brasil quando o ?lang=pt se perde (navegador in-app do Facebook corta parametros). NUNCA
+  // sobrescreve ?lang na URL nem o idioma escolhido no seletor (aura_lang).
+  function geoLangInit() {
+    try { if (new URLSearchParams(location.search).get("lang")) return; } catch (e) {}
+    try { if (localStorage.getItem("aura_lang")) return; } catch (e) {}
+    function apply(cc) {
+      var l = countryToLang(cc); if (!l) return;
+      try { localStorage.setItem("vez_geo_lang", l); } catch (e) {}
+      if (l !== lang) { lang = l; applyLangDom(); }
+    }
+    var cached = null; try { cached = JSON.parse(localStorage.getItem("vez_geo") || "null"); } catch (e) {}
+    if (cached && cached.c) { apply(cached.c); return; } // ja temos o pais por IP (captureGeo) — sem nova chamada
+    var done = false;
+    function finish(cc, city) {
+      if (done || !cc) return; done = true;
+      try { localStorage.setItem("vez_geo", JSON.stringify({ c: cc, city: city || "" })); } catch (e) {}
+      apply(cc);
+    }
+    try {
+      fetch("https://ipwho.is/").then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.success !== false && d.country_code) finish(d.country_code, d.city); else throw 0;
+      }).catch(function () {
+        try { fetch("https://ipapi.co/json/").then(function (r) { return r.json(); }).then(function (d) { if (d && d.country_code) finish(d.country_code, d.city); }).catch(function () {}); } catch (e) {}
+      });
+    } catch (e) {}
   }
 
   /* ---------------- render: router ---------------- */
@@ -5574,6 +5607,7 @@ fbq('track', 'PageView');
   i18nApply(document.body);
 
   /* boot */
+  geoLangInit(); // detecta pais por IP e ajusta idioma + moeda (BR -> PT/Pix) antes/junto do 1o render
   if (sb) {
     sb.auth.onAuthStateChange(function (_e, session) {
       // sessao anonima (chat de convidado) NAO entra pelo enterPlatform (evita gate de TOS + re-render); e tratada no ensureSessionThen
