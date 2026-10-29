@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b40"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b41"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4417,11 +4417,12 @@ fbq('track', 'PageView');
     try { if (localStorage.getItem("aura_age_ok")) return; } catch (e) {}
     modalRoot.innerHTML = '<div class="modal-bg"><div class="modal"><div class="modal-pad age-center">' +
       '<div class="age-logo">V</div>' +
-      '<h3>' + L("Elas estão online agora 💜", "They're online right now 💜", "Ellas están en línea ahora 💜") + '</h3>' +
-      '<p class="m-sub">' + L("Conteúdo adulto 18+. O 1º minuto de chat é por nossa conta. Confirma que você é maior de 18 pra entrar.", "Adult content, 18+. Your first chat minute is on us. Confirm you're 18 or older to come in.", "Contenido adulto 18+. El 1er minuto de chat va por nuestra cuenta. Confirma que eres mayor de 18 para entrar.") + '</p>' +
-      '<div class="modal-foot" style="flex-direction:column;gap:0.5rem">' +
-        '<button class="btn btn-primary btn-block" id="age-yes">' + L("Tenho 18+ · entrar", "I'm 18+ · Enter", "Tengo 18+ · entrar") + '</button>' +
-        '<button class="btn btn-ghost btn-block btn-sm" id="age-no" style="opacity:0.7">' + L("Sou menor · sair", "I'm under 18 · leave", "Soy menor · salir") + '</button>' +
+      '<h3>' + L("Ela tá online agora 💜", "She's online right now 💜", "Ella está en línea ahora 💜") + '</h3>' +
+      '<p class="m-sub">' + L("Seu 1º minuto é grátis — sem cartão, é só digitar. Entra e fala com ela num chat privado, só vocês dois.", "Your first minute is free — no card, just type. Come in and talk to her in a private chat, just the two of you.", "Tu 1er minuto es gratis — sin tarjeta, solo escribe. Entra y habla con ella en un chat privado, solo ustedes dos.") + '</p>' +
+      '<div class="modal-foot" style="flex-direction:column;gap:0.45rem">' +
+        '<button class="btn btn-primary btn-block" id="age-yes">' + L("Entrar · 1º minuto grátis", "Come in · first minute free", "Entrar · 1er minuto gratis") + '</button>' +
+        '<p style="font-size:0.72rem;line-height:1.3;color:var(--muted);margin:0.1rem 0 0;opacity:0.85">' + L("O Vezclub é só para adultos. Ao entrar, você confirma que tem 18 anos ou mais.", "Vezclub is for adults only. By entering, you confirm you're 18 or older.", "Vezclub es solo para adultos. Al entrar, confirmas que tienes 18 años o más.") + '</p>' +
+        '<button class="btn btn-ghost btn-block btn-sm" id="age-no" style="opacity:0.6;font-size:0.78rem">' + L("Tenho menos de 18 · sair", "I'm under 18 · leave", "Soy menor de 18 · salir") + '</button>' +
       '</div>' +
       '</div></div></div>';
     document.getElementById("age-yes").onclick = function () { try { localStorage.setItem("aura_age_ok", "1"); } catch (e) {} closeModal(); };
