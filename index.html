@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b45"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b46"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4168,6 +4168,7 @@ fbq('track', 'PageView');
   function openAiChat(cid, firstMsg) {
     var c = CREATORS.find(function (x) { return x.id === cid; });
     if (!c) return;
+    if (!ageOk()) { ageGate(function () { openAiChat(cid, firstMsg); }); return; } // confirma 18+ antes do chat
     if (!sb) return;
     if (!account) { ensureSessionThen(function () { openAiChat(cid, firstMsg); }); return; }
     var persona = AI_PERSONAS[cid] || {};
@@ -4478,20 +4479,32 @@ fbq('track', 'PageView');
     if (x) x.onclick = function () { try { sessionStorage.setItem("vez_nudge_x", "1"); } catch (e) {} bar.remove(); };
   }
 
-  function ageGate() {
-    try { if (localStorage.getItem("aura_age_ok")) return; } catch (e) {}
-    modalRoot.innerHTML = '<div class="modal-bg"><div class="modal"><div class="modal-pad age-center">' +
-      '<div class="age-logo">V</div>' +
-      '<h3>' + L("Tá tarde — e teu celular ficou quieto a noite toda.", "It's late — and your phone's been quiet all night.", "Es tarde — y tu teléfono estuvo callado toda la noche.") + '</h3>' +
-      '<p class="m-sub">' + L("Ela não. Tá acordada, de bom humor, esperando alguém como você aparecer hoje — pra conversar, provocar, e pegar as fotos que ela não põe no feed. O 1º minuto é por conta dela.", "She's not. She's up, in a good mood, hoping someone like you shows up tonight — to talk, to tease, to get the photos she keeps off her feed. Your first minute's on her.", "Ella no. Está despierta, de buen humor, esperando que alguien como tú aparezca hoy — para hablar, provocar, y ver las fotos que no pone en su feed. El 1er minuto va por su cuenta.") + '</p>' +
-      '<div class="modal-foot" style="flex-direction:column;gap:0.45rem">' +
-        '<button class="btn btn-primary btn-block" id="age-yes">' + L("Entrar — ela tá te esperando", "Come in — she's waiting", "Entrar — ella te espera") + '</button>' +
-        '<p style="font-size:0.72rem;line-height:1.3;color:var(--muted);margin:0.1rem 0 0;opacity:0.85">' + L("O Vezclub é só para adultos. Ao entrar, você confirma que tem 18 anos ou mais.", "Vezclub is for adults only. By entering, you confirm you're 18 or older.", "Vezclub es solo para adultos. Al entrar, confirmas que tienes 18 años o más.") + '</p>' +
-        '<button class="btn btn-ghost btn-block btn-sm" id="age-no" style="opacity:0.6;font-size:0.78rem">' + L("Tenho menos de 18 · sair", "I'm under 18 · leave", "Soy menor de 18 · salir") + '</button>' +
-      '</div>' +
-      '</div></div></div>';
-    document.getElementById("age-yes").onclick = function () { try { localStorage.setItem("aura_age_ok", "1"); } catch (e) {} closeModal(); };
-    document.getElementById("age-no").onclick = function () { app.innerHTML = '<div style="text-align:center;padding:4rem 1rem;color:var(--muted)">' + L("Você precisa ter 18 anos ou mais para acessar.", "You must be 18 or older to access.", "Debes tener 18 años o más para acceder.") + '</div>'; closeModal(); };
+  function ageOk() { try { return !!localStorage.getItem("aura_age_ok"); } catch (e) { return false; } }
+  // Gate LEVE: feed fica visivel; so uma barra fina confirma 18+. A confirmacao
+  // tambem e exigida antes de abrir um chat (mantem legal + regra do Stripe).
+  function ageGate(onOk) {
+    if (ageOk()) { if (typeof onOk === "function") onOk(); return; }
+    var existing = document.getElementById("age-bar");
+    if (existing) { if (typeof onOk === "function") existing.__onOk = onOk; return; }
+    var bar = document.createElement("div");
+    bar.id = "age-bar";
+    bar.setAttribute("style", "position:fixed;left:0;right:0;bottom:0;z-index:9999;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.18);padding:.7rem 1rem;padding-bottom:calc(.7rem + env(safe-area-inset-bottom));display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;justify-content:center");
+    if (typeof onOk === "function") bar.__onOk = onOk;
+    bar.innerHTML =
+      '<span style="font-size:.86rem;color:var(--fg);flex:1;min-width:150px">' + L("Conteúdo adulto. Você tem 18 anos ou mais?", "Adult content. Are you 18 or older?", "Contenido adulto. ¿Tienes 18 años o más?") + '</span>' +
+      '<button class="btn btn-primary btn-sm" id="age-yes" style="white-space:nowrap">' + L("Tenho 18+ · entrar", "I'm 18+ · enter", "Tengo 18+ · entrar") + '</button>' +
+      '<button class="btn btn-ghost btn-sm" id="age-no" style="opacity:.6;white-space:nowrap">' + L("Menor · sair", "Under 18 · leave", "Menor · salir") + '</button>';
+    document.body.appendChild(bar);
+    document.getElementById("age-yes").onclick = function () {
+      try { localStorage.setItem("aura_age_ok", "1"); } catch (e) {}
+      var cb = bar.__onOk;
+      try { if (bar.parentNode) bar.parentNode.removeChild(bar); } catch (e) {}
+      if (typeof cb === "function") cb();
+    };
+    document.getElementById("age-no").onclick = function () {
+      try { if (bar.parentNode) bar.parentNode.removeChild(bar); } catch (e) {}
+      app.innerHTML = '<div style="text-align:center;padding:4rem 1rem;color:var(--muted)">' + L("Você precisa ter 18 anos ou mais para acessar.", "You must be 18 or older to access.", "Debes tener 18 años o más para acceder.") + '</div>';
+    };
   }
 
   /* ---------------- toast ---------------- */
