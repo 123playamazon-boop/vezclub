@@ -892,7 +892,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b34"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b35"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1082,7 +1082,8 @@ fbq('track', 'PageView');
   var IMG_VER = "9"; // bump quando trocar imagens de modelo pra furar o cache (max-age 1h)
   function mediaUrl(path) { try { var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return null; } }
   // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed)
-  function imgUrl(path, w, q) { try { var u = sb.storage.from("avatars").getPublicUrl(path, { transform: { width: w, quality: q || 70 } }).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return mediaUrl(path); } }
+  // serve a imagem crua (webp ja otimizada no upload) — sem transformacao on-the-fly do Supabase (evita estourar a cota "Storage Image Transformations" e garante que a foto sempre carrega)
+  function imgUrl(path, w, q) { return mediaUrl(path); }
   function avThumb(c, w) { return c.avatarPath ? imgUrl(c.avatarPath, w || 160, 76) : (c.avatarUrl || null); }
   function seedRand(str, salt) { var h = 2166136261 >>> 0; var s = (str || "") + "|" + (salt || ""); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
   function vanityStats(key) {
