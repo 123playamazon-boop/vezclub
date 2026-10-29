@@ -939,7 +939,7 @@ fbq('track', 'PageView');
     try { var s = localStorage.getItem("aura_lang"); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
     return "en"; // plataforma padrao em ingles (trafego em ingles); seletor troca e salva
   })();
-  var BUILD = "b56"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b57"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -3497,14 +3497,17 @@ fbq('track', 'PageView');
   function livIsOnline(ts) { var m = livMinsAgo(ts); return m != null && m < 3; }
   function livAgo(ts) { var m = livMinsAgo(ts); if (m == null) return '—'; if (m < 1) return 'agora'; if (m < 60) return 'há ' + m + 'm'; var hh = Math.floor(m / 60); return hh < 24 ? ('há ' + hh + 'h') : ('há ' + Math.floor(hh / 24) + 'd'); }
   function livLangDetect(txt) {
-    var t = (txt || '').toLowerCase();
-    if (/[ãõ]/.test(t) || /\b(você|voce|não|nao|obrigad|vamos|cadê|beleza|né|tá|pra|cê|saudade|quero|dinheiro|reembolso|golpe|cancelar|oi|oii|bom dia|boa noite|tudo bem)\b/.test(t)) return 'pt';
-    if (/[ñ¿¡]/.test(t) || /\b(hola|gracias|quiero|dinero|cómo|cuánto|por favor|guap|cariño|buenas|qué|estás|amor)\b/.test(t)) return 'es';
-    if (/\b(the|you|your|how|are|please|want|money|refund|hello|hey|babe|love|what|really|thanks|just|yeah|good morning)\b/.test(t)) return 'en';
+    var t = (txt || '').toLowerCase().trim();
+    if (!t) return null;
+    if (/[ãõ]/.test(t) || /\b(você|voce|cê|não|nao|obrigad|vamos|vamo|cadê|cade|beleza|né|tá|pra|pro|saudade|quero|dinheiro|reembolso|golpe|cancelar|oi|oii|opa|bom dia|boa noite|boa tarde|tudo bem|gostosa|gostoso|safad|delícia|delicia|amo|amor|linda|lindo|quanto|manda|foto)\b/.test(t)) return 'pt';
+    if (/[ñ¿¡]/.test(t) || /\b(hola|gracias|quiero|dinero|cómo|cuánto|cuanto|por favor|guap|cariño|buenas|qué|mujer|mándame|rica|rico|contigo)\b/.test(t)) return 'es';
+    if (/\b(the|you|your|you're|how|are|please|want|money|refund|hello|hi|hey|babe|baby|love|what|really|thanks|just|yeah|yes|can|could|see|show|me|my|im|i'm|do|does|is|am|with|for|so|u|ur|pic|pics|photo|send|talk|wanna|gonna|where|who|when|nice|good|beautiful|sexy|girl|cute|dont|don't|cant|can't)\b/.test(t)) return 'en';
     if (/[áàâéêíóôúç]/.test(t)) return 'pt';
+    if (/^[\x00-\x7f]+$/.test(t) && /[a-z]{2,}/.test(t)) return 'en';
     return null;
   }
   function livFlag(l) { return l === 'pt' ? '🇧🇷 PT' : l === 'en' ? '🇺🇸 EN' : l === 'es' ? '🇪🇸 ES' : '🌐 ?'; }
+  function modelAv(key) { return SUPA_URL + "/storage/v1/object/public/avatars/" + encodeURIComponent(key || "") + "/avatar.webp"; }
   function livName(t) {
     var e = t.email || '';
     if (e && e.indexOf('@') > 0) { var p = e.split('@')[0]; if (p && !/^(anon|guest|user|temp|null)/i.test(p)) return p; }
@@ -3539,7 +3542,7 @@ fbq('track', 'PageView');
           var badge = t.human_mode ? '<span style="color:#2563eb">🙋 você</span>' : t.flagged ? '<span style="color:#dc2626">🔴 ' + escHtml(t.flag_reason || 'atenção') + '</span>' : '<span style="color:var(--mut)">🤖 robô</span>';
           var sel = t.thread_id === ivSelTid;
           h += '<div class="liv-item' + (sel ? ' on' : '') + (t.flagged ? ' flag' : '') + '" data-interv="' + t.thread_id + '" data-icreator="' + escHtml(t.creator_key || '') + '" data-iemail="' + escHtml(t.email || '') + '" data-ihuman="' + (t.human_mode ? '1' : '0') + '" data-iname="' + escHtml(livName(t)) + '">' +
-            '<div class="liv-ava">👤' + (on ? '<span class="liv-dot"></span>' : '') + '</div>' +
+            '<div class="liv-ava"><img src="' + modelAv(t.creator_key) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">' + (on ? '<span class="liv-dot"></span>' : '') + '</div>' +
             '<div class="liv-main">' +
               '<div class="liv-top"><b>' + escHtml(livName(t)) + '</b><span class="liv-flag">' + livFlag(clang) + '</span><span class="liv-time">' + livAgo(t.last_message_at) + '</span></div>' +
               '<div class="liv-sub">' + escHtml(snippet) + (snippet.length >= 40 ? '…' : '') + '</div>' +
@@ -3565,13 +3568,15 @@ fbq('track', 'PageView');
     var LGS = { pt: "PT", en: "EN", es: "ES" };
     var attLang = "pt"; try { attLang = localStorage.getItem("vez_att_lang") || "pt"; } catch (e) {}
     if (!LGS[attLang]) attLang = "pt";
-    var custLang = null, transCache = {};
+    var custLang = null, custLangManual = null, transCache = {};
     function guessLang(txt) {
-      var t = (txt || "").toLowerCase();
-      if (/[ãõ]/.test(t) || /\b(você|voce|não|nao|obrigad|vamos|cadê|beleza|né|tá|pra|cê|saudade|quero|dinheiro|reembolso|golpe|cancelar|oi|oii)\b/.test(t)) return "pt";
-      if (/[ñ¿¡]/.test(t) || /\b(hola|gracias|quiero|dinero|cómo|cuánto|por favor|guap|cariño|dinero)\b/.test(t)) return "es";
-      if (/\b(the|you|your|how|are|please|want|money|refund|hello|hey|babe|love|what|really|thanks|just|yeah)\b/.test(t)) return "en";
+      var t = (txt || "").toLowerCase().trim();
+      if (!t) return null;
+      if (/[ãõ]/.test(t) || /\b(você|voce|cê|não|nao|obrigad|vamos|vamo|cadê|cade|beleza|né|tá|pra|pro|saudade|quero|dinheiro|reembolso|golpe|cancelar|oi|oii|opa|bom dia|boa noite|boa tarde|tudo bem|gostosa|gostoso|safad|delícia|delicia|amo|amor|linda|lindo|quanto|manda|foto)\b/.test(t)) return "pt";
+      if (/[ñ¿¡]/.test(t) || /\b(hola|gracias|quiero|dinero|cómo|cuánto|cuanto|por favor|guap|cariño|buenas|qué|mujer|mándame|rica|rico|contigo)\b/.test(t)) return "es";
+      if (/\b(the|you|your|you're|how|are|please|want|money|refund|hello|hi|hey|babe|baby|love|what|really|thanks|just|yeah|yes|can|could|see|show|me|my|im|i'm|do|does|is|am|with|for|so|u|ur|pic|pics|photo|send|talk|wanna|gonna|where|who|when|nice|good|beautiful|sexy|girl|cute|dont|don't|cant|can't)\b/.test(t)) return "en";
       if (/[áàâéêíóôúç]/.test(t)) return "pt";
+      if (/^[\x00-\x7f]+$/.test(t) && /[a-z]{2,}/.test(t)) return "en"; // ASCII sem marca PT/ES → quase sempre inglês
       return null;
     }
     function tr(text, to) {
@@ -3594,7 +3599,10 @@ fbq('track', 'PageView');
       return tr(s.txt, lang).then(function (t) { transCache[key] = t; return t; });
     }
     function mediaOf(content) { var mm = /^\[\[media:(img|vid)\]\]([\s\S]+)$/.exec(content || ""); return mm ? { kind: mm[1], url: mm[2] } : null; }
-    var panelInner = '<div style="display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--line,#eee)"><div style="flex:1;min-width:0"><b>' + escHtml(custDisplayName || email || "Visitante") + '</b> <span style="color:var(--mut);font-size:.78rem">· ' + escHtml(creatorKey) + '</span><div id="iv-mode" style="font-size:.72rem"></div></div>' +
+    var modelName = (creatorKey || "").replace(/_ai$/, "").replace(/_/g, " ").replace(/^./, function (c) { return c.toUpperCase(); });
+    var panelInner = '<div style="display:flex;align-items:center;gap:.55rem;padding:.6rem .9rem;border-bottom:1px solid var(--line,#eee)">' +
+      '<img src="' + modelAv(creatorKey) + '" alt="" onerror="this.style.visibility=\'hidden\'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:rgba(109,40,217,.15)">' +
+      '<div style="flex:1;min-width:0"><b>' + escHtml(modelName) + '</b> <span style="color:var(--mut);font-size:.73rem">· atendendo ' + escHtml(custDisplayName || email || "Visitante") + '</span><div id="iv-mode" style="font-size:.72rem"></div></div>' +
       '<button id="iv-toggle" class="btn btn-sm"></button>' +
       '<button id="iv-close" title="fechar" style="border:0;background:none;font-size:1.25rem;cursor:pointer;color:inherit;margin-left:.3rem">✕</button></div>' +
       '<div style="display:flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-bottom:1px solid var(--line,#eee);font-size:.72rem;color:var(--mut)"><span>Seu idioma:</span><span id="iv-langs"></span><span id="iv-cust" style="margin-left:auto"></span></div>' +
@@ -3633,7 +3641,14 @@ fbq('track', 'PageView');
       modeEl.innerHTML = human ? '<span style="color:#2563eb">🙋 o robô está pausado — você responde</span>' : '<span style="color:var(--mut)">🤖 o robô está respondendo</span>';
     }
     function updatePlaceholder() { var i = ov.querySelector("#iv-text"); if (i) i.placeholder = (attLang === "en" ? "Write in your language…" : attLang === "es" ? "Escribe en tu idioma…" : "Escreva no seu idioma…"); }
-    function paintCust() { custEl.innerHTML = custLang ? ('cliente fala: <b>' + LGS[custLang] + '</b>' + (custLang !== attLang ? ' · 🌐 traduzindo' : '')) : ''; }
+    function paintCust() {
+      var eff = custLangManual || custLang;
+      var btns = ["pt", "en", "es"].map(function (l) {
+        return '<button data-cl="' + l + '" title="fixar o idioma do cliente" style="border:0;cursor:pointer;padding:.08rem .38rem;border-radius:6px;font-size:.66rem;font-weight:700;margin-left:.18rem;' + (l === eff ? 'background:#16a34a;color:#fff' : 'background:rgba(127,127,127,.15);color:inherit') + '">' + LGS[l] + '</button>';
+      }).join("");
+      custEl.innerHTML = 'cliente:' + btns + (eff && eff !== attLang ? ' <span title="traduzindo pro cliente">🌐</span>' : '') + (custLangManual ? '' : ' <span style="opacity:.55;font-size:.64rem">auto</span>');
+      custEl.querySelectorAll("[data-cl]").forEach(function (b) { b.onclick = function () { custLangManual = b.getAttribute("data-cl"); paintCust(); retranslateAll(); }; });
+    }
     function fillText(m) { if (mediaOf(m.content)) return; displayText(m, attLang).then(function (t) { var el = body.querySelector('[data-mid="' + m.id + '"] .ivtext'); if (el) el.textContent = t; }); }
     function retranslateAll() { msgsArr.forEach(fillText); paintCust(); }
     function paintLangs() {
@@ -3697,15 +3712,25 @@ fbq('track', 'PageView');
       { pt: "Quero te conhecer melhor… me conta mais de você.", en: "I want to know you better… tell me more about you.", es: "Quiero conocerte mejor… cuéntame más de ti." },
       { pt: "Tô ficando com vontade de te mandar uma surpresa…", en: "I'm starting to want to send you a little surprise…", es: "Me están dando ganas de mandarte una sorpresita…" }
     ];
+    function loadCustomQR() { try { return JSON.parse(localStorage.getItem("vez_quick_custom") || "[]") || []; } catch (e) { return []; } }
+    function saveCustomQR(a) { try { localStorage.setItem("vez_quick_custom", JSON.stringify(a)); } catch (e) {} }
+    function fillInp(txt) { var inp = ov.querySelector("#iv-text"); inp.value = txt; try { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {} }
     function paintQuick() {
       var q = ov.querySelector("#iv-quick"); if (!q) return;
-      q.innerHTML = '<span style="font-size:.64rem;color:var(--mut);width:100%;margin-bottom:.1rem">Respostas rápidas · clique pra preencher, aí você revisa e envia</span>' +
-        QUICK_REPLIES.map(function (r, i) {
-          return '<button data-qr="' + i + '" title="clique pra preencher o campo" style="border:1px solid var(--line,#ddd);background:rgba(109,40,217,.07);color:inherit;font-size:.72rem;padding:.3rem .55rem;border-radius:999px;cursor:pointer;line-height:1.15;text-align:left">' + escHtml(r[attLang] || r.pt) + '</button>';
-        }).join("");
-      q.querySelectorAll("[data-qr]").forEach(function (b) {
-        b.onclick = function () { var r = QUICK_REPLIES[+b.getAttribute("data-qr")]; var inp = ov.querySelector("#iv-text"); inp.value = r[attLang] || r.pt; try { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {} };
-      });
+      var custom = loadCustomQR();
+      var baseStyle = 'border:1px solid var(--line,#ddd);background:rgba(109,40,217,.07);color:inherit;font-size:.72rem;padding:.3rem .55rem;border-radius:999px;cursor:pointer;line-height:1.15;text-align:left';
+      var html = '<span style="font-size:.64rem;color:var(--mut);width:100%;margin-bottom:.1rem">Respostas rápidas · clique pra preencher, aí você revisa e envia</span>';
+      html += QUICK_REPLIES.map(function (r, i) { return '<button data-qr="' + i + '" title="clique pra preencher" style="' + baseStyle + '">' + escHtml(r[attLang] || r.pt) + '</button>'; }).join("");
+      html += custom.map(function (txt, i) { return '<span style="display:inline-flex;align-items:center;border:1px solid #6d28d9;background:rgba(109,40,217,.14);border-radius:999px;overflow:hidden"><button data-qrc="' + i + '" title="clique pra preencher" style="border:0;background:transparent;color:inherit;font-size:.72rem;padding:.3rem .2rem .3rem .55rem;cursor:pointer">' + escHtml(txt) + '</button><button data-qrx="' + i + '" title="remover" style="border:0;background:transparent;color:var(--mut);font-size:.7rem;padding:.3rem .45rem .3rem .25rem;cursor:pointer">✕</button></span>'; }).join("");
+      html += '<span style="display:flex;gap:.25rem;width:100%;margin-top:.25rem"><input id="qr-new" placeholder="+ escreva uma resposta sua e salve…" style="flex:1;min-width:0;font-size:.72rem;padding:.32rem .55rem;border:1px dashed var(--line,#ccc);border-radius:999px;background:transparent;color:inherit" autocomplete="off"><button id="qr-add" style="border:0;background:#6d28d9;color:#fff;font-size:.72rem;font-weight:700;padding:.32rem .7rem;border-radius:999px;cursor:pointer;white-space:nowrap">Salvar</button></span>';
+      q.innerHTML = html;
+      q.querySelectorAll("[data-qr]").forEach(function (b) { b.onclick = function () { var r = QUICK_REPLIES[+b.getAttribute("data-qr")]; fillInp(r[attLang] || r.pt); }; });
+      q.querySelectorAll("[data-qrc]").forEach(function (b) { b.onclick = function () { fillInp(loadCustomQR()[+b.getAttribute("data-qrc")] || ""); }; });
+      q.querySelectorAll("[data-qrx]").forEach(function (b) { b.onclick = function () { var a = loadCustomQR(); a.splice(+b.getAttribute("data-qrx"), 1); saveCustomQR(a); paintQuick(); }; });
+      var addB = q.querySelector("#qr-add"), ni = q.querySelector("#qr-new");
+      function doAdd() { var v = (ni.value || "").trim(); if (!v) return; var a = loadCustomQR(); a.push(v); saveCustomQR(a); paintQuick(); }
+      if (addB) addB.onclick = doAdd;
+      if (ni) ni.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doAdd(); } });
     }
     paintMode(); paintLangs(); updatePlaceholder(); paintQuick();
     sync(); ipoll = setInterval(sync, 3000); if (isPane) ivPanePoll = ipoll;
@@ -3720,7 +3745,8 @@ fbq('track', 'PageView');
     function ivSend() {
       var inp = ov.querySelector("#iv-text"); var v = (inp.value || "").trim(); if (!v) return;
       var sendBtn = ov.querySelector("#iv-send"); sendBtn.disabled = true;
-      var target = (custLang && custLang !== attLang) ? custLang : null;
+      var eff = custLangManual || custLang;
+      var target = (eff && eff !== attLang) ? eff : null;
       function store(customerText) {
         sb.rpc("admin_send_tr", { p_thread: tid, p_content: customerText, p_src_text: v, p_src_lang: attLang }).then(function (r) {
           sendBtn.disabled = false;
