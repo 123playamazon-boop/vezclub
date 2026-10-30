@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b85"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b86"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2084,78 +2084,78 @@ fbq('track', 'PageView');
 
   /* ============ O RETRATO FALADO — quiz da mulher ideal (funil SFW, grátis por agora) ============ */
   var QUIZ = [
-    { q: "Que horas ela te manda mensagem?", o: [
-      { t: "2h da manhã, sem mais nem menos", w: { i: 2, s: 2, a: "noturna", g: -1 } },
-      { t: "6h, voltando do treino", w: { i: 1, a: "fitness" } },
-      { t: "No meio da tarde, um textão", w: { m: 2, a: "intelectual", g: 1 } },
-      { t: "Bom dia com coração, todo dia", w: { s: -1, a: "caseira", g: 1 } } ] },
-    { q: "O encontro perfeito pra você é:", o: [
-      { t: "Bar escondido, drink, madrugada", w: { i: 1, a: "noturna" } },
-      { t: "Praia, sol, sem hora pra voltar", w: { a: "praiana", g: -1, i: 1 } },
-      { t: "Em casa, vinho e cozinhando juntos", w: { s: -1, a: "caseira", g: 1 } },
-      { t: "Livraria, museu, conversa que não acaba", w: { m: 2, a: "intelectual", g: 1 } } ] },
-    { q: "O que te desmonta numa mulher?", o: [
-      { t: "O olhar provocante", w: { s: 2, i: 1 } },
-      { t: "A risada solta", w: { m: -1, s: -1 } },
-      { t: "A inteligência afiada", w: { m: 2, g: 1 } },
-      { t: "O carinho genuíno", w: { s: -2, a: "caseira" } } ] },
-    { q: "A idade que mais combina com você:", o: [
+    { q: "O que te atrai primeiro numa mulher?", o: [
+      { t: "O olhar e a boca — puro magnetismo", w: { s: 2, i: 1 } },
+      { t: "O sorriso e a leveza dela", w: { s: -1, m: -1 } },
+      { t: "A inteligência, o papo afiado", w: { m: 2 } },
+      { t: "O corpo e a presença", w: { s: 2, a: "fitness" } } ] },
+    { q: "Seu fim de semana ideal com ela seria:", o: [
+      { t: "Balada, bar e acordar tarde juntos", w: { a: "noturna", i: 1, g: -1 } },
+      { t: "Praia, trilha, aventura ao ar livre", w: { a: "praiana", i: 1 } },
+      { t: "Treino de manhã e vida saudável", w: { a: "fitness" } },
+      { t: "Em casa, cozinhando e maratonando série", w: { a: "caseira", s: -1, g: 1 } } ] },
+    { q: "A mulher que te ganha é a que...", o: [
+      { t: "Toma a iniciativa e te provoca", w: { i: 2, s: 2 } },
+      { t: "Te acolhe e cuida de você", w: { s: -2, a: "caseira" } },
+      { t: "Te desafia a ser um cara melhor", w: { a: "fitness", m: 1, g: 1 } },
+      { t: "Te faz pensar e questionar tudo", w: { m: 2, a: "intelectual" } } ] },
+    { q: "A maturidade que mais combina com você:", o: [
       { t: "Mais nova, cheia de energia", w: { g: -2, i: 1 } },
-      { t: "Da sua idade, mesma sintonia", w: { g: 0 } },
-      { t: "Mais madura, que sabe o que quer", w: { g: 2, s: 1 } },
-      { t: "Tanto faz — o que vale é a conexão", w: { m: 1 } } ] },
-    { q: "No domingo, ela está...", o: [
-      { t: "Dormindo até tarde, você do lado", w: { a: "noturna", g: -1, s: 1 } },
-      { t: "Na praia ou numa trilha", w: { a: "praiana", i: 1 } },
-      { t: "Treinando e te chamando junto", w: { a: "fitness", i: 1 } },
-      { t: "De pijama, série e colo", w: { a: "caseira", s: -1, g: 1 } } ] },
-    { q: "O corpo dela que te pega é...", o: [
-      { t: "Curvas — ela sabe o que tem", w: { s: 2 } },
-      { t: "Definida, fitness", w: { a: "fitness" } },
+      { t: "Da sua idade, mesma fase de vida", w: { g: 0 } },
+      { t: "Mais madura e resolvida", w: { g: 2, s: 1 } },
+      { t: "Idade não importa — importa a conexão", w: { m: 1 } } ] },
+    { q: "O tipo de conversa que te prende:", o: [
+      { t: "Provocante, de duplo sentido", w: { s: 2, i: 1, a: "noturna" } },
+      { t: "Leve, cheia de risada", w: { m: -1, s: -1 } },
+      { t: "Profunda, de virar a madrugada", w: { m: 2, a: "intelectual" } },
+      { t: "Sobre planos, viagens e aventuras", w: { a: "praiana" } } ] },
+    { q: "O que mais te atrai no corpo dela?", o: [
+      { t: "As curvas — a mulher sabe o que tem", w: { s: 2 } },
+      { t: "Definida, que cuida do corpo", w: { a: "fitness" } },
       { t: "Natural, do jeitinho dela", w: { s: -1, a: "caseira" } },
-      { t: "O que importa é como ela se move", w: { m: 1, i: 1 } } ] },
-    { q: "Como ela fala com você?", o: [
-      { t: "Direta, sem rodeio, provocando", w: { s: 2, i: 2 } },
-      { t: "Doce, te chamando de amor", w: { s: -2, a: "caseira" } },
-      { t: "Cheia de ideia, te fazendo pensar", w: { m: 2, a: "intelectual" } },
-      { t: "Com humor, te zoando", w: { m: -1, i: 1 } } ] },
-    { q: "O que ela faz que ninguém mais fez?", o: [
-      { t: "Lembra de cada detalhe seu", w: { m: 1, a: "intelectual", g: 1 } },
-      { t: "Te manda foto no meio do dia", w: { s: 2, a: "noturna" } },
-      { t: "Te cozinha teu prato favorito", w: { s: -1, a: "caseira" } },
-      { t: "Te arranca de casa pra aventura", w: { a: "praiana", i: 1 } } ] },
-    { q: "A energia dela é...", o: [
-      { t: "Fogo, intensa, não para", w: { i: 3, a: "noturna" } },
-      { t: "Leve, de boa, sol", w: { i: -2, a: "praiana" } },
-      { t: "Focada, disciplinada", w: { a: "fitness", g: 1 } },
-      { t: "Profunda, meio misteriosa", w: { m: 2, a: "artistica" } } ] },
-    { q: "No primeiro beijo, ela...", o: [
-      { t: "Toma a iniciativa", w: { i: 2, s: 2 } },
-      { t: "Deixa a tensão crescer até você não aguentar", w: { s: 2, m: 1 } },
-      { t: "É tímida e derrete", w: { s: -2, i: -1 } },
-      { t: "Ri e te puxa pra perto", w: { m: -1, i: 1 } } ] },
-    { q: "O que ela curte de verdade?", o: [
-      { t: "Noite, música, dançar", w: { a: "noturna", i: 1 } },
-      { t: "Natureza, ar livre", w: { a: "praiana" } },
-      { t: "Arte, escrever, criar", w: { a: "artistica", m: 2 } },
-      { t: "Casa, aconchego, rotina a dois", w: { a: "caseira", s: -1, g: 1 } } ] },
-    { q: "Ela te ama te dando...", o: [
-      { t: "Desejo e fogo", w: { s: 2, i: 1 } },
-      { t: "Atenção e presença", w: { s: -1, g: 1 } },
-      { t: "Conversa e cumplicidade", w: { m: 2 } },
-      { t: "Aventura e surpresa", w: { a: "praiana", i: 1 } } ] },
-    { q: "O defeito que você perdoaria nela:", o: [
-      { t: "Ciúme — ela te quer só pra ela", w: { i: 1, s: 1 } },
-      { t: "Teimosia — ela sabe o que quer", w: { g: 1, m: 1 } },
-      { t: "Bagunça — a cabeça dela voa", w: { a: "artistica", m: 1 } },
-      { t: "Grudenta — ela só quer colo", w: { s: -1, a: "caseira" } } ] },
-    { q: "O cheiro dela é...", o: [
-      { t: "Perfume forte, marcante", w: { s: 2, a: "noturna" } },
-      { t: "Protetor solar e mar", w: { a: "praiana" } },
-      { t: "Natural, pele limpa", w: { s: -1, a: "fitness" } },
-      { t: "Livro velho e café", w: { m: 2, a: "intelectual" } } ] },
-    { q: "No fundo, o que você procura?", o: [
-      { t: "Alguém que incendeie você", w: { i: 2, s: 2 } },
+      { t: "O jeito que ela se move, a atitude", w: { i: 1, m: 1 } } ] },
+    { q: "Como você quer se sentir ao lado dela?", o: [
+      { t: "Em chamas, desejado", w: { s: 2, i: 1 } },
+      { t: "Em paz, acolhido", w: { s: -2, a: "caseira" } },
+      { t: "Instigado, admirado", w: { m: 2 } },
+      { t: "Vivo, livre, em aventura", w: { a: "praiana", i: 1 } } ] },
+    { q: "A energia que você procura numa mulher:", o: [
+      { t: "Intensa, um fogo que não apaga", w: { i: 3, a: "noturna" } },
+      { t: "Leve e solar, de boa com a vida", w: { i: -2, a: "praiana" } },
+      { t: "Focada e disciplinada", w: { a: "fitness", g: 1 } },
+      { t: "Profunda e meio misteriosa", w: { m: 2, a: "artistica" } } ] },
+    { q: "O estilo dela que te pega:", o: [
+      { t: "Produzida, salto, perfume marcante", w: { s: 2, a: "noturna" } },
+      { t: "Fitness, natural, saudável", w: { a: "fitness" } },
+      { t: "Despojada, de praia, descalça", w: { a: "praiana" } },
+      { t: "Alternativa, criativa, única", w: { a: "artistica", m: 1 } } ] },
+    { q: "O que você mais valoriza numa parceira?", o: [
+      { t: "Lealdade e desejo só por você", w: { i: 1, s: 1 } },
+      { t: "Companheirismo e parceria pra vida", w: { s: -1, g: 1, a: "caseira" } },
+      { t: "Cumplicidade e boas conversas", w: { m: 2 } },
+      { t: "Ela te tirar da rotina", w: { a: "praiana", i: 1 } } ] },
+    { q: "No primeiro encontro, você quer que ela seja:", o: [
+      { t: "Ousada, que puxa a química", w: { i: 2, s: 2 } },
+      { t: "Tímida e doce", w: { s: -2, i: -1 } },
+      { t: "Divertida, que te faz rir", w: { m: -1, i: 1 } },
+      { t: "Interessante, que te surpreende no papo", w: { m: 2 } } ] },
+    { q: "O que ela faria que te conquistaria de vez?", o: [
+      { t: "Mandar uma foto ousada no meio do dia", w: { s: 2, a: "noturna" } },
+      { t: "Te cozinhar teu prato favorito", w: { s: -1, a: "caseira" } },
+      { t: "Lembrar de cada detalhe teu", w: { m: 1, g: 1, a: "intelectual" } },
+      { t: "Te chamar pra uma aventura de última hora", w: { a: "praiana", i: 1 } } ] },
+    { q: "O defeito que você acharia charmoso nela:", o: [
+      { t: "Ciumenta — te quer só pra ela", w: { i: 1, s: 1 } },
+      { t: "Teimosa — sabe o que quer", w: { g: 1, m: 1 } },
+      { t: "Sonhadora, cabeça nas nuvens", w: { a: "artistica", m: 1 } },
+      { t: "Grudenta, só quer teu colo", w: { s: -1, a: "caseira" } } ] },
+    { q: "O clima perfeito pra vocês dois:", o: [
+      { t: "Noite, música baixa, tensão no ar", w: { s: 2, a: "noturna" } },
+      { t: "Sol, mar e cerveja gelada", w: { a: "praiana" } },
+      { t: "Manhã de treino e café depois", w: { a: "fitness" } },
+      { t: "Café, livro e conversa sem hora", w: { m: 2, a: "intelectual" } } ] },
+    { q: "No fundo, o que você procura numa mulher?", o: [
+      { t: "Alguém que te incendeie", w: { i: 2, s: 2 } },
       { t: "Alguém pra construir junto", w: { s: -1, g: 1, a: "caseira" } },
       { t: "Alguém que te entenda de verdade", w: { m: 2 } },
       { t: "Alguém que te faça sentir vivo de novo", w: { i: 1, a: "praiana" } } ] }
