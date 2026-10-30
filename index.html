@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b79"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b80"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5868,10 +5868,9 @@ fbq('track', 'PageView');
     } else if (it.kind === "story") {
       // conto: mostra o HOOK (primeiras linhas) com fade — a pessoa entende do que se trata
       var hk = pdPreview(it);
-      media = '<div style="position:relative;margin-top:.55rem;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,rgba(109,40,217,.1),rgba(219,39,119,.08));border:1px solid var(--line,#eee)">' +
-        '<div style="padding:.85rem;font-size:.9rem;line-height:1.55;font-style:italic;color:var(--ink,#222);max-height:120px;overflow:hidden">' + (hk ? escHtml(hk) + '…' : escHtml(pdTeaser(it))) + '</div>' +
-        '<div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(to bottom,transparent,var(--panel,#fff))"></div>' +
-        '<div style="position:absolute;bottom:.4rem;left:0;right:0;text-align:center;font-size:.76rem;font-weight:700;color:var(--accent,#6d28d9)">🔒 ' + L("continua ao desbloquear", "unlock to keep reading", "sigue al desbloquear") + '</div></div>';
+      media = '<div style="margin-top:.55rem;border-radius:12px;overflow:hidden;border:1px solid var(--line,#eee)">' +
+        '<div style="padding:.9rem;font-size:.95rem;line-height:1.6;color:var(--ink,#1a1430);font-weight:500;max-height:108px;overflow:hidden;background:var(--surface-2,rgba(127,127,127,.05))">' + (hk ? escHtml(hk) + '…' : escHtml(pdTeaser(it))) + '</div>' +
+        '<div style="padding:.55rem;text-align:center;font-size:.82rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#6d28d9,#db2777)">🔒 ' + L("continua ao desbloquear", "unlock to keep reading", "sigue al desbloquear") + '</div></div>';
     } else if (it.kind === "photo_set" && it.cover_url) {
       // álbum: 1ª foto NÍTIDA (a pessoa vê o que compra) + quantas fotos vem
       media = '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem"><img src="' + it.cover_url + '" alt="" style="width:100%;display:block">' + countTag + lockBadge + '</div>';
@@ -5887,8 +5886,10 @@ fbq('track', 'PageView');
       : owned
         ? '<div style="margin-top:.5rem;text-align:center;color:#16a34a;font-weight:700">' + L("Desbloqueado ✓", "Unlocked ✓", "Desbloqueado ✓") + '</div>'
         : '<button class="btn btn-primary btn-block" data-unlock="' + it.id + '" style="margin-top:.55rem">🪙 ' + unlockLabel + it.unlock_cost_coins + '</button>';
-    var who = it._who ? '<div style="font-size:.72rem;color:var(--accent,#6d28d9);font-weight:800;margin-bottom:.1rem">' + escHtml(it._who) + '</div>' : '';
-    return '<div style="border:1px solid var(--line,#eee);border-radius:14px;padding:.85rem;margin-bottom:.85rem">' + who + '<div style="font-weight:700">' + pdIcon(it.kind) + ' ' + escHtml(pdTitle(it)) + '</div><div style="font-size:.84rem;color:var(--mut,#888);margin-top:.15rem">' + escHtml(pdTeaser(it)) + '</div>' + media + btn + '</div>';
+    var star = it.featured ? ' <span style="background:linear-gradient(135deg,#f59e0b,#db2777);color:#fff;padding:.05rem .4rem;border-radius:999px;font-size:.64rem;margin-left:.2rem">⭐ ' + L("Destaque", "Featured", "Destacado") + '</span>' : '';
+    var who = (it._who || it.featured) ? '<div style="font-size:.72rem;color:var(--accent,#6d28d9);font-weight:800;margin-bottom:.1rem">' + escHtml(it._who || "") + star + '</div>' : '';
+    var fborder = it.featured ? 'border:1.5px solid #f59e0b;box-shadow:0 6px 18px -10px rgba(245,158,11,.5)' : 'border:1px solid var(--line,#eee)';
+    return '<div style="' + fborder + ';border-radius:14px;padding:.85rem;margin-bottom:.85rem">' + who + '<div style="font-weight:700">' + pdIcon(it.kind) + ' ' + escHtml(pdTitle(it)) + '</div><div style="font-size:.84rem;color:var(--mut,#888);margin-top:.15rem">' + escHtml(pdTeaser(it)) + '</div>' + media + btn + '</div>';
   }
   function openProductStore(creatorKey) {
     if (!sb) return;
@@ -5908,7 +5909,7 @@ fbq('track', 'PageView');
     if (!host || !sb) return;
     var sec = /^__kind:([a-z_]+)__$/.exec(creatorKey || "");
     var q = sec
-      ? sb.from("content_public").select("*").eq("kind", sec[1]).order("created_at", { ascending: false })
+      ? sb.from("content_public").select("*").eq("kind", sec[1]).order("featured", { ascending: false }).order("created_at", { ascending: false })
       : sb.from("content_public").select("*").eq("creator_key", creatorKey).order("sort");
     Promise.all([
       q,
