@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b72"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b73"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2639,6 +2639,100 @@ fbq('track', 'PageView');
   }
 
   /* ---------------- admin console ---------------- */
+  /* ===== Admin de conteúdo (álbuns, contos, jogos) ===== */
+  var acItemsById = {};
+  function acCall(payload) { return sb.functions.invoke("admin_content", { body: payload }); }
+  function wireAdminContent() {
+    var sel = document.getElementById("ac-creator"); if (!sel) return;
+    sel.onchange = function () { if (sel.value) acLoad(sel.value); else { var l = document.getElementById("ac-list"); if (l) l.innerHTML = '<p class="muted-note">Escolhe uma modelo.</p>'; } };
+  }
+  function acLoad(ck) {
+    var box = document.getElementById("ac-list"); if (!box) return;
+    box.innerHTML = '<p class="muted-note">Carregando…</p>';
+    acCall({ action: "list", creator_key: ck }).then(function (r) {
+      var items = (r && r.data && r.data.items) || [];
+      acItemsById = {}; items.forEach(function (it) { acItemsById[it.id] = it; });
+      box.innerHTML = items.map(acItemHtml).join("") +
+        '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-ghost btn-sm" data-ac-new="photo_set">+ Álbum</button><button class="btn btn-ghost btn-sm" data-ac-new="story">+ Conto</button><button class="btn btn-ghost btn-sm" data-ac-new="game">+ Jogo</button></div>';
+      acWire(box, ck);
+    }, function () { box.innerHTML = '<p class="muted-note">Erro ao carregar.</p>'; });
+  }
+  function acField(label, name, val, type) {
+    return '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">' + label + '</label><input data-f="' + name + '" type="' + (type || "text") + '" value="' + escHtml(String(val == null ? "" : val)) + '" style="width:100%;padding:.45rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">';
+  }
+  function acItemHtml(it) {
+    var isStory = it.kind === "story", isPhoto = it.kind === "photo_set";
+    var kindLbl = isStory ? "📖 Conto" : isPhoto ? "📸 Álbum de fotos" : it.kind === "game" ? "🎲 Jogo" : it.kind;
+    return '<div class="ac-item" data-ac-id="' + it.id + '" data-kind="' + it.kind + '" style="border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:.9rem">' +
+      '<div style="font-weight:700;margin-bottom:.3rem">' + kindLbl + '</div>' +
+      acField("Título (PT)", "title", it.title) +
+      acField("Chamada / teaser (PT)", "teaser", it.teaser) +
+      (isStory ? '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">Texto do conto (PT — traduz sozinho pra EN/ES ao salvar)</label><textarea data-f="story_text" rows="5" style="width:100%;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">' + escHtml(it.story_text || "") + '</textarea>' : '') +
+      (isPhoto ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">Fotos do álbum</div><div class="ac-photos" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">+ Adicionar foto<input type="file" accept="image/*" data-ac-addphoto hidden></label>' : '') +
+      '<div style="display:flex;gap:.7rem;align-items:center;margin-top:.6rem;flex-wrap:wrap">' +
+      '<label style="font-size:.82rem">Preço <input data-f="unlock_cost_coins" type="number" value="' + (it.unlock_cost_coins || 0) + '" style="width:72px;padding:.4rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit"> coins</label>' +
+      '<label style="font-size:.82rem"><input data-f="active" type="checkbox" ' + (it.active !== false ? "checked" : "") + '> ativo</label>' +
+      '<label style="font-size:.82rem"><input data-f="coming_soon" type="checkbox" ' + (it.coming_soon ? "checked" : "") + '> em breve</label>' +
+      '</div>' +
+      '<div style="display:flex;gap:.5rem;margin-top:.6rem"><button class="btn btn-primary btn-sm" data-ac-save>Salvar</button><button class="btn btn-ghost btn-sm" data-ac-del>Apagar</button></div>' +
+      '</div>';
+  }
+  function acLoadPhotos(id, host) {
+    var it = acItemsById[id]; var paths = (it && Array.isArray(it.media_paths)) ? it.media_paths : [];
+    if (!paths.length) { host.innerHTML = '<span class="muted-note" style="font-size:.76rem">sem fotos ainda</span>'; return; }
+    host.innerHTML = paths.map(function (p) { return '<div data-p="' + escHtml(p) + '" style="position:relative;width:62px;height:62px;border-radius:8px;overflow:hidden;background:var(--surface-2,rgba(127,127,127,.12));display:flex;align-items:center;justify-content:center"><span style="font-size:.6rem;color:var(--muted)">…</span><button data-ac-rmphoto title="remover" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.6);color:#fff;border:0;width:18px;height:18px;border-radius:0 0 0 6px;cursor:pointer;font-size:.72rem;line-height:1">×</button></div>'; }).join("");
+    paths.forEach(function (p) {
+      acCall({ action: "sign", path: p }).then(function (r) {
+        var url = r && r.data && r.data.url; if (!url) return;
+        var cell; try { cell = host.querySelector('[data-p="' + (window.CSS && CSS.escape ? CSS.escape(p) : p) + '"]'); } catch (e) { cell = null; }
+        if (cell) { cell.style.background = 'url(' + url + ') center/cover'; var sp = cell.querySelector("span"); if (sp) sp.remove(); }
+      });
+    });
+    host.querySelectorAll("[data-ac-rmphoto]").forEach(function (b) {
+      b.onclick = function () {
+        var p = b.closest("[data-p]").getAttribute("data-p");
+        acCall({ action: "remove_photo", id: id, path: p }).then(function (r) { if (r && r.data && r.data.ok) { if (acItemsById[id]) acItemsById[id].media_paths = r.data.paths; acLoadPhotos(id, host); } });
+      };
+    });
+  }
+  function acWire(box, ck) {
+    box.querySelectorAll(".ac-item").forEach(function (el) { var ph = el.querySelector(".ac-photos"); if (ph) acLoadPhotos(el.getAttribute("data-ac-id"), ph); });
+    box.querySelectorAll("[data-ac-addphoto]").forEach(function (inp) {
+      inp.addEventListener("change", function () {
+        var f = inp.files && inp.files[0]; if (!f) return;
+        if (f.size > 12 * 1024 * 1024) { toast("Foto muito grande (máx 12MB)"); inp.value = ""; return; }
+        var id = inp.closest(".ac-item").getAttribute("data-ac-id");
+        var rd = new FileReader();
+        rd.onload = function () {
+          var b64 = String(rd.result || "").split(",")[1] || ""; toast("Subindo foto…");
+          acCall({ action: "add_photo", id: id, b64: b64, content_type: f.type }).then(function (r) {
+            inp.value = "";
+            if (r && r.data && r.data.ok) { toast("Foto adicionada ✓"); if (acItemsById[id]) acItemsById[id].media_paths = r.data.paths; acLoadPhotos(id, inp.closest(".ac-item").querySelector(".ac-photos")); }
+            else toast("não subiu a foto");
+          });
+        };
+        rd.readAsDataURL(f);
+      });
+    });
+    box.querySelectorAll("[data-ac-save]").forEach(function (b) {
+      b.onclick = function () {
+        var el = b.closest(".ac-item"); var item = { id: el.getAttribute("data-ac-id"), creator_key: ck, kind: el.getAttribute("data-kind") };
+        el.querySelectorAll("[data-f]").forEach(function (f) { var k = f.getAttribute("data-f"); item[k] = f.type === "checkbox" ? f.checked : (f.type === "number" ? (parseInt(f.value, 10) || 0) : f.value); });
+        b.disabled = true; b.textContent = "Salvando…";
+        acCall({ action: "save", item: item }).then(function (r) { b.disabled = false; b.textContent = "Salvar"; toast(r && r.data && r.data.ok ? "Salvo ✓ (conto traduz sozinho)" : "erro ao salvar"); });
+      };
+    });
+    box.querySelectorAll("[data-ac-del]").forEach(function (b) {
+      b.onclick = function () { var id = b.closest(".ac-item").getAttribute("data-ac-id"); acCall({ action: "delete", id: id }).then(function () { toast("Apagado"); acLoad(ck); }); };
+    });
+    box.querySelectorAll("[data-ac-new]").forEach(function (b) {
+      b.onclick = function () {
+        var kind = b.getAttribute("data-ac-new");
+        acCall({ action: "save", item: { creator_key: ck, kind: kind, title: kind === "story" ? "Conto só nosso" : kind === "photo_set" ? "Álbum completo" : "Jogo de casal", teaser: "", unlock_cost_coins: kind === "story" ? 30 : kind === "game" ? 80 : 60, active: true, coming_soon: kind === "game" } }).then(function () { acLoad(ck); });
+      };
+    });
+  }
+
   function renderAdmin() {
     if (!(account && account.isAdmin)) { goHome(); return; } // admin console is not public
     var demoMonths = [8420, 12940, 9810, 7260, 5600, 4100, 3180];
@@ -2659,12 +2753,19 @@ fbq('track', 'PageView');
       { k: "chats", label: "💬 Chats ao vivo" },
       { k: "clientes", label: "👥 Clientes" },
       { k: "modelos", label: "🤖 Modelos" },
+      { k: "conteudo", label: "📸 Conteúdo" },
       { k: "config", label: "📣 Campanhas &amp; time" }
     ];
     var admActive = "geral";
     html += '<div class="adm-tabs">' + ADM_TABS.map(function (t) {
       return '<button data-adm-tab="' + t.k + '"' + (t.k === admActive ? ' class="on"' : '') + '>' + t.label + '</button>';
     }).join("") + '</div>';
+
+    // ===== Conteúdo & álbuns (admin) =====
+    html += '<div class="card" data-pane="conteudo"><div class="card-head"><h3>📸 Conteúdo &amp; álbuns</h3><span class="hint">fotos, contos e preço — por modelo</span></div>' +
+      '<select id="ac-creator" style="width:100%;padding:.6rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;margin-bottom:.9rem"><option value="">— escolhe uma modelo —</option>' +
+      CREATORS.filter(function (c) { return AI_PERSONAS[c.id]; }).map(function (c) { return '<option value="' + escHtml(c.id) + '">' + escHtml(c.name) + '</option>'; }).join("") +
+      '</select><div id="ac-list"><p class="muted-note">Escolhe uma modelo pra ver e editar o conteúdo dela (álbum de fotos, conto, jogo).</p></div></div>';
 
     html += '<div class="card" data-pane="clientes"><div class="card-head"><h3>Clientes &amp; jornada</h3><button class="btn btn-ghost btn-sm" id="crm-refresh">↻ Atualizar</button></div>' +
       '<p class="muted-note" style="margin-top:-0.3rem">Quem entrou, quem está ativo, quem esfriou e quem sumiu — base pra recuperação com cupom (liga na etapa de pagamento).</p>' +
@@ -2792,6 +2893,7 @@ fbq('track', 'PageView');
     loadAdminMoney();
     loadAiAdmin();
     wireAiAdd();
+    wireAdminContent();
     wirePushSettings();
     app.querySelectorAll("[data-region]").forEach(function (b) { b.onclick = function () { setRegion(b.getAttribute("data-region")); }; });
     app.querySelectorAll("[data-copy]").forEach(function (b) { b.onclick = function () { var t = b.getAttribute("data-copy"); try { navigator.clipboard.writeText(t); } catch (e) {} toast(L("Link copiado: ", "Link copied: ", "Enlace copiado: ") + t); }; });
