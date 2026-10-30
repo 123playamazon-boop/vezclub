@@ -960,7 +960,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b90"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b91"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1966,6 +1966,7 @@ fbq('track', 'PageView');
       '<button data-section="photo_set" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#8b5cf6,#d946ef);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(139,92,246,.6);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📸</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Galeria Secreta", "Secret Gallery", "Galería Secreta") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("fotos que elas não postam em nenhum lugar", "photos they post nowhere else", "fotos que no publican en ningún lado") + '</span></span></button>' +
       '<button data-section="story" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#db2777,#f59e0b);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(219,39,119,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📖</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Contos quentes", "Hot Stories", "Cuentos calientes") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("as fantasias que elas nunca contaram", "the fantasies they never told", "las fantasías que nunca contaron") + '</span></span></button>' +
       '<button data-section="ebook" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(14,165,233,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📘</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Códigos da Conquista", "The Codes", "Códigos de la Conquista") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("o que dizer pra conquistar (ou reconquistar) ela", "what to say to win her (or win her back)", "qué decir para conquistar (o reconquistar)") + '</span></span></button>' +
+      '<button data-coach="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#f43f5e,#be185d);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(244,63,94,.6);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">💘</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Cupido IA", "AI Wingman", "Cupido IA") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("cola o que ela respondeu e eu te falo o que mandar — 3 grátis", "paste what she said and I'll tell you what to send — 3 free", "pega lo que ella respondió y te digo qué mandar — 3 gratis") + '</span></span></button>' +
       (coinMarket() === "us" ? '<button data-gift-shop="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#059669,#10b981);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(5,150,105,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">🎁</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Gift someone you love", "Gift someone you love", "Regala a quien amas") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("a real gift delivered to her door", "a real gift delivered to her door", "un regalo de verdad que llega a su casa") + '</span></span></button>' : '') +
       '</div>';
     html += '<div style="display:flex;justify-content:flex-end;margin:-0.6rem 0 0.8rem"><button class="btn btn-ghost btn-sm" data-coll="1">' + I.star + ' Minha coleção</button></div>';
@@ -5327,6 +5328,75 @@ fbq('track', 'PageView');
     try { if (!window.matchMedia("(max-width:560px)").matches) document.getElementById("chat-text").focus(); } catch (e) {}
   }
 
+  // ===== CUPIDO IA (coach de conquista) — chat limpo, reusa a função chat (coins), 3 grátis depois cobra =====
+  function openCoachChat() {
+    if (!ageOk()) { ageGate(function () { openCoachChat(); }); return; }
+    if (!sb) return;
+    if (!account) { ensureSessionThen(function () { openCoachChat(); }); return; }
+    var persona = AI_PERSONAS["coach"] || {};
+    var greeting = persona.greeting || L("E aí, chefe. Manda a situação — ou cola o que ela respondeu — que eu te falo o que mandar.", "Yo. Tell me the situation — or paste what she texted — and I'll tell you what to send.", "¿Qué tal? Cuéntame la situación — o pega lo que ella respondió — y te digo qué mandar.");
+    var cname = L("Cupido", "Wingman", "Cupido");
+    var ava = '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f43f5e,#a21caf);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">💘</div>';
+    modalRoot.innerHTML = '<div class="modal-bg chat-open" data-close><div class="modal chat-modal">' +
+      '<div class="chat-head"><button class="ch-back" id="ch-back">' + I.back + '</button>' + ava +
+      '<div><div class="ch-name">' + escHtml(cname) + '</div><div class="ch-stat" id="ch-stat">' + L("teu cupido particular", "your personal wingman", "tu cupido personal") + '</div></div>' +
+      '<span id="ch-time" style="margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
+      '<button class="ch-x" data-close>' + XICON + '</button></div>' +
+      '<div class="chat-body" id="chat-body"></div>' +
+      '<div class="chat-input"><input id="chat-text" placeholder="' + escHtml(L("Conta a situação ou cola o que ela disse", "Tell the situation or paste what she said", "Cuenta la situación o pega lo que ella dijo")) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
+      '</div></div>';
+    var body = document.getElementById("chat-body");
+    var timeEl = document.getElementById("ch-time");
+    function setBal(n) { timeEl.textContent = "🪙 " + Math.max(0, n | 0); }
+    function rich(t) { var h = escHtml(t); h = h.replace(/\*([^*\n]+)\*/g, "<b>$1</b>").replace(/\n/g, "<br>"); return h; }
+    function her(t) { body.insertAdjacentHTML("beforeend", '<div class="bub her">' + rich(t) + '</div>'); body.scrollTop = body.scrollHeight; }
+    function me(t) { body.insertAdjacentHTML("beforeend", '<div class="bub me">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
+    function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
+    try { if (window.clarity) { window.clarity("event", "coach_open"); } } catch (e) {}
+    sb.from("wallets").select("coin_balance").maybeSingle().then(function (r) { setBal((r.data && r.data.coin_balance) || 0); }, function () {});
+    // carrega histórico do coach (ou a saudação na primeira vez)
+    sb.from("chat_threads").select("id").eq("creator_key", "coach").maybeSingle().then(function (tr) {
+      var tid = tr.data && tr.data.id;
+      if (!tid) { her(greeting); return; }
+      sb.from("chat_messages").select("role,content").eq("thread_id", tid).order("created_at", { ascending: true }).limit(100).then(function (mr) {
+        var rows = mr.data || [];
+        if (!rows.length) { her(greeting); return; }
+        rows.forEach(function (m2) { if (m2.role === "user") me(m2.content); else her(m2.content); });
+      });
+    }, function () { her(greeting); });
+    var sending = false;
+    function doSend() {
+      var inp = document.getElementById("chat-text"); if (!inp) return;
+      var v = (inp.value || "").trim(); if (!v || sending) return;
+      inp.value = ""; me(v); sending = true;
+      var sbtn = document.getElementById("chat-send"); if (sbtn) sbtn.disabled = true;
+      var stat = document.getElementById("ch-stat"); if (stat) stat.textContent = L("pensando…", "thinking…", "pensando…");
+      sb.functions.invoke("chat", { body: { creator_key: "coach", message: v, lang: lang } }).then(function (res) {
+        sending = false;
+        var sb2 = document.getElementById("chat-send"); if (sb2) sb2.disabled = false;
+        var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = L("teu cupido particular", "your personal wingman", "tu cupido personal");
+        var d = res.data, er = res.error;
+        if (er || !d || d.error) {
+          if (d && d.error === "no_credit") { if (typeof d.coins === "number") setBal(d.coins); note(L("Teus coins acabaram — pega mais pra eu continuar te ajudando 💪", "Out of coins — grab more so I can keep helping 💪", "Se acabaron los coins — toma más para seguir ayudándote 💪")); openCoinStore(); return; }
+          if (d && d.error === "model_error") { note(L("(o provedor filtrou essa — reformula e manda de novo)", "(the provider filtered that one — rephrase and resend)", "(el proveedor filtró esa — reformula y reenvía)")); return; }
+          note(L("(não consegui responder agora)", "(couldn't reply right now)", "(no pude responder ahora)")); return;
+        }
+        her(d.reply);
+        if (typeof d.free_left === "number" && d.free_left >= 0 && d.free_left <= 3) { note(L("restam " + d.free_left + " respostas grátis", d.free_left + " free replies left", "quedan " + d.free_left + " respuestas gratis")); }
+        if (typeof d.coins === "number") setBal(d.coins);
+        try { document.getElementById("chat-text").focus(); } catch (_) {}
+      }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note(L("(falha de conexão)", "(connection failed)", "(fallo de conexión)")); });
+    }
+    var _sb = document.getElementById("chat-send"); var _stouch = 0;
+    _sb.style.touchAction = "manipulation";
+    _sb.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    _sb.addEventListener("touchend", function (e) { e.preventDefault(); _stouch = Date.now(); doSend(); }, { passive: false });
+    _sb.onclick = function () { if (Date.now() - _stouch < 800) return; doSend(); };
+    document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
+    document.getElementById("ch-back").onclick = function () { closeModal(); };
+    try { if (!window.matchMedia("(max-width:560px)").matches) document.getElementById("chat-text").focus(); } catch (e) {}
+  }
+
   // nudge pra quem abre pelo navegador in-app do Facebook/Instagram (webview capenga, sem Apple Pay)
   var _nudgeDone = false;
   function inAppNudge() {
@@ -5514,7 +5584,9 @@ fbq('track', 'PageView');
     var section = e.target.closest("[data-section]");
     var giftShop = e.target.closest("[data-gift-shop]");
     var quizBtn = e.target.closest("[data-quiz]");
+    var coachBtn = e.target.closest("[data-coach]");
 
+    if (coachBtn) { openCoachChat(); return; }
     if (quizBtn) { startQuiz(); return; }
     if (giftShop) { openGiftShop(); return; }
     if (section) { var sk = section.getAttribute("data-section"); state.view = sk === "photo_set" ? "sec_fotos" : sk === "ebook" ? "sec_guias" : "sec_contos"; render(); return; }
