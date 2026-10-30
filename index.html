@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b82"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b83"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -3231,14 +3231,77 @@ fbq('track', 'PageView');
       '<div class="story-view' + (sbg ? ' has-img' : '') + '" style="' + svStyle + '">' +
         '<div class="sv-bar"><i></i></div>' +
         '<div class="sv-body"><div class="sv-name">' + c.name.split(" ")[0] + '</div><p class="sv-hook">' + escHtml(c.hook) + '</p>' +
+        '<div id="sv-flash" style="margin-bottom:.45rem"></div>' +
         (c.hasChat ? '<button class="btn btn-block" data-chat-open="' + cid + '" style="background:var(--accent);color:#fff;margin-bottom:0.45rem">' + I.chatic + ' ' + L("Conversar agora", "Chat now", "Charlar ahora") + '</button>' : '') +
         '<button class="btn btn-block" data-story-go style="background:#fff;color:var(--accent)">' + L("Ver meu perfil", "See my profile", "Ver mi perfil") + '</button></div>' +
       '</div></div></div>';
     applyDynTranslation();
+    loadStoryFlash(cid, 3 + (c.left % 6));
     var b = modalRoot.querySelector("[data-story-go]");
     if (b) b.onclick = function () { closeModal(); state.creatorId = cid; state.view = "store"; render(); };
     var cb = modalRoot.querySelector("[data-chat-open]");
     if (cb) cb.onclick = function () { closeModal(); if (AI_PERSONAS[cid]) openAiChat(cid); else { if (needLogin()) return; openChatThread(cid); } };
+  }
+
+  // Flash PPV: o story já "some em Xh" — torna isso comprável (desbloqueia o álbum dela com urgência real)
+  function loadStoryFlash(cid, hrs) {
+    if (!sb) return;
+    var host = document.getElementById("sv-flash"); if (!host) return;
+    Promise.all([
+      sb.from("content_public").select("id,unlock_cost_coins,photo_count").eq("creator_key", cid).eq("kind", "photo_set").limit(1),
+      account ? sb.from("content_unlocks").select("content_id") : Promise.resolve({ data: [] })
+    ]).then(function (res) {
+      var al = ((res[0] && res[0].data) || [])[0]; if (!al) return;
+      var owned = {}; ((res[1] && res[1].data) || []).forEach(function (u) { owned[u.content_id] = true; });
+      if (owned[al.id]) return;
+      var h = document.getElementById("sv-flash"); if (!h) return;
+      var np = al.photo_count || 0;
+      h.innerHTML = '<button class="btn btn-block" id="sv-flash-btn" style="background:linear-gradient(135deg,#f59e0b,#db2777);color:#fff">🔥 ' + L("Some em " + hrs + "h · pega as " + np + " fotos · " + al.unlock_cost_coins, "Gone in " + hrs + "h · grab the " + np + " photos · " + al.unlock_cost_coins, "Desaparece en " + hrs + "h · toma las " + np + " fotos · " + al.unlock_cost_coins) + ' 🪙</button>';
+      var fb = document.getElementById("sv-flash-btn");
+      if (fb) fb.onclick = function () {
+        fb.disabled = true;
+        ensureSessionThen(function () {
+          if (!account) { fb.disabled = false; return; }
+          sb.rpc("spend_coins", { p_content: al.id, p_type: "flash", p_ref: al.id }).then(function (r) {
+            if (r.error) {
+              fb.disabled = false;
+              if (/saldo/.test(r.error.message || "")) { toast(L("Coins insuficientes — pega mais 💜", "Not enough coins 💜", "Coins insuficientes 💜")); openCoinStore(); }
+              else if (/ja desbloqueado/.test(r.error.message || "")) { h.innerHTML = ""; }
+              else toast(L("Não deu pra desbloquear", "Couldn't unlock", "No se pudo"));
+              return;
+            }
+            if (typeof r.data === "number") setCoinBal(r.data);
+            try { if (window.fbq) fbq("track", "Purchase", { value: al.unlock_cost_coins, currency: "coins" }); } catch (e) {}
+            try { if (window.clarity) window.clarity("event", "flash_unlock"); } catch (e) {}
+            toast(L("Desbloqueado 💜 tá na tua coleção", "Unlocked 💜 it's in your collection", "Desbloqueado 💜 está en tu colección"));
+            closeModal(); state.view = "collection"; render();
+          });
+        });
+      };
+    });
+  }
+
+  // Oferta de saída: ao fechar o chat sem comprar, uma última oferta barata de 1ª compra (uma vez por sessão)
+  function shouldExitOffer() { try { if (sessionStorage.getItem("vez_exit_shown")) return false; } catch (e) {} return !!account && (coinBal || 0) < 30; }
+  function exitOffer(onDone) {
+    try { sessionStorage.setItem("vez_exit_shown", "1"); } catch (e) {}
+    var mkt = coinMarket();
+    sb.from("coin_packs").select("*").eq("market", mkt).eq("exit_only", true).eq("active", true).limit(1).then(function (r) {
+      var p = ((r && r.data) || [])[0]; if (!p) { if (onDone) onDone(); return; }
+      var coins = p.coins + (p.bonus_coins || 0);
+      var ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem";
+      ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:380px;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)"><div style="padding:1.1rem"><div style="font-weight:800;font-size:1.08rem;margin-bottom:.3rem">' + L("Peraí — antes de ir 💜", "Wait — before you go 💜", "Espera — antes de irte 💜") + '</div><div style="font-size:.88rem;opacity:.9;margin-bottom:.9rem">' + L("Leva " + coins + " coins por " + money(p.price_cents, p.currency) + " — só agora, pra desbloquear o que quiser.", "Grab " + coins + " coins for " + money(p.price_cents, p.currency) + " — just now, to unlock anything.", "Llévate " + coins + " coins por " + money(p.price_cents, p.currency) + " — solo ahora.") + '</div><div id="eo-pay"></div><button class="btn btn-primary btn-block" id="eo-buy">' + L("Quero — " + money(p.price_cents, p.currency), "I want it — " + money(p.price_cents, p.currency), "Lo quiero — " + money(p.price_cents, p.currency)) + '</button><button class="btn btn-ghost btn-block" id="eo-no" style="margin-top:.4rem">' + L("Agora não", "Not now", "Ahora no") + '</button></div></div>';
+      document.body.appendChild(ov);
+      var close = function () { if (ov.parentNode) document.body.removeChild(ov); };
+      ov.querySelector("#eo-no").onclick = function () { close(); if (onDone) onDone(); };
+      ov.querySelector("#eo-buy").onclick = function () {
+        var btn = ov.querySelector("#eo-buy");
+        try { if (window.clarity) window.clarity("event", "exit_offer_buy"); } catch (e) {}
+        if (mkt === "br") { buyCoinsPix(p.code, p.price_cents, coins, ov.querySelector("#eo-pay"), btn, false); }
+        else { buyCoinsStripe(p.code, btn, false); }
+      };
+    }, function () { if (onDone) onDone(); });
   }
 
   var chatCh = null, chatTypingTimer = null;
@@ -5054,7 +5117,7 @@ fbq('track', 'PageView');
     _sendBtn.addEventListener("touchend", function (e) { e.preventDefault(); _stouch = Date.now(); doSend(); }, { passive: false });
     _sendBtn.onclick = function () { if (Date.now() - _stouch < 800) return; doSend(); };
     document.getElementById("chat-text").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doSend(); } });
-    document.getElementById("ch-back").onclick = function () { closeModal(); };
+    document.getElementById("ch-back").onclick = function () { if (shouldExitOffer()) { exitOffer(function () { closeModal(); }); } else { closeModal(); } };
     // no mobile nao foca automatico (evita o teclado abrir na hora e baguncar o layout); o usuario toca no campo
     try { if (!window.matchMedia("(max-width:560px)").matches) document.getElementById("chat-text").focus(); } catch (e) {}
   }
@@ -5695,10 +5758,12 @@ fbq('track', 'PageView');
       ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
       ov.querySelector("#cs-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
       var csBody = ov.querySelector("#cs-body");
-      sb.from("coin_packs").select("*").eq("market", mkt).eq("active", true).order("sort").then(function (r) {
+      sb.from("coin_packs").select("*").eq("market", mkt).eq("active", true).eq("exit_only", false).order("sort").then(function (r) {
         var packs = (r.data || []);
         if (!packs.length) { csBody.innerHTML = '<p class="muted-note">' + L("Sem pacotes agora.", "No packs right now.", "Sin paquetes ahora.") + '</p>'; return; }
-        csBody.innerHTML = '<div id="gift-goal"></div><div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Coins desbloqueiam fotos, presentes e mais — e nunca expiram.", "Coins unlock photos, gifts and more — and never expire.", "Los coins desbloquean fotos, regalos y más — nunca caducan.") + '</div>' +
+        var bumpPrice = mkt === "br" ? "R$ 9,90" : "$4.99";
+        var bumpHtml = '<label style="display:flex;gap:.55rem;align-items:flex-start;border:1.5px dashed #f59e0b;border-radius:12px;padding:.7rem;margin-bottom:.8rem;background:rgba(245,158,11,.08);cursor:pointer"><input type="checkbox" id="cs-bump" style="margin-top:.15rem;width:18px;height:18px;accent-color:#db2777"><span style="font-size:.84rem"><b>+ ' + bumpPrice + ' ' + L("e leve +150 coins bônus", "and get +150 bonus coins", "y lleva +150 coins bono") + '</b> <span style="opacity:.78">— ' + L("aproveita que já tá aqui 💜", "while you're already here 💜", "aprovecha que ya estás aquí 💜") + '</span></span></label>';
+        csBody.innerHTML = '<div id="gift-goal"></div><div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Coins desbloqueiam fotos, presentes e mais — e nunca expiram.", "Coins unlock photos, gifts and more — and never expire.", "Los coins desbloquean fotos, regalos y más — nunca caducan.") + '</div>' + bumpHtml +
           packs.map(function (p) {
             var coins = p.coins + (p.bonus_coins || 0);
             var bonus = p.bonus_coins > 0 ? ' <span style="color:#ffd84d;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.25)">+' + p.bonus_coins + ' ' + L("bônus", "bonus", "bono") + '</span>' : '';
@@ -5708,28 +5773,29 @@ fbq('track', 'PageView');
         csBody.querySelectorAll("[data-pack]").forEach(function (b) {
           b.onclick = function () {
             var code = b.getAttribute("data-pack"), price = +b.getAttribute("data-price"), coins = +b.getAttribute("data-coins");
-            if (mkt === "br") { buyCoinsPix(code, price, coins, csBody.querySelector("#cs-pay"), b); }
-            else { buyCoinsStripe(code, b); }
+            var bumpEl = document.getElementById("cs-bump"), bump = !!(bumpEl && bumpEl.checked);
+            if (mkt === "br") { buyCoinsPix(code, price, coins, csBody.querySelector("#cs-pay"), b, bump); }
+            else { buyCoinsStripe(code, b, bump); }
           };
         });
       }, function () { csBody.innerHTML = '<p class="muted-note">' + L("Erro ao carregar.", "Load error.", "Error al cargar.") + '</p>'; });
     });
   }
-  function buyCoinsStripe(code, btn) {
+  function buyCoinsStripe(code, btn, bump) {
     try { btn.disabled = true; } catch (e) {}
-    sb.functions.invoke("coins_stripe", { body: { pack_code: code } }).then(function (res) {
+    sb.functions.invoke("coins_stripe", { body: { pack_code: code, bump: !!bump } }).then(function (res) {
       if (res && res.data && res.data.url) { window.location.href = res.data.url; }
       else { try { btn.disabled = false; } catch (e) {} toast(L("Não abriu o checkout. Tenta de novo 🙏", "Checkout didn't open. Try again 🙏", "No abrió el checkout. Inténtalo 🙏")); }
     }).catch(function () { try { btn.disabled = false; } catch (e) {} toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
   }
-  function buyCoinsPix(code, priceCents, coins, mount, btn) {
+  function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {
     if (!mount) return;
     try { btn.disabled = true; } catch (e) {}
     mount.innerHTML = '<div style="margin-top:.6rem;padding:1rem;border:1px solid var(--line);border-radius:14px;text-align:center"><div class="muted-note">' + L("Gerando seu Pix…", "Generating your Pix…", "Generando tu Pix…") + '</div></div>';
-    sb.functions.invoke("coins_pix", { body: { pack_code: code } }).then(function (res) {
+    sb.functions.invoke("coins_pix", { body: { pack_code: code, bump: !!bump } }).then(function (res) {
       var d = res && res.data;
       if ((res && res.error) || !d || !d.pix_code) { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} return; }
-      renderCoinPix(mount, d.pix_code, d.identifier, priceCents, coins);
+      renderCoinPix(mount, d.pix_code, d.identifier, Math.round((d.amount || priceCents / 100) * 100), (d.coins || coins));
     }).catch(function () { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} });
   }
   function renderCoinPix(mount, code, identifier, priceCents, coins) {
