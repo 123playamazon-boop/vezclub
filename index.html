@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b87"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b88"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1854,6 +1854,18 @@ fbq('track', 'PageView');
       });
     } catch (e) {}
   }
+  // garante o país no cache mesmo quando o idioma já está fixado (geoLangInit sai cedo nesses casos)
+  function ensureGeo() {
+    var cached = null; try { cached = JSON.parse(localStorage.getItem("vez_geo") || "null"); } catch (e) {}
+    if (cached && cached.c) return;
+    try {
+      fetch("https://ipwho.is/").then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.success !== false && d.country_code) { try { localStorage.setItem("vez_geo", JSON.stringify({ c: d.country_code, city: d.city || "" })); } catch (e) {} }
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  // mercado do visitante p/ analytics: país real (vez_geo) → br/us; fallback no idioma
+  function vezMarket() { try { var g = JSON.parse(localStorage.getItem("vez_geo") || "null"); if (g && g.c) return g.c === "BR" ? "br" : "us"; } catch (e) {} return (lang === "pt" ? "br" : "us"); }
 
   /* ---------------- render: router ---------------- */
   function render() {
@@ -4962,10 +4974,10 @@ fbq('track', 'PageView');
           p_creator_key: ctx.creator_key || null,
           p_pack: ctx.pack || null,
           p_price_cents: (ctx.price_cents != null ? ctx.price_cents : null),
-          p_currency: ctx.currency || "USD",
+          p_currency: ctx.currency || (vezMarket() === "br" ? "BRL" : "USD"),
           p_variant: ctx.variant || null,
           p_contact: ctx.contact || null,
-          p_meta: ctx.meta || null
+          p_meta: Object.assign({ market: vezMarket() }, ctx.meta || {})
         }).then(function () {}, function () {});
       } catch (e) {}
     }
@@ -5095,7 +5107,7 @@ fbq('track', 'PageView');
         b.addEventListener("mousedown", function (e) { e.preventDefault(); });
         b.onclick = function () {
           var _min = +b.getAttribute("data-buytime"), _price = +b.getAttribute("data-price");
-          try { if (sb) sb.rpc("track_ux", { p_event: "recharge_click", p_creator_key: cid, p_meta: { min: _min, price: _price } }).then(function () {}, function () {}); } catch (e) {}
+          try { if (sb) sb.rpc("track_ux", { p_event: "recharge_click", p_creator_key: cid, p_meta: { min: _min, price: _price, market: vezMarket() } }).then(function () {}, function () {}); } catch (e) {}
           logIntent("buy_click", { creator_key: cid, pack: _min + "min", price_cents: Math.round(_price * 100), currency: "USD", variant: FD_VAR });
           fbt("InitiateCheckout", { content_name: cid, value: _price, currency: "USD", contents: [{ id: _min + "min", quantity: 1 }] }); // clicou num pacote (intenção de pagar)
           clar("event", "buy_click"); clar("set", "funnel_stage", "buy_intent");
@@ -5181,7 +5193,7 @@ fbq('track', 'PageView');
         '<div style="font-size:.78rem;opacity:.65;margin-bottom:.5rem">' + L("ou só uns coins avulsos", "or just a few coins", "o solo unos coins sueltos") + '</div>' +
         '<button class="btn btn-ghost btn-block" id="buy-coins-cta">🪙 ' + L("Comprar coins", "Buy coins", "Comprar coins") + '</button></div>';
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
-      try { if (sb) sb.rpc("track_ux", { p_event: "recharge_view", p_creator_key: cid }).then(function () {}, function () {}); } catch (e) {}
+      try { if (sb) sb.rpc("track_ux", { p_event: "recharge_view", p_creator_key: cid, p_meta: { market: vezMarket() } }).then(function () {}, function () {}); } catch (e) {}
       var subHost = document.getElementById("buy-sub");
       if (subHost) {
         subHost.innerHTML = subCardHtml(cid, false);
@@ -6469,6 +6481,7 @@ fbq('track', 'PageView');
 
   /* boot */
   geoLangInit(); // detecta pais por IP e ajusta idioma + moeda (BR -> PT/Pix) antes/junto do 1o render
+  ensureGeo();   // cacheia o pais mesmo quando o idioma ja estava fixado (pro tracking BR/US)
   if (sb) {
     sb.auth.onAuthStateChange(function (_e, session) {
       // sessao anonima (chat de convidado) NAO entra pelo enterPlatform (evita gate de TOS + re-render); e tratada no ensureSessionThen
