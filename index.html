@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b67"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b68"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5416,6 +5416,101 @@ fbq('track', 'PageView');
     document.getElementById("priv-back").onclick = function () { n.remove(); };
   }
 
+  /* ================= COINS: carteira + loja (dual-rail Pix/Stripe) ================= */
+  var coinBal = 0;
+  function fmtCoins(n) { return (n || 0).toLocaleString(lang === "en" ? "en-US" : "pt-BR"); }
+  function coinMarket() { return lang === "pt" ? "br" : "us"; } // BR -> Pix/real · resto -> Stripe/dolar
+  function money(cents, cur) { var v = (cents || 0) / 100; return cur === "brl" ? ("R$ " + v.toFixed(2).replace(".", ",")) : ("$" + v.toFixed(2)); }
+  function setCoinBal(n) { coinBal = n || 0; var s = document.getElementById("wallet-bal"); if (s) s.textContent = fmtCoins(coinBal); }
+  function renderWalletChip() {
+    var ta = document.querySelector(".top-actions"); if (!ta) return;
+    var old = document.getElementById("wallet-chip"); if (old) old.remove();
+    if (!account) return; // mostra pra logado; anon compra pelo chat (fase 2)
+    var el = document.createElement("button");
+    el.id = "wallet-chip"; el.className = "icon-btn";
+    el.title = L("Seus coins", "Your coins", "Tus coins");
+    el.style.width = "auto"; el.style.padding = "0 .55rem"; el.style.gap = ".3rem"; el.style.fontWeight = "800"; el.style.fontSize = ".8rem";
+    el.innerHTML = '🪙 <span id="wallet-bal">' + fmtCoins(coinBal) + '</span>';
+    el.onclick = function () { openCoinStore(); };
+    ta.insertBefore(el, ta.firstChild);
+  }
+  function loadCoinBal() {
+    if (!sb) return;
+    sb.from("wallets").select("coin_balance").maybeSingle().then(function (r) { setCoinBal((r.data && r.data.coin_balance) || 0); }, function () {});
+  }
+  function openCoinStore() {
+    if (!sb) return;
+    ensureSessionThen(function () {
+      var mkt = coinMarket();
+      var ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem";
+      ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:460px;width:100%;max-height:90vh;border-radius:18px;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-bottom:1px solid var(--line,#eee)"><b>🪙 ' + L("Comprar coins", "Buy coins", "Comprar coins") + '</b><button id="cs-x" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit">✕</button></div><div id="cs-body" style="padding:1rem 1.1rem"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+      document.body.appendChild(ov);
+      ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
+      ov.querySelector("#cs-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
+      var csBody = ov.querySelector("#cs-body");
+      sb.from("coin_packs").select("*").eq("market", mkt).eq("active", true).order("sort").then(function (r) {
+        var packs = (r.data || []);
+        if (!packs.length) { csBody.innerHTML = '<p class="muted-note">' + L("Sem pacotes agora.", "No packs right now.", "Sin paquetes ahora.") + '</p>'; return; }
+        csBody.innerHTML = '<div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Coins desbloqueiam fotos, presentes e mais — e nunca expiram.", "Coins unlock photos, gifts and more — and never expire.", "Los coins desbloquean fotos, regalos y más — nunca caducan.") + '</div>' +
+          packs.map(function (p) {
+            var coins = p.coins + (p.bonus_coins || 0);
+            var bonus = p.bonus_coins > 0 ? ' <span style="color:#16a34a;font-weight:700">+' + p.bonus_coins + ' ' + L("bônus", "bonus", "bono") + '</span>' : '';
+            return '<button class="btn btn-primary btn-block" data-pack="' + p.code + '" data-price="' + p.price_cents + '" data-coins="' + coins + '" style="margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><span>🪙 ' + coins + ' coins' + bonus + '</span><span style="font-weight:800">' + money(p.price_cents, p.currency) + '</span></button>';
+          }).join("") + '<div id="cs-pay"></div>';
+        csBody.querySelectorAll("[data-pack]").forEach(function (b) {
+          b.onclick = function () {
+            var code = b.getAttribute("data-pack"), price = +b.getAttribute("data-price"), coins = +b.getAttribute("data-coins");
+            if (mkt === "br") { buyCoinsPix(code, price, coins, csBody.querySelector("#cs-pay"), b); }
+            else { buyCoinsStripe(code, b); }
+          };
+        });
+      }, function () { csBody.innerHTML = '<p class="muted-note">' + L("Erro ao carregar.", "Load error.", "Error al cargar.") + '</p>'; });
+    });
+  }
+  function buyCoinsStripe(code, btn) {
+    try { btn.disabled = true; } catch (e) {}
+    sb.functions.invoke("coins_stripe", { body: { pack_code: code } }).then(function (res) {
+      if (res && res.data && res.data.url) { window.location.href = res.data.url; }
+      else { try { btn.disabled = false; } catch (e) {} toast(L("Não abriu o checkout. Tenta de novo 🙏", "Checkout didn't open. Try again 🙏", "No abrió el checkout. Inténtalo 🙏")); }
+    }).catch(function () { try { btn.disabled = false; } catch (e) {} toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
+  }
+  function buyCoinsPix(code, priceCents, coins, mount, btn) {
+    if (!mount) return;
+    try { btn.disabled = true; } catch (e) {}
+    mount.innerHTML = '<div style="margin-top:.6rem;padding:1rem;border:1px solid var(--line);border-radius:14px;text-align:center"><div class="muted-note">' + L("Gerando seu Pix…", "Generating your Pix…", "Generando tu Pix…") + '</div></div>';
+    sb.functions.invoke("coins_pix", { body: { pack_code: code } }).then(function (res) {
+      var d = res && res.data;
+      if ((res && res.error) || !d || !d.pix_code) { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} return; }
+      renderCoinPix(mount, d.pix_code, d.identifier, priceCents, coins);
+    }).catch(function () { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} });
+  }
+  function renderCoinPix(mount, code, identifier, priceCents, coins) {
+    var qr = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=" + encodeURIComponent(code);
+    mount.innerHTML = '<div style="margin-top:.7rem;padding:1rem;border:1px solid var(--line);border-radius:14px;text-align:center">' +
+      '<div style="font-weight:800;margin-bottom:.5rem">🪙 ' + coins + ' coins — ' + money(priceCents, "brl") + '</div>' +
+      '<div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.style.display=\'none\'"></div>' +
+      '<div style="font-size:.82rem;margin:.6rem 0 .35rem;opacity:.92">' + L("Abra o app do banco → Pix → Pagar com QR Code, ou copie:", "Open your bank app → Pix → Pay with QR, or copy:", "Abre tu banco → Pix → Pagar con QR, o copia:") + '</div>' +
+      '<div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.55rem"><input readonly value="' + escHtml(code) + '" id="cpix-code" style="flex:1;min-width:0;font-size:.7rem;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);color:inherit"><button id="cpix-copy" class="btn btn-primary btn-sm" style="white-space:nowrap">' + L("Copiar", "Copy", "Copiar") + '</button></div>' +
+      '<div id="cpix-status" style="font-size:.84rem;font-weight:700;color:var(--muted)">⏳ ' + L("Aguardando o pagamento… (confirma sozinho)", "Waiting for payment… (auto-confirms)", "Esperando el pago… (confirma solo)") + '</div></div>';
+    var cp = document.getElementById("cpix-copy");
+    if (cp) cp.onclick = function () { try { var i = document.getElementById("cpix-code"); i.select(); navigator.clipboard.writeText(code); } catch (e) {} cp.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); setTimeout(function () { cp.textContent = L("Copiar", "Copy", "Copiar"); }, 1500); };
+    var tries = 0, pp = setInterval(function () {
+      tries++;
+      if (!document.body.contains(mount) || tries > 150) { clearInterval(pp); return; }
+      sb.functions.invoke("coins_status", { body: { identifier: identifier } }).then(function (r) {
+        var d = r && r.data;
+        if (d && d.status === "completed") {
+          clearInterval(pp);
+          var st = document.getElementById("cpix-status"); if (st) st.innerHTML = '✅ <span style="color:#16a34a">' + L("Coins creditados!", "Coins credited!", "¡Coins acreditados!") + '</span>';
+          if (typeof d.balance === "number") setCoinBal(d.balance);
+          try { if (window.fbq) fbq("track", "Purchase", { value: priceCents / 100, currency: "BRL" }); } catch (e) {}
+          try { if (window.clarity) window.clarity("event", "coin_purchase"); } catch (e) {}
+        }
+      }, function () {});
+    }, 4000);
+  }
+
   function renderAccountBadge() {
     var ta = document.querySelector(".top-actions"); if (!ta || !account) return;
     var old = document.getElementById("acct-badge"); if (old) old.remove();
@@ -5425,6 +5520,7 @@ fbq('track', 'PageView');
     el.innerHTML = '<span style="width:20px;height:20px;border-radius:6px;background:linear-gradient(140deg,var(--accent),var(--lock2));color:#fff;display:grid;place-items:center;font-size:.6rem;font-weight:800">' + initials(account.name) + '</span>Sair';
     el.onclick = function () { if (sb) sb.auth.signOut(); };
     ta.insertBefore(el, ta.firstChild);
+    loadCoinBal(); renderWalletChip();
   }
 
   function needLogin() { if (sb && !account) { showAuthGate("signup", "buyer"); return true; } return false; }
@@ -5451,6 +5547,21 @@ fbq('track', 'PageView');
   function checkPaidReturn() {
     try {
       var q = new URLSearchParams(location.search);
+      if (q.get("coins_paid") === "1") {
+        var csid = q.get("session_id") || "";
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        if (csid && sb) {
+          ensureSessionThen(function () {
+            sb.functions.invoke("coins_stripe_confirm", { body: { session_id: csid } }).then(function (r) {
+              var d = r && r.data;
+              if (d && typeof d.balance === "number") setCoinBal(d.balance);
+              renderWalletChip();
+              toast(L("Coins creditados! 💜", "Coins credited! 💜", "¡Coins acreditados! 💜"));
+            }).catch(function () {});
+          });
+        }
+        return;
+      }
       if (q.get("paid") === "1") {
         var ck = q.get("ck") || "", sid = q.get("session_id") || "";
         try { history.replaceState(null, "", location.pathname); } catch (e) {}
