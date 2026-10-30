@@ -960,7 +960,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b91"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b92"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5293,6 +5293,7 @@ fbq('track', 'PageView');
         var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = L("online agora", "online now", "en línea ahora");
         var d = res.data, e = res.error;
         if (e || !d || d.error) {
+          if (d && d.error === "need_signup") { note(L("Pra continuar, cria sua conta rapidinho 💜", "Create your account to keep going 💜", "Crea tu cuenta para seguir 💜")); setTimeout(function () { closeModal(); showAuthGate("signup", "buyer"); }, 1000); return; }
           if (d && d.error === "no_credit") { if (typeof d.coins === "number") setBal(d.coins); showBuy(); return; }
           if (d && d.error === "model_error") { note("(o provedor filtrou essa resposta — hora de trocar o motor pro adulto)"); return; }
           if (d && d.error === "no_model_key") { note("(motor sem chave configurada)"); return; }
@@ -5377,6 +5378,7 @@ fbq('track', 'PageView');
         var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = L("teu cupido particular", "your personal wingman", "tu cupido personal");
         var d = res.data, er = res.error;
         if (er || !d || d.error) {
+          if (d && d.error === "need_signup") { note(L("Cria sua conta rapidinho pra eu continuar te ajudando 💪", "Create your account so I can keep helping 💪", "Crea tu cuenta para seguir ayudándote 💪")); setTimeout(function () { closeModal(); showAuthGate("signup", "buyer"); }, 1000); return; }
           if (d && d.error === "no_credit") { if (typeof d.coins === "number") setBal(d.coins); note(L("Teus coins acabaram — pega mais pra eu continuar te ajudando 💪", "Out of coins — grab more so I can keep helping 💪", "Se acabaron los coins — toma más para seguir ayudándote 💪")); openCoinStore(); return; }
           if (d && d.error === "model_error") { note(L("(o provedor filtrou essa — reformula e manda de novo)", "(the provider filtered that one — rephrase and resend)", "(el proveedor filtró esa — reformula y reenvía)")); return; }
           note(L("(não consegui responder agora)", "(couldn't reply right now)", "(no pude responder ahora)")); return;
