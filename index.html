@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b86"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b87"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1940,7 +1940,7 @@ fbq('track', 'PageView');
     html += freeBanner();
     // seções próprias: comprar sem precisar entrar em cada modelo
     html += '<div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem">' +
-      (lang === "pt" ? '<button data-quiz="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#4f46e5,#9333ea);border-radius:16px;padding:1.15rem 1.15rem;box-shadow:0 12px 26px -12px rgba(79,70,229,.7);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.9rem;line-height:1">🔮</span><span><span style="display:block;font-weight:800;font-size:1.12rem">O Retrato Falado</span><span style="display:block;font-size:.86rem;opacity:.95">15 perguntas e eu desenho a sua mulher ideal — de graça</span></span></button>' : '') +
+      '<button data-quiz="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#4f46e5,#9333ea);border-radius:16px;padding:1.15rem 1.15rem;box-shadow:0 12px 26px -12px rgba(79,70,229,.7);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.9rem;line-height:1">🔮</span><span><span style="display:block;font-weight:800;font-size:1.12rem">' + L("O Retrato Falado", "The Sketch", "El Retrato Hablado") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("15 perguntas e eu desenho a sua mulher ideal — de graça", "15 questions and I'll sketch your ideal woman — free", "15 preguntas y dibujo tu mujer ideal — gratis") + '</span></span></button>' +
       '<button data-section="photo_set" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#8b5cf6,#d946ef);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(139,92,246,.6);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📸</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Galeria Secreta", "Secret Gallery", "Galería Secreta") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("fotos que elas não postam em nenhum lugar", "photos they post nowhere else", "fotos que no publican en ningún lado") + '</span></span></button>' +
       '<button data-section="story" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#db2777,#f59e0b);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(219,39,119,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📖</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Contos quentes", "Hot Stories", "Cuentos calientes") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("as fantasias que elas nunca contaram", "the fantasies they never told", "las fantasías que nunca contaron") + '</span></span></button>' +
       '<button data-section="ebook" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(14,165,233,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📘</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Códigos da Conquista", "The Codes", "Códigos de la Conquista") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("o que dizer pra conquistar (ou reconquistar) ela", "what to say to win her (or win her back)", "qué decir para conquistar (o reconquistar)") + '</span></span></button>' +
@@ -2082,103 +2082,105 @@ fbq('track', 'PageView');
       applyDynTranslation();
   }
 
-  /* ============ O RETRATO FALADO — quiz da mulher ideal (funil SFW, grátis por agora) ============ */
+  /* ============ O RETRATO FALADO — quiz da mulher ideal (funil SFW, grátis por agora) · PT+EN ============ */
+  function qT(o) { return (o && (o[lang] || o.en || o.pt)) || ""; }
+  function qle() { return lang === "pt" ? "pt" : "en"; }
   var QUIZ = [
-    { q: "O que te atrai primeiro numa mulher?", o: [
-      { t: "O olhar e a boca — puro magnetismo", w: { s: 2, i: 1 } },
-      { t: "O sorriso e a leveza dela", w: { s: -1, m: -1 } },
-      { t: "A inteligência, o papo afiado", w: { m: 2 } },
-      { t: "O corpo e a presença", w: { s: 2, a: "fitness" } } ] },
-    { q: "Seu fim de semana ideal com ela seria:", o: [
-      { t: "Balada, bar e acordar tarde juntos", w: { a: "noturna", i: 1, g: -1 } },
-      { t: "Praia, trilha, aventura ao ar livre", w: { a: "praiana", i: 1 } },
-      { t: "Treino de manhã e vida saudável", w: { a: "fitness" } },
-      { t: "Em casa, cozinhando e maratonando série", w: { a: "caseira", s: -1, g: 1 } } ] },
-    { q: "A mulher que te ganha é a que...", o: [
-      { t: "Toma a iniciativa e te provoca", w: { i: 2, s: 2 } },
-      { t: "Te acolhe e cuida de você", w: { s: -2, a: "caseira" } },
-      { t: "Te desafia a ser um cara melhor", w: { a: "fitness", m: 1, g: 1 } },
-      { t: "Te faz pensar e questionar tudo", w: { m: 2, a: "intelectual" } } ] },
-    { q: "A maturidade que mais combina com você:", o: [
-      { t: "Mais nova, cheia de energia", w: { g: -2, i: 1 } },
-      { t: "Da sua idade, mesma fase de vida", w: { g: 0 } },
-      { t: "Mais madura e resolvida", w: { g: 2, s: 1 } },
-      { t: "Idade não importa — importa a conexão", w: { m: 1 } } ] },
-    { q: "O tipo de conversa que te prende:", o: [
-      { t: "Provocante, de duplo sentido", w: { s: 2, i: 1, a: "noturna" } },
-      { t: "Leve, cheia de risada", w: { m: -1, s: -1 } },
-      { t: "Profunda, de virar a madrugada", w: { m: 2, a: "intelectual" } },
-      { t: "Sobre planos, viagens e aventuras", w: { a: "praiana" } } ] },
-    { q: "O que mais te atrai no corpo dela?", o: [
-      { t: "As curvas — a mulher sabe o que tem", w: { s: 2 } },
-      { t: "Definida, que cuida do corpo", w: { a: "fitness" } },
-      { t: "Natural, do jeitinho dela", w: { s: -1, a: "caseira" } },
-      { t: "O jeito que ela se move, a atitude", w: { i: 1, m: 1 } } ] },
-    { q: "Como você quer se sentir ao lado dela?", o: [
-      { t: "Em chamas, desejado", w: { s: 2, i: 1 } },
-      { t: "Em paz, acolhido", w: { s: -2, a: "caseira" } },
-      { t: "Instigado, admirado", w: { m: 2 } },
-      { t: "Vivo, livre, em aventura", w: { a: "praiana", i: 1 } } ] },
-    { q: "A energia que você procura numa mulher:", o: [
-      { t: "Intensa, um fogo que não apaga", w: { i: 3, a: "noturna" } },
-      { t: "Leve e solar, de boa com a vida", w: { i: -2, a: "praiana" } },
-      { t: "Focada e disciplinada", w: { a: "fitness", g: 1 } },
-      { t: "Profunda e meio misteriosa", w: { m: 2, a: "artistica" } } ] },
-    { q: "O estilo dela que te pega:", o: [
-      { t: "Produzida, salto, perfume marcante", w: { s: 2, a: "noturna" } },
-      { t: "Fitness, natural, saudável", w: { a: "fitness" } },
-      { t: "Despojada, de praia, descalça", w: { a: "praiana" } },
-      { t: "Alternativa, criativa, única", w: { a: "artistica", m: 1 } } ] },
-    { q: "O que você mais valoriza numa parceira?", o: [
-      { t: "Lealdade e desejo só por você", w: { i: 1, s: 1 } },
-      { t: "Companheirismo e parceria pra vida", w: { s: -1, g: 1, a: "caseira" } },
-      { t: "Cumplicidade e boas conversas", w: { m: 2 } },
-      { t: "Ela te tirar da rotina", w: { a: "praiana", i: 1 } } ] },
-    { q: "No primeiro encontro, você quer que ela seja:", o: [
-      { t: "Ousada, que puxa a química", w: { i: 2, s: 2 } },
-      { t: "Tímida e doce", w: { s: -2, i: -1 } },
-      { t: "Divertida, que te faz rir", w: { m: -1, i: 1 } },
-      { t: "Interessante, que te surpreende no papo", w: { m: 2 } } ] },
-    { q: "O que ela faria que te conquistaria de vez?", o: [
-      { t: "Mandar uma foto ousada no meio do dia", w: { s: 2, a: "noturna" } },
-      { t: "Te cozinhar teu prato favorito", w: { s: -1, a: "caseira" } },
-      { t: "Lembrar de cada detalhe teu", w: { m: 1, g: 1, a: "intelectual" } },
-      { t: "Te chamar pra uma aventura de última hora", w: { a: "praiana", i: 1 } } ] },
-    { q: "O defeito que você acharia charmoso nela:", o: [
-      { t: "Ciumenta — te quer só pra ela", w: { i: 1, s: 1 } },
-      { t: "Teimosa — sabe o que quer", w: { g: 1, m: 1 } },
-      { t: "Sonhadora, cabeça nas nuvens", w: { a: "artistica", m: 1 } },
-      { t: "Grudenta, só quer teu colo", w: { s: -1, a: "caseira" } } ] },
-    { q: "O clima perfeito pra vocês dois:", o: [
-      { t: "Noite, música baixa, tensão no ar", w: { s: 2, a: "noturna" } },
-      { t: "Sol, mar e cerveja gelada", w: { a: "praiana" } },
-      { t: "Manhã de treino e café depois", w: { a: "fitness" } },
-      { t: "Café, livro e conversa sem hora", w: { m: 2, a: "intelectual" } } ] },
-    { q: "No fundo, o que você procura numa mulher?", o: [
-      { t: "Alguém que te incendeie", w: { i: 2, s: 2 } },
-      { t: "Alguém pra construir junto", w: { s: -1, g: 1, a: "caseira" } },
-      { t: "Alguém que te entenda de verdade", w: { m: 2 } },
-      { t: "Alguém que te faça sentir vivo de novo", w: { i: 1, a: "praiana" } } ] }
+    { q: { pt: "O que te atrai primeiro numa mulher?", en: "What catches your eye first in a woman?" }, o: [
+      { t: { pt: "O olhar e a boca — puro magnetismo", en: "Her eyes and lips — pure magnetism" }, w: { s: 2, i: 1 } },
+      { t: { pt: "O sorriso e a leveza dela", en: "Her smile and easy vibe" }, w: { s: -1, m: -1 } },
+      { t: { pt: "A inteligência, o papo afiado", en: "Her intelligence, her sharp talk" }, w: { m: 2 } },
+      { t: { pt: "O corpo e a presença", en: "Her body and her presence" }, w: { s: 2, a: "fitness" } } ] },
+    { q: { pt: "Seu fim de semana ideal com ela seria:", en: "Your ideal weekend with her would be:" }, o: [
+      { t: { pt: "Balada, bar e acordar tarde juntos", en: "Nightlife, bars, sleeping in together" }, w: { a: "noturna", i: 1, g: -1 } },
+      { t: { pt: "Praia, trilha, aventura ao ar livre", en: "Beach, trails, outdoor adventure" }, w: { a: "praiana", i: 1 } },
+      { t: { pt: "Treino de manhã e vida saudável", en: "Morning workouts and a healthy life" }, w: { a: "fitness" } },
+      { t: { pt: "Em casa, cozinhando e maratonando série", en: "Home, cooking and binge-watching" }, w: { a: "caseira", s: -1, g: 1 } } ] },
+    { q: { pt: "A mulher que te ganha é a que...", en: "The woman who wins you over is the one who..." }, o: [
+      { t: { pt: "Toma a iniciativa e te provoca", en: "Takes the lead and teases you" }, w: { i: 2, s: 2 } },
+      { t: { pt: "Te acolhe e cuida de você", en: "Nurtures you and takes care of you" }, w: { s: -2, a: "caseira" } },
+      { t: { pt: "Te desafia a ser um cara melhor", en: "Challenges you to be a better man" }, w: { a: "fitness", m: 1, g: 1 } },
+      { t: { pt: "Te faz pensar e questionar tudo", en: "Makes you think and question everything" }, w: { m: 2, a: "intelectual" } } ] },
+    { q: { pt: "A maturidade que mais combina com você:", en: "The maturity that fits you best:" }, o: [
+      { t: { pt: "Mais nova, cheia de energia", en: "Younger, full of energy" }, w: { g: -2, i: 1 } },
+      { t: { pt: "Da sua idade, mesma fase de vida", en: "Your age, same stage of life" }, w: { g: 0 } },
+      { t: { pt: "Mais madura e resolvida", en: "Older and self-assured" }, w: { g: 2, s: 1 } },
+      { t: { pt: "Idade não importa — importa a conexão", en: "Age doesn't matter — connection does" }, w: { m: 1 } } ] },
+    { q: { pt: "O tipo de conversa que te prende:", en: "The kind of conversation that hooks you:" }, o: [
+      { t: { pt: "Provocante, de duplo sentido", en: "Flirty, full of double meaning" }, w: { s: 2, i: 1, a: "noturna" } },
+      { t: { pt: "Leve, cheia de risada", en: "Light, full of laughter" }, w: { m: -1, s: -1 } },
+      { t: { pt: "Profunda, de virar a madrugada", en: "Deep, the all-night kind" }, w: { m: 2, a: "intelectual" } },
+      { t: { pt: "Sobre planos, viagens e aventuras", en: "About plans, travel and adventure" }, w: { a: "praiana" } } ] },
+    { q: { pt: "O que mais te atrai no corpo dela?", en: "What attracts you most about her body?" }, o: [
+      { t: { pt: "As curvas — a mulher sabe o que tem", en: "Her curves — she knows what she's got" }, w: { s: 2 } },
+      { t: { pt: "Definida, que cuida do corpo", en: "Toned, takes care of herself" }, w: { a: "fitness" } },
+      { t: { pt: "Natural, do jeitinho dela", en: "Natural, just the way she is" }, w: { s: -1, a: "caseira" } },
+      { t: { pt: "O jeito que ela se move, a atitude", en: "The way she moves, her attitude" }, w: { i: 1, m: 1 } } ] },
+    { q: { pt: "Como você quer se sentir ao lado dela?", en: "How do you want to feel next to her?" }, o: [
+      { t: { pt: "Em chamas, desejado", en: "On fire, desired" }, w: { s: 2, i: 1 } },
+      { t: { pt: "Em paz, acolhido", en: "At peace, cared for" }, w: { s: -2, a: "caseira" } },
+      { t: { pt: "Instigado, admirado", en: "Challenged, admired" }, w: { m: 2 } },
+      { t: { pt: "Vivo, livre, em aventura", en: "Alive, free, on an adventure" }, w: { a: "praiana", i: 1 } } ] },
+    { q: { pt: "A energia que você procura numa mulher:", en: "The energy you look for in a woman:" }, o: [
+      { t: { pt: "Intensa, um fogo que não apaga", en: "Intense, a fire that won't go out" }, w: { i: 3, a: "noturna" } },
+      { t: { pt: "Leve e solar, de boa com a vida", en: "Light and sunny, easygoing" }, w: { i: -2, a: "praiana" } },
+      { t: { pt: "Focada e disciplinada", en: "Focused and disciplined" }, w: { a: "fitness", g: 1 } },
+      { t: { pt: "Profunda e meio misteriosa", en: "Deep and a little mysterious" }, w: { m: 2, a: "artistica" } } ] },
+    { q: { pt: "O estilo dela que te pega:", en: "The style of hers that gets you:" }, o: [
+      { t: { pt: "Produzida, salto, perfume marcante", en: "Dressed up, heels, bold perfume" }, w: { s: 2, a: "noturna" } },
+      { t: { pt: "Fitness, natural, saudável", en: "Fit, natural, healthy" }, w: { a: "fitness" } },
+      { t: { pt: "Despojada, de praia, descalça", en: "Laid-back, beachy, barefoot" }, w: { a: "praiana" } },
+      { t: { pt: "Alternativa, criativa, única", en: "Alternative, creative, one of a kind" }, w: { a: "artistica", m: 1 } } ] },
+    { q: { pt: "O que você mais valoriza numa parceira?", en: "What do you value most in a partner?" }, o: [
+      { t: { pt: "Lealdade e desejo só por você", en: "Loyalty and desire only for you" }, w: { i: 1, s: 1 } },
+      { t: { pt: "Companheirismo e parceria pra vida", en: "Companionship and a partner for life" }, w: { s: -1, g: 1, a: "caseira" } },
+      { t: { pt: "Cumplicidade e boas conversas", en: "Closeness and good conversation" }, w: { m: 2 } },
+      { t: { pt: "Ela te tirar da rotina", en: "Her pulling you out of the routine" }, w: { a: "praiana", i: 1 } } ] },
+    { q: { pt: "No primeiro encontro, você quer que ela seja:", en: "On the first date, you want her to be:" }, o: [
+      { t: { pt: "Ousada, que puxa a química", en: "Bold, driving the chemistry" }, w: { i: 2, s: 2 } },
+      { t: { pt: "Tímida e doce", en: "Shy and sweet" }, w: { s: -2, i: -1 } },
+      { t: { pt: "Divertida, que te faz rir", en: "Fun, makes you laugh" }, w: { m: -1, i: 1 } },
+      { t: { pt: "Interessante, que te surpreende no papo", en: "Interesting, surprises you in conversation" }, w: { m: 2 } } ] },
+    { q: { pt: "O que ela faria que te conquistaria de vez?", en: "What would she do that would win you for good?" }, o: [
+      { t: { pt: "Mandar uma foto ousada no meio do dia", en: "Send a bold photo in the middle of the day" }, w: { s: 2, a: "noturna" } },
+      { t: { pt: "Te cozinhar teu prato favorito", en: "Cook you your favorite dish" }, w: { s: -1, a: "caseira" } },
+      { t: { pt: "Lembrar de cada detalhe teu", en: "Remember every little detail about you" }, w: { m: 1, g: 1, a: "intelectual" } },
+      { t: { pt: "Te chamar pra uma aventura de última hora", en: "Call you for a last-minute adventure" }, w: { a: "praiana", i: 1 } } ] },
+    { q: { pt: "O defeito que você acharia charmoso nela:", en: "The flaw you'd find charming in her:" }, o: [
+      { t: { pt: "Ciumenta — te quer só pra ela", en: "Jealous — wants you all to herself" }, w: { i: 1, s: 1 } },
+      { t: { pt: "Teimosa — sabe o que quer", en: "Stubborn — knows what she wants" }, w: { g: 1, m: 1 } },
+      { t: { pt: "Sonhadora, cabeça nas nuvens", en: "A dreamer, head in the clouds" }, w: { a: "artistica", m: 1 } },
+      { t: { pt: "Grudenta, só quer teu colo", en: "Clingy, just wants to be close" }, w: { s: -1, a: "caseira" } } ] },
+    { q: { pt: "O clima perfeito pra vocês dois:", en: "The perfect mood for the two of you:" }, o: [
+      { t: { pt: "Noite, música baixa, tensão no ar", en: "Night, low music, tension in the air" }, w: { s: 2, a: "noturna" } },
+      { t: { pt: "Sol, mar e cerveja gelada", en: "Sun, sea and a cold beer" }, w: { a: "praiana" } },
+      { t: { pt: "Manhã de treino e café depois", en: "A morning workout and coffee after" }, w: { a: "fitness" } },
+      { t: { pt: "Café, livro e conversa sem hora", en: "Coffee, a book and endless talk" }, w: { m: 2, a: "intelectual" } } ] },
+    { q: { pt: "No fundo, o que você procura numa mulher?", en: "Deep down, what are you looking for in a woman?" }, o: [
+      { t: { pt: "Alguém que te incendeie", en: "Someone who sets you on fire" }, w: { i: 2, s: 2 } },
+      { t: { pt: "Alguém pra construir junto", en: "Someone to build a life with" }, w: { s: -1, g: 1, a: "caseira" } },
+      { t: { pt: "Alguém que te entenda de verdade", en: "Someone who truly gets you" }, w: { m: 2 } },
+      { t: { pt: "Alguém que te faça sentir vivo de novo", en: "Someone who makes you feel alive again" }, w: { i: 1, a: "praiana" } } ] }
   ];
   var ARCH = {
-    noturna: { label: "Coruja da madrugada", model: "ruby",
-      hab: ["dorme tarde e te manda áudio de madrugada", "conhece todo canto escondido da cidade", "tem uma playlist que é puro pecado"],
-      pensa: "acha que as melhores conversas acontecem depois da meia-noite" },
-    fitness: { label: "Fogo e disciplina", model: "livia",
-      hab: ["treina cedo e te arrasta junto", "come saudável mas abre exceção por você", "ama um desafio — inclusive te desafiar"],
-      pensa: "acredita que corpo e cabeça andam juntos" },
-    praiana: { label: "Sol e água salgada", model: "mel",
-      hab: ["vive descalça e de biquíni", "te leva pra ver o pôr do sol sem avisar", "cheira a verão o ano todo"],
-      pensa: "acha que a vida é curta demais pra passar dentro de casa" },
-    caseira: { label: "Aconchego", model: "ana",
-      hab: ["faz questão de te cozinhar", "ama um domingo de pijama e filme", "te manda bom dia sem falhar um dia"],
-      pensa: "acredita que lar é onde você estiver" },
-    intelectual: { label: "Mente afiada", model: "sofia_ai",
-      hab: ["lê três livros ao mesmo tempo", "te manda textão às 2h", "ganha a discussão e sorri depois"],
-      pensa: "acha que cabeça é a parte mais sexy do corpo" },
-    artistica: { label: "Alma criativa", model: "violet",
-      hab: ["escreve ou desenha de madrugada", "te enxerga de um jeito que ninguém mais vê", "transforma qualquer coisa em arte"],
-      pensa: "acredita que sentir intensamente é o ponto da vida" }
+    noturna: { model: "ruby", label: { pt: "Coruja da madrugada", en: "Night owl" },
+      hab: { pt: ["dorme tarde e te manda áudio de madrugada", "conhece todo canto escondido da cidade", "tem uma playlist que é puro pecado"], en: ["stays up late and sends you 2am voice notes", "knows every hidden corner of the city", "has a playlist that's pure sin"] },
+      pensa: { pt: "acha que as melhores conversas acontecem depois da meia-noite", en: "thinks the best conversations happen after midnight" } },
+    fitness: { model: "livia", label: { pt: "Fogo e disciplina", en: "Fire and discipline" },
+      hab: { pt: ["treina cedo e te arrasta junto", "come saudável mas abre exceção por você", "ama um desafio — inclusive te desafiar"], en: ["trains early and drags you along", "eats clean but makes an exception for you", "loves a challenge — including challenging you"] },
+      pensa: { pt: "acredita que corpo e cabeça andam juntos", en: "believes body and mind go together" } },
+    praiana: { model: "mel", label: { pt: "Sol e água salgada", en: "Sun and salt water" },
+      hab: { pt: ["vive descalça e de biquíni", "te leva pra ver o pôr do sol sem avisar", "cheira a verão o ano todo"], en: ["lives barefoot and in a bikini", "takes you to watch the sunset out of nowhere", "smells like summer all year"] },
+      pensa: { pt: "acha que a vida é curta demais pra passar dentro de casa", en: "thinks life's too short to spend indoors" } },
+    caseira: { model: "ana", label: { pt: "Aconchego", en: "Comfort and home" },
+      hab: { pt: ["faz questão de te cozinhar", "ama um domingo de pijama e filme", "te manda bom dia sem falhar um dia"], en: ["insists on cooking for you", "loves a pajama-and-movie Sunday", "texts you good morning without missing a day"] },
+      pensa: { pt: "acredita que lar é onde você estiver", en: "believes home is wherever you are" } },
+    intelectual: { model: "sofia_ai", label: { pt: "Mente afiada", en: "Sharp mind" },
+      hab: { pt: ["lê três livros ao mesmo tempo", "te manda textão às 2h", "ganha a discussão e sorri depois"], en: ["reads three books at once", "sends you a wall of text at 2am", "wins the argument and smiles after"] },
+      pensa: { pt: "acha que cabeça é a parte mais sexy do corpo", en: "thinks the mind is the sexiest part of the body" } },
+    artistica: { model: "violet", label: { pt: "Alma criativa", en: "Creative soul" },
+      hab: { pt: ["escreve ou desenha de madrugada", "te enxerga de um jeito que ninguém mais vê", "transforma qualquer coisa em arte"], en: ["writes or draws late at night", "sees you in a way no one else does", "turns anything into art"] },
+      pensa: { pt: "acredita que sentir intensamente é o ponto da vida", en: "believes feeling intensely is the whole point of life" } }
   };
   var quizState = { i: 0, sc: null, done: false };
   function startQuiz() { quizState = { i: 0, sc: { i: 0, s: 0, m: 0, g: 0, a: {} }, done: false }; state.view = "quiz"; try { if (window.clarity) window.clarity("event", "quiz_start"); } catch (e) {} render(); }
@@ -2191,64 +2193,70 @@ fbq('track', 'PageView');
     render();
   }
   function quizCompose() {
-    var sc = quizState.sc;
+    var sc = quizState.sc, le = qle();
     var arch = "caseira", best = -1;
     Object.keys(ARCH).forEach(function (k) { var v = sc.a[k] || 0; if (v > best) { best = v; arch = k; } });
     var A = ARCH[arch];
     var idade = Math.max(22, Math.min(40, 29 + sc.g));
     var pers = [];
-    pers.push(sc.i >= 4 ? "intensa" : sc.i <= -1 ? "serena" : "equilibrada");
-    pers.push(sc.s >= 3 ? "provocante" : sc.s <= -3 ? "doce" : "safadinha quando quer");
-    pers.push(sc.m >= 3 ? "de cabeça profunda" : sc.m <= -2 ? "divertida e leve" : "curiosa");
-    var pensa = A.pensa + (sc.m >= 3 ? " — e conversa com você vira madrugada" : sc.m <= -2 ? " — e te faz rir até doer a barriga" : "");
-    var procura = sc.i >= 4 ? "um homem que aguente o fogo dela e não corra"
-      : sc.g >= 2 ? "alguém de palavra, que saiba o que quer"
-      : sc.s <= -2 ? "um porto seguro, presença de verdade"
-      : "alguém verdadeiro, que preste atenção nos detalhes";
-    return { arch: A, idade: idade, pers: pers, pensa: pensa, procura: procura, model: A.model };
+    if (le === "pt") {
+      pers.push(sc.i >= 4 ? "intensa" : sc.i <= -1 ? "serena" : "equilibrada");
+      pers.push(sc.s >= 3 ? "provocante" : sc.s <= -3 ? "doce" : "safadinha quando quer");
+      pers.push(sc.m >= 3 ? "de cabeça profunda" : sc.m <= -2 ? "divertida e leve" : "curiosa");
+    } else {
+      pers.push(sc.i >= 4 ? "intense" : sc.i <= -1 ? "calm" : "balanced");
+      pers.push(sc.s >= 3 ? "bold" : sc.s <= -3 ? "sweet" : "playful when she wants");
+      pers.push(sc.m >= 3 ? "deep-minded" : sc.m <= -2 ? "fun and light" : "curious");
+    }
+    var pensa = A.pensa[le] + (le === "pt"
+      ? (sc.m >= 3 ? " — e conversa com você vira madrugada" : sc.m <= -2 ? " — e te faz rir até doer a barriga" : "")
+      : (sc.m >= 3 ? " — and talking with you turns into an all-nighter" : sc.m <= -2 ? " — and she makes you laugh till it hurts" : ""));
+    var procura = le === "pt"
+      ? (sc.i >= 4 ? "um homem que aguente o fogo dela e não corra" : sc.g >= 2 ? "alguém de palavra, que saiba o que quer" : sc.s <= -2 ? "um porto seguro, presença de verdade" : "alguém verdadeiro, que preste atenção nos detalhes")
+      : (sc.i >= 4 ? "a man who can handle her fire and won't run" : sc.g >= 2 ? "someone solid, who knows what he wants" : sc.s <= -2 ? "a safe harbor, real presence" : "someone genuine, who notices the little things");
+    return { arch: A, label: A.label[le], idade: idade, pers: pers, hab: A.hab[le], pensa: pensa, procura: procura, model: A.model };
   }
   function renderQuiz() {
     try { window.scrollTo(0, 0); } catch (e) {}
-    var html = '<button class="back" id="q-back">' + I.back + 'Voltar</button>';
+    var html = '<button class="back" id="q-back">' + I.back + L("Voltar", "Back", "Volver") + '</button>';
     if (!quizState.done) {
       var step = quizState.i, Q = QUIZ[step], pct = Math.round((step) / QUIZ.length * 100);
       html += '<div style="max-width:520px;margin:0 auto">' +
-        '<div style="font-size:.78rem;color:var(--faint);font-weight:700;margin-bottom:.4rem">🔮 O Retrato Falado · ' + (step + 1) + ' de ' + QUIZ.length + '</div>' +
+        '<div style="font-size:.78rem;color:var(--faint);font-weight:700;margin-bottom:.4rem">🔮 ' + L("O Retrato Falado", "The Sketch", "El Retrato Hablado") + ' · ' + (step + 1) + ' / ' + QUIZ.length + '</div>' +
         '<div style="height:8px;background:rgba(127,127,127,.18);border-radius:999px;overflow:hidden;margin-bottom:1.1rem"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#4f46e5,#9333ea);transition:width .3s"></div></div>' +
-        '<h1 style="font-size:1.35rem;margin:0 0 1rem">' + escHtml(Q.q) + '</h1>' +
+        '<h1 style="font-size:1.35rem;margin:0 0 1rem">' + escHtml(qT(Q.q)) + '</h1>' +
         '<div style="display:flex;flex-direction:column;gap:.6rem">' +
-        Q.o.map(function (op, idx) { return '<button class="btn btn-block" data-qopt="' + idx + '" style="text-align:left;background:var(--surface-2,rgba(127,127,127,.06));color:inherit;border:1px solid var(--line);padding:.9rem 1rem;font-weight:600">' + escHtml(op.t) + '</button>'; }).join("") +
+        Q.o.map(function (op, idx) { return '<button class="btn btn-block" data-qopt="' + idx + '" style="text-align:left;background:var(--surface-2,rgba(127,127,127,.06));color:inherit;border:1px solid var(--line);padding:.9rem 1rem;font-weight:600">' + escHtml(qT(op.t)) + '</button>'; }).join("") +
         '</div></div>';
       app.innerHTML = html;
       document.getElementById("q-back").onclick = function () { if (quizState.i > 0) { quizState.i--; render(); } else { state.view = "feed"; render(); } };
       app.querySelectorAll("[data-qopt]").forEach(function (b) { b.onclick = function () { quizAnswer(QUIZ[quizState.i].o[+b.getAttribute("data-qopt")].w); }; });
       return;
     }
-    // RESULTADO
     var R = quizCompose(), nm = whoName(R.model) || "ela";
     html += '<div style="max-width:520px;margin:0 auto">' +
-      '<div style="text-align:center;margin-bottom:1rem"><div style="font-size:.78rem;color:var(--faint);font-weight:800;letter-spacing:.5px">🔮 O RETRATO FALADO</div><h1 style="font-size:1.5rem;margin:.2rem 0 .1rem">A sua mulher ideal</h1><p style="color:var(--faint);font-size:.9rem;margin:0">Montado a partir das suas 15 respostas — não é genérico, é o seu.</p></div>' +
+      '<div style="text-align:center;margin-bottom:1rem"><div style="font-size:.78rem;color:var(--faint);font-weight:800;letter-spacing:.5px">🔮 ' + L("O RETRATO FALADO", "THE SKETCH", "EL RETRATO HABLADO") + '</div><h1 style="font-size:1.5rem;margin:.2rem 0 .1rem">' + L("A sua mulher ideal", "Your ideal woman", "Tu mujer ideal") + '</h1><p style="color:var(--faint);font-size:.9rem;margin:0">' + L("Montado a partir das suas 15 respostas — não é genérico, é o seu.", "Built from your 15 answers — not generic, it's yours.", "Hecho con tus 15 respuestas — no es genérico, es el tuyo.") + '</p></div>' +
       '<div style="border:1.5px solid #9333ea;border-radius:18px;padding:1.2rem;background:linear-gradient(135deg,rgba(79,70,229,.08),rgba(147,51,234,.06));box-shadow:0 14px 34px -16px rgba(147,51,234,.5)">' +
-        '<div style="display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem"><span style="font-weight:800;font-size:1.15rem">' + R.arch.label + '</span><span style="color:var(--faint);font-weight:700">· ' + R.idade + ' anos</span></div>' +
-        '<div style="font-size:.95rem;line-height:1.6;margin-bottom:.9rem">Ela é <b>' + R.pers.join(", ") + '</b>. ' + escHtml(cap(R.pensa)) + '.</div>' +
-        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#6d28d9);margin-bottom:.3rem">OS HÁBITOS DELA</div>' +
-        '<div style="font-size:.92rem;line-height:1.6;margin-bottom:.9rem">' + R.arch.hab.map(function (h) { return '• ' + escHtml(h); }).join("<br>") + '</div>' +
-        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#6d28d9);margin-bottom:.3rem">O QUE ELA PROCURA EM VOCÊ</div>' +
+        '<div style="display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem"><span style="font-weight:800;font-size:1.15rem">' + escHtml(R.label) + '</span><span style="color:var(--faint);font-weight:700">· ' + R.idade + ' ' + L("anos", "yrs", "años") + '</span></div>' +
+        '<div style="font-size:.95rem;line-height:1.6;margin-bottom:.9rem">' + L("Ela é", "She's", "Ella es") + ' <b>' + R.pers.join(", ") + '</b>. ' + escHtml(cap(R.pensa)) + '.</div>' +
+        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#6d28d9);margin-bottom:.3rem">' + L("OS HÁBITOS DELA", "HER HABITS", "SUS HÁBITOS") + '</div>' +
+        '<div style="font-size:.92rem;line-height:1.6;margin-bottom:.9rem">' + R.hab.map(function (h) { return '• ' + escHtml(h); }).join("<br>") + '</div>' +
+        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#6d28d9);margin-bottom:.3rem">' + L("O QUE ELA PROCURA EM VOCÊ", "WHAT SHE'S LOOKING FOR IN YOU", "LO QUE ELLA BUSCA EN TI") + '</div>' +
         '<div style="font-size:.92rem;line-height:1.6">' + escHtml(cap(R.procura)) + '.</div>' +
       '</div>' +
-      '<div style="text-align:center;margin:1.3rem 0 .5rem;font-size:1.02rem;font-weight:700">E quem mais chega perto dela aqui dentro… é a <span style="color:#9333ea">' + escHtml(nm) + '</span> 💜</div>' +
-      '<button class="btn btn-primary btn-block" id="q-chat" style="margin-bottom:.5rem">💬 Conversar com ' + escHtml(nm) + ' agora — 1º minuto grátis</button>' +
-      '<button class="btn btn-ghost btn-block" id="q-share" style="margin-bottom:.5rem">📲 Mandar meu resultado pros amigos</button>' +
-      '<button class="btn btn-ghost btn-block" id="q-again">↻ Refazer o teste</button>' +
+      '<div style="text-align:center;margin:1.3rem 0 .5rem;font-size:1.02rem;font-weight:700">' + L("E quem mais chega perto dela aqui dentro… é a", "And the one who comes closest to her here is…", "Y la que más se parece a ella aquí es…") + ' <span style="color:#9333ea">' + escHtml(nm) + '</span> 💜</div>' +
+      '<button class="btn btn-primary btn-block" id="q-chat" style="margin-bottom:.5rem">💬 ' + L("Conversar com " + nm + " agora — 1º minuto grátis", "Chat with " + nm + " now — 1st minute free", "Habla con " + nm + " ahora — 1er minuto gratis") + '</button>' +
+      '<button class="btn btn-ghost btn-block" id="q-share" style="margin-bottom:.5rem">📲 ' + L("Mandar meu resultado pros amigos", "Send my result to friends", "Enviar mi resultado a los amigos") + '</button>' +
+      '<button class="btn btn-ghost btn-block" id="q-again">↻ ' + L("Refazer o teste", "Retake the quiz", "Rehacer el test") + '</button>' +
       '</div>';
     app.innerHTML = html;
     document.getElementById("q-back").onclick = function () { state.view = "feed"; render(); };
     document.getElementById("q-again").onclick = function () { startQuiz(); };
     document.getElementById("q-chat").onclick = function () { var id = R.model; if (AI_PERSONAS[id]) openAiChat(id); else { state.creatorId = id; state.view = "store"; render(); } };
     document.getElementById("q-share").onclick = function () {
-      var txt = "Fiz o Retrato Falado e descobri minha mulher ideal 🔮 (" + R.arch.label + ", " + R.idade + " anos). Faz o teu: " + location.origin;
+      var txt = L("Fiz o Retrato Falado e descobri minha mulher ideal 🔮 (" + R.label + ", " + R.idade + " anos). Faz o teu: " + location.origin, "I did The Sketch and found my ideal woman 🔮 (" + R.label + ", " + R.idade + "). Make yours: " + location.origin, "Hice El Retrato Hablado y encontré mi mujer ideal 🔮 (" + R.label + ", " + R.idade + "). Haz el tuyo: " + location.origin);
       try { if (navigator.share) { navigator.share({ text: txt, url: location.origin }); return; } } catch (e) {}
-      try { navigator.clipboard.writeText(txt); toast("Copiado! Cola no teu grupo 💜"); } catch (e) { toast(txt); }
+      try { navigator.clipboard.writeText(txt); toast(L("Copiado! Cola no teu grupo 💜", "Copied! Paste it in your group 💜", "¡Copiado! Pégalo en tu grupo 💜")); } catch (e) { toast(txt); }
     };
   }
   function cap(s) { s = s || ""; return s.charAt(0).toUpperCase() + s.slice(1); }
