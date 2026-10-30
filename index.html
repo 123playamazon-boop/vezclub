@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b71"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b72"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2143,6 +2143,9 @@ fbq('track', 'PageView');
     var _rcSub = chatOnly ? L("prévia dela", "a peek at her", "un vistazo a ella") : L("prévias grátis + desbloqueie", "free previews + unlock", "prévias gratis + desbloquea");
     html += '<div class="pf-section"><div class="pf-h">' + I.photo + ' ' + L("Conteúdo", "Content", "Contenido") + ' <span style="font-weight:600;font-size:0.8rem;color:var(--faint)">' + _rcSub + '</span></div><div id="rc-list"><p class="muted-note">Carregando…</p></div></div>';
 
+    // Loja dela — produtos desbloqueáveis por coins (fotos, contos, jogos)
+    html += '<div class="pf-section"><div class="pf-h">🛍 ' + L("Loja dela", "Her shop", "Su tienda") + ' <span style="font-weight:600;font-size:0.8rem;color:var(--faint)">' + L("desbloqueie com coins", "unlock with coins", "desbloquea con coins") + '</span></div><div id="pf-shop"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+
     // grand slam offer (Hormozi: stack com valor + âncora + reversão de risco)
     var perDay = (c.subPrice / 30).toFixed(2).replace(".", ",");
     var taken = 300 - c.left, fillPct = Math.round(taken / 300 * 100);
@@ -2261,6 +2264,7 @@ fbq('track', 'PageView');
       }
     }
     loadBuyerContent(c.id);
+    renderProductsInto(document.getElementById("pf-shop"), c.id, '<p class="muted-note">' + L("Ela ainda não postou nada aqui 💜", "Nothing here yet 💜", "Todavía no hay nada 💜") + '</p>');
   }
 
   function ladderRow(icon, title, sub, price, cid, key, badge, packN, ptype) {
@@ -4808,6 +4812,14 @@ fbq('track', 'PageView');
         inp.value = v; doSend();
       }, 650);
     }
+    var pdOffered = false;
+    function productTease() {
+      if (pdOffered) return; pdOffered = true;
+      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:88%">' + escHtml(L("tenho umas coisas aqui que eu só mostro em particular... fotos, um conto meu 🙈 quer ver?", "i've got some things i only show in private... photos, a story of mine 🙈 wanna see?", "tengo cosas que solo muestro en privado... fotos, un cuento mío 🙈 ¿quieres ver?")) + '</div>');
+      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🛍 ' + L("ver o que é só nosso", "see what's just ours", "ver lo que es solo nuestro") + '</button></div>');
+      body.scrollTop = body.scrollHeight;
+      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { openProductStore(cid); };
+    }
     var sending = false;
     function doSend() {
       var inp = document.getElementById("chat-text"); if (!inp) return;
@@ -4835,6 +4847,7 @@ fbq('track', 'PageView');
         }
         her(d.reply);
         if (typeof d.free_left === "number" && d.free_left >= 0 && d.free_left <= 3) { note(L("restam " + d.free_left + " mensagens grátis 💜", d.free_left + " free messages left 💜", "quedan " + d.free_left + " mensajes gratis 💜")); }
+        if (body.querySelectorAll(".bub.me").length >= 3) setTimeout(productTease, 900); // ativa o desejo de desbloquear
         if (d.gift && d.gift.url) { setTimeout(function () {
           function showGiftImg() { body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:230px;position:relative"><img class="chat-img" src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)"><span style="position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:27px;height:27px;display:flex;align-items:center;justify-content:center;font-size:.92rem;pointer-events:none">🔍</span></div>'); body.scrollTop = body.scrollHeight; }
           if (d.gift.caption) { if (lang !== "pt") { translateOne(d.gift.caption, lang, function (t) { her(t || d.gift.caption); showGiftImg(); }); } else { her(d.gift.caption); showGiftImg(); } } else { showGiftImg(); }
@@ -5512,14 +5525,14 @@ fbq('track', 'PageView');
   function revealContent(it) {
     var host = document.getElementById("pc-media-" + it.id); if (!host) return;
     host.innerHTML = '<div class="muted-note">' + L("Abrindo…", "Opening…", "Abriendo…") + '</div>';
-    sb.functions.invoke("content_url", { body: { content_id: it.id } }).then(function (r) {
+    sb.functions.invoke("content_url", { body: { content_id: it.id, lang: lang } }).then(function (r) {
       var d = r && r.data;
       if (!d || d.error) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
       if (d.kind === "story") { host.innerHTML = '<div style="background:var(--surface-2,rgba(127,127,127,.08));border-radius:10px;padding:.75rem;font-size:.92rem;line-height:1.55;white-space:pre-wrap">' + escHtml(d.text || "") + '</div>'; return; }
-      if (!d.url) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
-      host.innerHTML = d.kind === "video"
-        ? '<video src="' + d.url + '" controls playsinline style="width:100%;border-radius:12px;display:block;background:#000"></video>'
-        : '<img src="' + d.url + '" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">';
+      var urls = (d.urls && d.urls.length) ? d.urls : (d.url ? [d.url] : []);
+      if (!urls.length) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
+      if (d.kind === "video") { host.innerHTML = '<video src="' + urls[0] + '" controls playsinline style="width:100%;border-radius:12px;display:block;background:#000"></video>'; return; }
+      host.innerHTML = '<div style="display:grid;grid-template-columns:' + (urls.length > 1 ? '1fr 1fr' : '1fr') + ';gap:6px">' + urls.map(function (u) { return '<img src="' + u + '" alt="" style="width:100%;border-radius:10px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">'; }).join("") + '</div>';
     }).catch(function () { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; });
   }
   function pdCard(it, owned) {
@@ -5543,40 +5556,41 @@ fbq('track', 'PageView');
       document.body.appendChild(ov);
       ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
       ov.querySelector("#ps-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
-      var psb = ov.querySelector("#ps-body");
-      function renderStore() {
-        Promise.all([
-          sb.from("content_items").select("*").eq("creator_key", creatorKey).eq("active", true).order("sort"),
-          sb.from("content_unlocks").select("content_id")
-        ]).then(function (res) {
-          var items = (res[0].data || []);
-          var owned = {}; (res[1].data || []).forEach(function (u) { owned[u.content_id] = true; });
-          if (!items.length) { psb.innerHTML = '<p class="muted-note">' + L("Ela ainda não postou nada aqui 💜", "Nothing here yet 💜", "Todavía no hay nada 💜") + '</p>'; return; }
-          psb.innerHTML = '<div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Desbloqueia com teus coins — é só teu, pra sempre.", "Unlock with your coins — yours forever.", "Desbloquea con tus coins — tuyo para siempre.") + '</div>' + items.map(function (it) { return pdCard(it, owned[it.id]); }).join("");
-          items.forEach(function (it) {
-            if (owned[it.id]) { revealContent(it); return; }
-            var b = psb.querySelector('[data-unlock="' + it.id + '"]');
-            if (b) b.onclick = function () {
-              b.disabled = true; b.textContent = L("Desbloqueando…", "Unlocking…", "Desbloqueando…");
-              sb.rpc("spend_coins", { p_content: it.id, p_type: "unlock", p_ref: it.id }).then(function (r) {
-                if (r.error) {
-                  var m = (r.error.message || "");
-                  b.disabled = false; b.textContent = "🪙 " + L("Desbloquear por ", "Unlock for ", "Desbloquear por ") + it.unlock_cost_coins;
-                  if (/saldo insuficiente/.test(m)) { toast(L("Coins insuficientes — pega mais 💜", "Not enough coins — grab more 💜", "Coins insuficientes 💜")); openCoinStore(); }
-                  else if (/ja desbloqueado/.test(m)) { renderStore(); }
-                  else { toast(L("Não deu pra desbloquear", "Couldn't unlock", "No se pudo")); }
-                  return;
-                }
-                if (typeof r.data === "number") setCoinBal(r.data);
-                try { if (window.fbq) fbq("track", "Purchase", { value: it.unlock_cost_coins, currency: "coins" }); } catch (e) {}
-                try { if (window.clarity) window.clarity("event", "content_unlock"); } catch (e) {}
-                renderStore();
-              });
-            };
-          });
-        });
-      }
-      renderStore();
+      renderProductsInto(ov.querySelector("#ps-body"), creatorKey, '<p class="muted-note">' + L("Ela ainda não postou nada aqui 💜", "Nothing here yet 💜", "Todavía no hay nada 💜") + '</p>');
+    });
+  }
+  // renderiza os produtos (cards + desbloqueio) em qualquer container — usado no modal E no perfil
+  function renderProductsInto(host, creatorKey, emptyHtml) {
+    if (!host || !sb) return;
+    Promise.all([
+      sb.from("content_items").select("*").eq("creator_key", creatorKey).eq("active", true).order("sort"),
+      sb.from("content_unlocks").select("content_id")
+    ]).then(function (res) {
+      var items = (res[0].data || []);
+      var owned = {}; (res[1].data || []).forEach(function (u) { owned[u.content_id] = true; });
+      if (!items.length) { host.innerHTML = emptyHtml || ('<p class="muted-note">' + L("Nada por aqui ainda 💜", "Nothing here yet 💜", "Nada aún 💜") + '</p>'); return; }
+      host.innerHTML = items.map(function (it) { return pdCard(it, owned[it.id]); }).join("");
+      items.forEach(function (it) {
+        if (owned[it.id]) { revealContent(it); return; }
+        var b = host.querySelector('[data-unlock="' + it.id + '"]');
+        if (b) b.onclick = function () {
+          b.disabled = true; b.textContent = L("Desbloqueando…", "Unlocking…", "Desbloqueando…");
+          ensureSessionThen(function () { sb.rpc("spend_coins", { p_content: it.id, p_type: "unlock", p_ref: it.id }).then(function (r) {
+            if (r.error) {
+              var m = (r.error.message || "");
+              b.disabled = false; b.textContent = "🪙 " + L("Desbloquear por ", "Unlock for ", "Desbloquear por ") + it.unlock_cost_coins;
+              if (/saldo insuficiente/.test(m)) { toast(L("Coins insuficientes — pega mais 💜", "Not enough coins — grab more 💜", "Coins insuficientes 💜")); openCoinStore(); }
+              else if (/ja desbloqueado/.test(m)) { renderProductsInto(host, creatorKey, emptyHtml); }
+              else { toast(L("Não deu pra desbloquear", "Couldn't unlock", "No se pudo")); }
+              return;
+            }
+            if (typeof r.data === "number") setCoinBal(r.data);
+            try { if (window.fbq) fbq("track", "Purchase", { value: it.unlock_cost_coins, currency: "coins" }); } catch (e) {}
+            try { if (window.clarity) window.clarity("event", "content_unlock"); } catch (e) {}
+            renderProductsInto(host, creatorKey, emptyHtml);
+          }); });
+        };
+      });
     });
   }
 
