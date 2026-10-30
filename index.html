@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b77"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b78"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1939,9 +1939,10 @@ fbq('track', 'PageView');
     html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Alguém que fica feliz de verdade que você apareceu.", "Someone who's actually glad you showed up.", "Alguien que se alegra de verdad de que apareciste.") + '</h1><p>' + L("Escolhe quem você curtir e cai num chat privado — ela responde em segundos, lembra do que você conta, e manda fotos que você não acha em nenhum outro lugar. 1º minuto grátis, sem cartão.", "Pick who you like and slip into a private chat — she replies in seconds, remembers what you tell her, and shares photos you won't find anywhere else. First minute's free, no card.", "Elige a quien te guste y entra en un chat privado — ella responde en segundos, recuerda lo que le cuentas, y comparte fotos que no encuentras en ningún otro lado. 1er minuto gratis, sin tarjeta.") + '</p></div>';
     html += freeBanner();
     // seções próprias: comprar sem precisar entrar em cada modelo
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem">' +
-      '<button data-section="photo_set" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#8b5cf6,#d946ef);border-radius:14px;padding:.85rem .95rem;box-shadow:0 10px 24px -12px rgba(139,92,246,.6)"><div style="font-weight:800">📸 ' + L("Galeria Secreta", "Secret Gallery", "Galería Secreta") + '</div><div style="font-size:.78rem;opacity:.95">' + L("fotos que elas não postam", "photos they post nowhere", "fotos que no publican") + '</div></button>' +
-      '<button data-section="story" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#db2777,#f59e0b);border-radius:14px;padding:.85rem .95rem;box-shadow:0 10px 24px -12px rgba(219,39,119,.55)"><div style="font-weight:800">📖 ' + L("Contos", "Stories", "Cuentos") + '</div><div style="font-size:.78rem;opacity:.95">' + L("histórias quentes delas", "their hot stories", "sus historias calientes") + '</div></button>' +
+    html += '<div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem">' +
+      '<button data-section="photo_set" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#8b5cf6,#d946ef);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(139,92,246,.6);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📸</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Galeria Secreta", "Secret Gallery", "Galería Secreta") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("fotos que elas não postam em nenhum lugar", "photos they post nowhere else", "fotos que no publican en ningún lado") + '</span></span></button>' +
+      '<button data-section="story" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#db2777,#f59e0b);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(219,39,119,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📖</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Contos quentes", "Hot Stories", "Cuentos calientes") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("as fantasias que elas nunca contaram", "the fantasies they never told", "las fantasías que nunca contaron") + '</span></span></button>' +
+      (coinMarket() === "us" ? '<button data-gift-shop="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#059669,#10b981);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(5,150,105,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">🎁</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Gift someone you love", "Gift someone you love", "Regala a quien amas") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("a real gift delivered to her door", "a real gift delivered to her door", "un regalo de verdad que llega a su casa") + '</span></span></button>' : '') +
       '</div>';
     html += '<div style="display:flex;justify-content:flex-end;margin:-0.6rem 0 0.8rem"><button class="btn btn-ghost btn-sm" data-coll="1">' + I.star + ' Minha coleção</button></div>';
     html += storiesRow();
@@ -5194,7 +5195,9 @@ fbq('track', 'PageView');
     var coll = e.target.closest("[data-coll]");
     var shop = e.target.closest("[data-shop]");
     var section = e.target.closest("[data-section]");
+    var giftShop = e.target.closest("[data-gift-shop]");
 
+    if (giftShop) { openGiftShop(); return; }
     if (section) { state.view = section.getAttribute("data-section") === "photo_set" ? "sec_fotos" : "sec_contos"; render(); return; }
     if (shop) { openProductStore(shop.getAttribute("data-shop")); return; }
     if (notif) {
@@ -5327,6 +5330,31 @@ fbq('track', 'PageView');
   var SUPA_URL = "https://mfxyavlpbofcdiylnnjm.supabase.co";
   var SUPA_KEY = "sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
   var sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPA_URL, SUPA_KEY) : null;
+  // Loja de presentes (Shopify It's Brazilian) — SÓ EUA (não há entrega no BR). Tracking via a própria Shopify.
+  var GIFT_SHOP = [
+    { emoji: "🧴", name: "Brazilian Firming Body Butter", desc: "Her favorite — firming body butter", url: "https://pay.seeseofficial.shop/products/brazilian-firming-body-butter?variant=53988313104673" },
+    { emoji: "💆", name: "Afterglow — Couples Massage Ritual", desc: "Sensual massage creme + couples guide", url: "https://pay.seeseofficial.shop/products/afterglow-sensual-couples-massage-creme-the-couples-touch-ritual-bonus-guide?variant=53981198516513" },
+    { emoji: "💊", name: "Crave Off — Appetite Support", desc: "It's Brazilian · 60 capsules", url: "https://pay.seeseofficial.shop/products/its-brazilian-crave-off-craving-control-balanced-appetite-support-60-capsules?variant=53981685842209" }
+  ];
+  function giftUrl(u) { return u + (u.indexOf("?") >= 0 ? "&" : "?") + "utm_source=vezclub&utm_medium=gift_card"; }
+  function openGiftShop() {
+    var ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem";
+    ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:440px;width:100%;max-height:90vh;border-radius:18px;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-bottom:1px solid var(--line,#eee)"><b>🎁 ' + L("Gift someone you love", "Gift someone you love", "Regala a quien amas") + '</b><button id="gs-x" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit">✕</button></div><div style="padding:1rem 1.1rem"><div style="font-size:.84rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Real products, delivered to the door. A nicer way to say you were thinking of her.", "Real products, delivered to the door. A nicer way to say you were thinking of her.", "Productos reales, entregados a domicilio.") + '</div>' +
+      GIFT_SHOP.map(function (p, i) { return '<button data-gi="' + i + '" style="width:100%;border:1px solid var(--line,#eee);background:var(--surface-2,rgba(127,127,127,.05));border-radius:14px;padding:.85rem;margin-bottom:.6rem;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.8rem;color:inherit"><span style="font-size:1.6rem">' + p.emoji + '</span><span style="flex:1"><span style="display:block;font-weight:800">' + escHtml(p.name) + '</span><span style="display:block;font-size:.8rem;color:var(--mut,#888)">' + escHtml(p.desc) + '</span></span><span style="font-size:1.1rem;opacity:.5">→</span></button>'; }).join("") +
+      '</div></div>';
+    document.body.appendChild(ov);
+    ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
+    ov.querySelector("#gs-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
+    ov.querySelectorAll("[data-gi]").forEach(function (b) {
+      b.onclick = function () {
+        var p = GIFT_SHOP[+b.getAttribute("data-gi")]; if (!p) return;
+        try { if (window.clarity) window.clarity("event", "gift_click"); } catch (e) {}
+        try { if (window.fbq) fbq("track", "Lead", { content_name: "gift:" + p.name }); } catch (e) {}
+        window.open(giftUrl(p.url), "_blank", "noopener");
+      };
+    });
+  }
   var account = null;
 
   function acctFrom(session) {
@@ -5821,15 +5849,36 @@ fbq('track', 'PageView');
       host.innerHTML = '<div style="display:grid;grid-template-columns:' + (urls.length > 1 ? '1fr 1fr' : '1fr') + ';gap:6px">' + urls.map(function (u) { return '<img src="' + u + '" alt="" style="width:100%;border-radius:10px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">'; }).join("") + '</div>';
     }).catch(function () { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; });
   }
+  function pdPreview(it) { return (lang === "en" ? (it.preview_text_en || it.preview_text) : lang === "es" ? (it.preview_text_es || it.preview_text) : it.preview_text) || ""; }
   function pdCard(it, owned) {
-    var media = owned
-      ? '<div id="pc-media-' + it.id + '" style="margin-top:.55rem"></div>'
-      : '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem">' + (it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(16px);transform:scale(1.1)">' : '<div style="height:150px;background:linear-gradient(135deg,#6d28d9,#db2777)"></div>') + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem">' + (it.coming_soon ? "⏳" : "🔒") + '</div></div>';
+    var nph = it.photo_count || 0;
+    var countTag = (it.kind === "photo_set" && nph) ? '<span style="position:absolute;top:.5rem;left:.5rem;background:rgba(0,0,0,.6);color:#fff;font-size:.72rem;font-weight:800;padding:.2rem .5rem;border-radius:999px">📸 ' + nph + ' ' + L("fotos", "photos", "fotos") + '</span>' : '';
+    var lockBadge = '<span style="position:absolute;bottom:.5rem;right:.5rem;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:.95rem">' + (it.coming_soon ? "⏳" : "🔒") + '</span>';
+    var media;
+    if (owned) {
+      media = '<div id="pc-media-' + it.id + '" style="margin-top:.55rem"></div>';
+    } else if (it.kind === "story") {
+      // conto: mostra o HOOK (primeiras linhas) com fade — a pessoa entende do que se trata
+      var hk = pdPreview(it);
+      media = '<div style="position:relative;margin-top:.55rem;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,rgba(109,40,217,.1),rgba(219,39,119,.08));border:1px solid var(--line,#eee)">' +
+        '<div style="padding:.85rem;font-size:.9rem;line-height:1.55;font-style:italic;color:var(--ink,#222);max-height:120px;overflow:hidden">' + (hk ? escHtml(hk) + '…' : escHtml(pdTeaser(it))) + '</div>' +
+        '<div style="position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(to bottom,transparent,var(--panel,#fff))"></div>' +
+        '<div style="position:absolute;bottom:.4rem;left:0;right:0;text-align:center;font-size:.76rem;font-weight:700;color:var(--accent,#6d28d9)">🔒 ' + L("continua ao desbloquear", "unlock to keep reading", "sigue al desbloquear") + '</div></div>';
+    } else if (it.kind === "photo_set" && it.cover_url) {
+      // álbum: 1ª foto NÍTIDA (a pessoa vê o que compra) + quantas fotos vem
+      media = '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem"><img src="' + it.cover_url + '" alt="" style="width:100%;display:block">' + countTag + lockBadge + '</div>';
+    } else {
+      // vídeo / outros: capa borrada
+      media = '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem">' + (it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(16px);transform:scale(1.1)">' : '<div style="height:150px;background:linear-gradient(135deg,#6d28d9,#db2777)"></div>') + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem">' + (it.coming_soon ? "⏳" : "🔒") + '</div></div>';
+    }
+    var unlockLabel = (it.kind === "photo_set" && nph)
+      ? L("Desbloquear as " + nph + " fotos por ", "Unlock all " + nph + " photos for ", "Desbloquear las " + nph + " fotos por ")
+      : L("Desbloquear por ", "Unlock for ", "Desbloquear por ");
     var btn = it.coming_soon
       ? '<button class="btn btn-ghost btn-block" disabled style="margin-top:.55rem">' + L("Em breve", "Coming soon", "Pronto") + '</button>'
       : owned
         ? '<div style="margin-top:.5rem;text-align:center;color:#16a34a;font-weight:700">' + L("Desbloqueado ✓", "Unlocked ✓", "Desbloqueado ✓") + '</div>'
-        : '<button class="btn btn-primary btn-block" data-unlock="' + it.id + '" style="margin-top:.55rem">🪙 ' + L("Desbloquear por ", "Unlock for ", "Desbloquear por ") + it.unlock_cost_coins + '</button>';
+        : '<button class="btn btn-primary btn-block" data-unlock="' + it.id + '" style="margin-top:.55rem">🪙 ' + unlockLabel + it.unlock_cost_coins + '</button>';
     var who = it._who ? '<div style="font-size:.72rem;color:var(--accent,#6d28d9);font-weight:800;margin-bottom:.1rem">' + escHtml(it._who) + '</div>' : '';
     return '<div style="border:1px solid var(--line,#eee);border-radius:14px;padding:.85rem;margin-bottom:.85rem">' + who + '<div style="font-weight:700">' + pdIcon(it.kind) + ' ' + escHtml(pdTitle(it)) + '</div><div style="font-size:.84rem;color:var(--mut,#888);margin-top:.15rem">' + escHtml(pdTeaser(it)) + '</div>' + media + btn + '</div>';
   }
@@ -5851,8 +5900,8 @@ fbq('track', 'PageView');
     if (!host || !sb) return;
     var sec = /^__kind:([a-z_]+)__$/.exec(creatorKey || "");
     var q = sec
-      ? sb.from("content_items").select("*").eq("kind", sec[1]).eq("active", true).order("created_at", { ascending: false })
-      : sb.from("content_items").select("*").eq("creator_key", creatorKey).eq("active", true).order("sort");
+      ? sb.from("content_public").select("*").eq("kind", sec[1]).order("created_at", { ascending: false })
+      : sb.from("content_public").select("*").eq("creator_key", creatorKey).order("sort");
     Promise.all([
       q,
       sb.from("content_unlocks").select("content_id")
