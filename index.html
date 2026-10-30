@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b68"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b69"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5455,7 +5455,7 @@ fbq('track', 'PageView');
         csBody.innerHTML = '<div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Coins desbloqueiam fotos, presentes e mais — e nunca expiram.", "Coins unlock photos, gifts and more — and never expire.", "Los coins desbloquean fotos, regalos y más — nunca caducan.") + '</div>' +
           packs.map(function (p) {
             var coins = p.coins + (p.bonus_coins || 0);
-            var bonus = p.bonus_coins > 0 ? ' <span style="color:#16a34a;font-weight:700">+' + p.bonus_coins + ' ' + L("bônus", "bonus", "bono") + '</span>' : '';
+            var bonus = p.bonus_coins > 0 ? ' <span style="color:#ffd84d;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.25)">+' + p.bonus_coins + ' ' + L("bônus", "bonus", "bono") + '</span>' : '';
             return '<button class="btn btn-primary btn-block" data-pack="' + p.code + '" data-price="' + p.price_cents + '" data-coins="' + coins + '" style="margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><span>🪙 ' + coins + ' coins' + bonus + '</span><span style="font-weight:800">' + money(p.price_cents, p.currency) + '</span></button>';
           }).join("") + '<div id="cs-pay"></div>';
         csBody.querySelectorAll("[data-pack]").forEach(function (b) {
