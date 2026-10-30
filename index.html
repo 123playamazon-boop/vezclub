@@ -960,7 +960,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b94"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b95"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5738,16 +5738,16 @@ fbq('track', 'PageView');
   var sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPA_URL, SUPA_KEY) : null;
   // Loja de presentes (Shopify It's Brazilian) — SÓ EUA (não há entrega no BR). Tracking via a própria Shopify.
   var GIFT_SHOP = [
-    { emoji: "🧴", name: "Brazilian Firming Body Butter", desc: "Her favorite — firming body butter", url: "https://pay.seeseofficial.shop/products/brazilian-firming-body-butter?variant=53988313104673" },
-    { emoji: "💆", name: "Afterglow — Couples Massage Ritual", desc: "Sensual massage creme + couples guide", url: "https://pay.seeseofficial.shop/products/afterglow-sensual-couples-massage-creme-the-couples-touch-ritual-bonus-guide?variant=53981198516513" },
-    { emoji: "💊", name: "Crave Off — Appetite Support", desc: "It's Brazilian · 60 capsules", url: "https://pay.seeseofficial.shop/products/its-brazilian-crave-off-craving-control-balanced-appetite-support-60-capsules?variant=53981685842209" }
+    { emoji: "🧴", img: "img/gift/bumbum.jpg", name: "Brazilian Firming Body Butter", desc: "Her favorite — firming body butter", url: "https://pay.seeseofficial.shop/products/brazilian-firming-body-butter?variant=53988313104673" },
+    { emoji: "💆", img: "img/gift/afterglow.jpg", name: "Afterglow — Couples Massage Ritual", desc: "Sensual massage creme + couples guide", url: "https://pay.seeseofficial.shop/products/afterglow-sensual-couples-massage-creme-the-couples-touch-ritual-bonus-guide?variant=53981198516513" },
+    { emoji: "💊", img: "img/gift/craveoff.jpg", name: "Crave Off — Appetite Support", desc: "It's Brazilian · 60 capsules", url: "https://pay.seeseofficial.shop/products/its-brazilian-crave-off-craving-control-balanced-appetite-support-60-capsules?variant=53981685842209" }
   ];
   function giftUrl(u) { return u + (u.indexOf("?") >= 0 ? "&" : "?") + "utm_source=vezclub&utm_medium=gift_card"; }
   function openGiftShop() {
     var ov = document.createElement("div");
     ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem";
     ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:440px;width:100%;max-height:90vh;border-radius:18px;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-bottom:1px solid var(--line,#eee)"><b>🎁 ' + L("Gift someone you love", "Gift someone you love", "Regala a quien amas") + '</b><button id="gs-x" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit">✕</button></div><div style="padding:1rem 1.1rem"><div style="font-size:.84rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Real products, delivered to the door. A nicer way to say you were thinking of her.", "Real products, delivered to the door. A nicer way to say you were thinking of her.", "Productos reales, entregados a domicilio.") + '</div>' +
-      GIFT_SHOP.map(function (p, i) { return '<button data-gi="' + i + '" style="width:100%;border:1px solid var(--line,#eee);background:var(--surface-2,rgba(127,127,127,.05));border-radius:14px;padding:.85rem;margin-bottom:.6rem;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.8rem;color:inherit"><span style="font-size:1.6rem">' + p.emoji + '</span><span style="flex:1"><span style="display:block;font-weight:800">' + escHtml(p.name) + '</span><span style="display:block;font-size:.8rem;color:var(--mut,#888)">' + escHtml(p.desc) + '</span></span><span style="font-size:1.1rem;opacity:.5">→</span></button>'; }).join("") +
+      GIFT_SHOP.map(function (p, i) { return '<button data-gi="' + i + '" style="width:100%;border:1px solid var(--line,#eee);background:var(--surface-2,rgba(127,127,127,.05));border-radius:14px;padding:.85rem;margin-bottom:.6rem;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.8rem;color:inherit">' + (p.img ? '<img src="' + p.img + '" alt="" loading="lazy" style="width:58px;height:58px;border-radius:11px;object-fit:cover;background:#fff;flex-shrink:0" onerror="this.outerHTML=\'<span style=&quot;font-size:1.6rem&quot;>' + p.emoji + '</span>\'">' : '<span style="font-size:1.6rem">' + p.emoji + '</span>') + '<span style="flex:1"><span style="display:block;font-weight:800">' + escHtml(p.name) + '</span><span style="display:block;font-size:.8rem;color:var(--mut,#888)">' + escHtml(p.desc) + '</span></span><span style="font-size:1.1rem;opacity:.5">→</span></button>'; }).join("") +
       '</div></div>';
     document.body.appendChild(ov);
     ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
