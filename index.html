@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b84"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b85"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1858,7 +1858,7 @@ fbq('track', 'PageView');
   /* ---------------- render: router ---------------- */
   function render() {
     if (window.__tick) { clearInterval(window.__tick); window.__tick = null; }
-    if (state.role === "buyer") { state.view === "store" ? renderStore() : state.view === "collection" ? renderCollection() : state.view === "sec_fotos" ? renderSection("photo_set") : state.view === "sec_contos" ? renderSection("story") : state.view === "quiz" ? renderQuiz() : renderFeed(); }
+    if (state.role === "buyer") { state.view === "store" ? renderStore() : state.view === "collection" ? renderCollection() : state.view === "sec_fotos" ? renderSection("photo_set") : state.view === "sec_contos" ? renderSection("story") : state.view === "sec_guias" ? renderSection("ebook") : state.view === "quiz" ? renderQuiz() : renderFeed(); }
     else if (state.role === "creator") renderCreator();
     else renderAdmin();
     try { app.classList.remove("vin"); void app.offsetWidth; app.classList.add("vin"); } catch (e) {}
@@ -1943,6 +1943,7 @@ fbq('track', 'PageView');
       (lang === "pt" ? '<button data-quiz="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#4f46e5,#9333ea);border-radius:16px;padding:1.15rem 1.15rem;box-shadow:0 12px 26px -12px rgba(79,70,229,.7);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.9rem;line-height:1">🔮</span><span><span style="display:block;font-weight:800;font-size:1.12rem">O Retrato Falado</span><span style="display:block;font-size:.86rem;opacity:.95">15 perguntas e eu desenho a sua mulher ideal — de graça</span></span></button>' : '') +
       '<button data-section="photo_set" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#8b5cf6,#d946ef);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(139,92,246,.6);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📸</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Galeria Secreta", "Secret Gallery", "Galería Secreta") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("fotos que elas não postam em nenhum lugar", "photos they post nowhere else", "fotos que no publican en ningún lado") + '</span></span></button>' +
       '<button data-section="story" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#db2777,#f59e0b);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(219,39,119,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📖</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Contos quentes", "Hot Stories", "Cuentos calientes") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("as fantasias que elas nunca contaram", "the fantasies they never told", "las fantasías que nunca contaron") + '</span></span></button>' +
+      '<button data-section="ebook" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(14,165,233,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📘</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Códigos da Conquista", "The Codes", "Códigos de la Conquista") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("o que dizer pra conquistar (ou reconquistar) ela", "what to say to win her (or win her back)", "qué decir para conquistar (o reconquistar)") + '</span></span></button>' +
       (coinMarket() === "us" ? '<button data-gift-shop="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#059669,#10b981);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(5,150,105,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">🎁</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Gift someone you love", "Gift someone you love", "Regala a quien amas") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("a real gift delivered to her door", "a real gift delivered to her door", "un regalo de verdad que llega a su casa") + '</span></span></button>' : '') +
       '</div>';
     html += '<div style="display:flex;justify-content:flex-end;margin:-0.6rem 0 0.8rem"><button class="btn btn-ghost btn-sm" data-coll="1">' + I.star + ' Minha coleção</button></div>';
@@ -2254,11 +2255,13 @@ fbq('track', 'PageView');
 
   /* ---------------- buyer: storefront ---------------- */
   function renderSection(kind) {
-    var isFotos = kind === "photo_set";
-    var title = isFotos ? L("📸 Galeria Secreta", "📸 Secret Gallery", "📸 Galería Secreta") : L("📖 Contos de Cabeceira", "📖 Bedtime Stories", "📖 Cuentos de Cabecera");
+    var isFotos = kind === "photo_set", isEbook = kind === "ebook";
+    var title = isFotos ? L("📸 Galeria Secreta", "📸 Secret Gallery", "📸 Galería Secreta") : isEbook ? L("📘 Códigos da Conquista", "📘 The Codes", "📘 Códigos de la Conquista") : L("📖 Contos de Cabeceira", "📖 Bedtime Stories", "📖 Cuentos de Cabecera");
     // copy Amanda (nome chiclete + 1ª pessoa + curiosidade) + Hormozi (posse pra sempre, exclusividade)
     var sub = isFotos
       ? L("Os ensaios que elas não postam em lugar nenhum. Escolhe, desbloqueia com teus coins — e é teu pra sempre.", "The photo sets they post nowhere else. Pick one, unlock with your coins — yours forever.", "Los ensayos que no publican en ningún lado. Elige, desbloquea con tus coins — tuyo para siempre.")
+      : isEbook
+      ? L("Guias práticos pra quem quer conquistar — ou reconquistar. O que mandar, quando, e como não travar. Desbloqueia e é teu pra sempre.", "Practical guides to win her — or win her back. What to text, when, and how not to freeze. Unlock it and it's yours forever.", "Guías prácticas para conquistar — o reconquistar. Qué decir, cuándo, y cómo no trabarte. Desbloquéalo y es tuyo para siempre.")
       : L("Fantasias escritas na 1ª pessoa, só pra você ler baixinho. Desbloqueia a que te deixar mais curioso.", "First-person fantasies, just for you to read. Unlock the one that makes you most curious.", "Fantasías en 1ª persona, solo para ti. Desbloquea la que más te intrigue.");
     var html = '<button class="back" id="back">' + I.back + L("Voltar", "Back", "Volver") + '</button>';
     html += '<div class="page-head"><h1 style="font-size:1.5rem">' + title + '</h1><p>' + sub + '</p></div>';
@@ -5465,7 +5468,7 @@ fbq('track', 'PageView');
 
     if (quizBtn) { startQuiz(); return; }
     if (giftShop) { openGiftShop(); return; }
-    if (section) { state.view = section.getAttribute("data-section") === "photo_set" ? "sec_fotos" : "sec_contos"; render(); return; }
+    if (section) { var sk = section.getAttribute("data-section"); state.view = sk === "photo_set" ? "sec_fotos" : sk === "ebook" ? "sec_guias" : "sec_contos"; render(); return; }
     if (shop) { openProductStore(shop.getAttribute("data-shop")); return; }
     if (notif) {
       enableNotif();
@@ -6126,14 +6129,14 @@ fbq('track', 'PageView');
   /* ================= PRODUTOS: vitrine "Loja dela" + desbloqueio por coins ================= */
   function pdTitle(it) { return (lang === "en" ? (it.title_en || it.title) : (it.title || "")) || ""; }
   function pdTeaser(it) { return (lang === "en" ? (it.teaser_en || it.teaser) : (it.teaser || "")) || ""; }
-  function pdIcon(k) { return k === "story" ? "📖" : k === "game" ? "🎲" : k === "video" ? "🎬" : k === "reveal" ? "👗" : "📸"; }
+  function pdIcon(k) { return k === "story" ? "📖" : k === "game" ? "🎲" : k === "video" ? "🎬" : k === "reveal" ? "👗" : k === "ebook" ? "📘" : "📸"; }
   function revealContent(it) {
     var host = document.getElementById("pc-media-" + it.id); if (!host) return;
     host.innerHTML = '<div class="muted-note">' + L("Abrindo…", "Opening…", "Abriendo…") + '</div>';
     sb.functions.invoke("content_url", { body: { content_id: it.id, lang: lang } }).then(function (r) {
       var d = r && r.data;
       if (!d || d.error) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
-      if (d.kind === "story") { host.innerHTML = '<div style="background:var(--surface-2,rgba(127,127,127,.08));border-radius:10px;padding:.75rem;font-size:.92rem;line-height:1.55;white-space:pre-wrap">' + escHtml(d.text || "") + '</div>'; return; }
+      if (d.kind === "story" || d.kind === "ebook") { var tall = d.kind === "ebook" ? "max-height:62vh;overflow:auto;" : ""; host.innerHTML = '<div style="background:var(--surface-2,rgba(127,127,127,.08));border-radius:10px;padding:.85rem;font-size:.92rem;line-height:1.6;white-space:pre-wrap;' + tall + '">' + escHtml(d.text || "") + '</div>'; return; }
       var urls = (d.urls && d.urls.length) ? d.urls : (d.url ? [d.url] : []);
       if (!urls.length) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
       if (d.kind === "video") { host.innerHTML = '<video src="' + urls[0] + '" controls playsinline style="width:100%;border-radius:12px;display:block;background:#000"></video>'; return; }
@@ -6148,8 +6151,8 @@ fbq('track', 'PageView');
     var media;
     if (owned) {
       media = '<div id="pc-media-' + it.id + '" style="margin-top:.55rem"></div>';
-    } else if (it.kind === "story") {
-      // conto: mostra o HOOK (primeiras linhas) com fade — a pessoa entende do que se trata
+    } else if (it.kind === "story" || it.kind === "ebook") {
+      // conto/ebook: mostra o HOOK (primeiras linhas) — a pessoa entende do que se trata
       var hk = pdPreview(it);
       media = '<div style="margin-top:.55rem;border-radius:12px;overflow:hidden;border:1px solid var(--line,#eee)">' +
         '<div style="padding:.9rem;font-size:.95rem;line-height:1.6;color:var(--ink,#1a1430);font-weight:500;max-height:108px;overflow:hidden;background:var(--surface-2,rgba(127,127,127,.05))">' + (hk ? escHtml(hk) + '…' : escHtml(pdTeaser(it))) + '</div>' +
