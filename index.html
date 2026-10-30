@@ -55,7 +55,13 @@ fbq('track', 'PageView');
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<!-- preconnect aos recursos que travam o 1o paint: supabase-js (CDN) e a API supabase -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://mfxyavlpbofcdiylnnjm.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://api.qrserver.com">
+<!-- fonte sem bloquear o render (display=swap ja evita texto invisivel) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap"></noscript>
 <style>
   /* Layout: app shell — sticky topbar with role switcher; main area swaps between buyer feed/storefront, creator dashboard, admin console. Blue creator-economy identity, theme-aware. */
   :root {
@@ -924,7 +930,11 @@ fbq('track', 'PageView');
   </div>
 </header>
 
-<main id="app" class="wrap"></main>
+<style>@keyframes vzspin{to{transform:rotate(360deg)}}</style>
+<main id="app" class="wrap"><div style="min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif">
+  <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(140deg,#7c3aed,#db2777);display:grid;place-items:center;color:#fff;font-weight:800;font-size:24px">V</div>
+  <div style="width:30px;height:30px;border:3px solid rgba(124,58,237,.22);border-top-color:#7c3aed;border-radius:50%;animation:vzspin .8s linear infinite"></div>
+</div></main>
 
 <div id="modal-root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -950,7 +960,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b88"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b89"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5337,6 +5347,25 @@ fbq('track', 'PageView');
     if (x) x.onclick = function () { try { sessionStorage.setItem("vez_nudge_x", "1"); } catch (e) {} bar.remove(); };
   }
 
+  function isInApp() { try { return /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Line\//i.test(navigator.userAgent || ""); } catch (e) { return false; } }
+  // webview do Face/Insta mata cartão/Apple Pay — intercepta o Stripe e manda abrir no navegador (link já copiado)
+  function payInterstitial(onContinue) {
+    if (!isInApp()) { if (onContinue) onContinue(); return; }
+    try { navigator.clipboard.writeText(location.origin); } catch (e) {}
+    var ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10002;display:flex;align-items:center;justify-content:center;padding:1.2rem";
+    ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:400px;width:100%;border-radius:18px;padding:1.3rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)">' +
+      '<div style="font-size:2.2rem;margin-bottom:.3rem">🔒</div>' +
+      '<div style="font-weight:800;font-size:1.1rem;margin-bottom:.5rem">' + L("Pra pagar com segurança, abra no navegador", "Open in your browser to pay securely", "Abre en tu navegador para pagar seguro") + '</div>' +
+      '<div style="font-size:.88rem;opacity:.9;line-height:1.5;margin-bottom:1rem">' + L("O cartão não funciona bem aqui dentro do app. Toque em ⋯ (ou no ícone de compartilhar) no canto e escolha “Abrir no navegador”. O link já está copiado pra você.", "Card payment doesn't work well inside this app. Tap ⋯ (or the share icon) in the corner and choose “Open in browser”. The link is already copied for you.", "La tarjeta no funciona bien dentro de la app. Toca ⋯ y elige “Abrir en el navegador”. El enlace ya está copiado.") + '</div>' +
+      '<button class="btn btn-primary btn-block" id="pi-copy">📋 ' + L("Copiar o link do site", "Copy the site link", "Copiar el enlace") + '</button>' +
+      '<button class="btn btn-ghost btn-block" id="pi-go" style="margin-top:.5rem;opacity:.72">' + L("Continuar aqui mesmo", "Continue here anyway", "Continuar aquí igual") + '</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    try { if (window.clarity) window.clarity("event", "pay_interstitial"); } catch (e) {}
+    ov.querySelector("#pi-copy").onclick = function () { try { navigator.clipboard.writeText(location.origin); } catch (e) {} var b = ov.querySelector("#pi-copy"); b.textContent = L("Link copiado ✓ — agora abre no navegador", "Link copied ✓ — now open in browser", "Enlace copiado ✓"); try { if (window.clarity) window.clarity("event", "open_in_browser"); } catch (e) {} };
+    ov.querySelector("#pi-go").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); if (onContinue) onContinue(); };
+  }
   function ageOk() { try { return !!localStorage.getItem("aura_age_ok"); } catch (e) { return false; } }
   // Gate LEVE: feed fica visivel; so uma barra fina confirma 18+. A confirmacao
   // tambem e exigida antes de abrir um chat (mantem legal + regra do Stripe).
@@ -5979,11 +6008,14 @@ fbq('track', 'PageView');
     });
   }
   function buyCoinsStripe(code, btn, bump) {
-    try { btn.disabled = true; } catch (e) {}
-    sb.functions.invoke("coins_stripe", { body: { pack_code: code, bump: !!bump } }).then(function (res) {
-      if (res && res.data && res.data.url) { window.location.href = res.data.url; }
-      else { try { btn.disabled = false; } catch (e) {} toast(L("Não abriu o checkout. Tenta de novo 🙏", "Checkout didn't open. Try again 🙏", "No abrió el checkout. Inténtalo 🙏")); }
-    }).catch(function () { try { btn.disabled = false; } catch (e) {} toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
+    var go = function () {
+      try { btn.disabled = true; } catch (e) {}
+      sb.functions.invoke("coins_stripe", { body: { pack_code: code, bump: !!bump } }).then(function (res) {
+        if (res && res.data && res.data.url) { window.location.href = res.data.url; }
+        else { try { btn.disabled = false; } catch (e) {} toast(L("Não abriu o checkout. Tenta de novo 🙏", "Checkout didn't open. Try again 🙏", "No abrió el checkout. Inténtalo 🙏")); }
+      }).catch(function () { try { btn.disabled = false; } catch (e) {} toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
+    };
+    payInterstitial(go); // in-app → manda abrir no navegador antes do cartão; fora do app segue direto
   }
   function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {
     if (!mount) return;
@@ -6096,11 +6128,13 @@ fbq('track', 'PageView');
               renderSubPix(mount, d.pix_code, d.identifier, d.amount, onOk);
             }).catch(function () { b.disabled = false; b.textContent = t0; if (mount) mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.5rem">' + L("Falha de conexão 🙏", "Connection error 🙏", "Error de conexión 🙏") + '</div>'; });
           } else {
-            b.disabled = true; b.textContent = L("Abrindo…", "Opening…", "Abriendo…");
-            sb.functions.invoke("sub_stripe", { body: { creator_key: ck } }).then(function (res) {
-              if (res && res.data && res.data.url) { window.location.href = res.data.url; }
-              else { b.disabled = false; b.textContent = t0; toast(L("Não abriu o checkout 🙏", "Checkout didn't open 🙏", "No abrió el checkout 🙏")); }
-            }).catch(function () { b.disabled = false; b.textContent = t0; toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
+            payInterstitial(function () {
+              b.disabled = true; b.textContent = L("Abrindo…", "Opening…", "Abriendo…");
+              sb.functions.invoke("sub_stripe", { body: { creator_key: ck } }).then(function (res) {
+                if (res && res.data && res.data.url) { window.location.href = res.data.url; }
+                else { b.disabled = false; b.textContent = t0; toast(L("Não abriu o checkout 🙏", "Checkout didn't open 🙏", "No abrió el checkout 🙏")); }
+              }).catch(function () { b.disabled = false; b.textContent = t0; toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
+            });
           }
         });
       };
