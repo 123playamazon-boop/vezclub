@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b76"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b77"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -4906,11 +4906,15 @@ fbq('track', 'PageView');
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
       try { if (sb) sb.rpc("track_ux", { p_event: "recharge_view", p_creator_key: cid }).then(function () {}, function () {}); } catch (e) {}
       var subHost = document.getElementById("buy-sub");
-      if (subHost) { subHost.innerHTML = subCardHtml(cid, false); wireSubBuy(subHost, function () {
-        var bp = document.getElementById("buy-panel"); if (bp) bp.remove();
-        note(L("Linha Privada ativa 💜 agora é sem limite — fala comigo 😏", "Private Line active 💜 no limits now — talk to me 😏", "Línea Privada activa 💜 sin límites ahora — háblame 😏"));
-        try { document.getElementById("chat-text").focus(); } catch (_) {}
-      }); }
+      if (subHost) {
+        subHost.innerHTML = subCardHtml(cid, false);
+        var _subDone = function () {
+          var bp = document.getElementById("buy-panel"); if (bp) bp.remove();
+          note(L("Linha Privada ativa 💜 agora é sem limite — fala comigo 😏", "Private Line active 💜 no limits now — talk to me 😏", "Línea Privada activa 💜 sin límites ahora — háblame 😏"));
+          try { document.getElementById("chat-text").focus(); } catch (_) {}
+        };
+        wireSubBuy(subHost, _subDone); wireSubPay(subHost, _subDone);
+      }
       var cta = document.getElementById("buy-coins-cta");
       if (cta) cta.onclick = function () { openCoinStore(); };
     }
@@ -5676,8 +5680,9 @@ fbq('track', 'PageView');
   }
 
   /* ================= LINHA PRIVADA: assinatura (passe 30 dias · chat ilimitado + álbum) ================= */
-  var SUB_COINS = 400;   // custo em coins (servidor manda: app_config SUB_PRICE_COINS)
+  var SUB_COINS = 200;   // custo em coins (servidor manda: app_config SUB_PRICE_COINS) · paridade R$39,90 / $19.99
   var _subCache = {};    // creator_key -> ativo?
+  function subPriceTxt() { return coinMarket() === "br" ? "R$ 39,90" : "$19.99"; }
   function subStack() {
     return [
       L("Conversa ILIMITADA com ela por 30 dias — sem contar mensagem", "UNLIMITED chat with her for 30 days — no counting", "Chat ILIMITADO con ella por 30 días — sin contar"),
@@ -5699,8 +5704,10 @@ fbq('track', 'PageView');
       '<div style="font-size:.8rem;opacity:.75;margin-bottom:.55rem">' + L("o jeito mais barato de ter ela — 30 dias inteiros", "the cheapest way to have her — a full 30 days", "la forma más barata de tenerla — 30 días completos") + '</div>' +
       '<div style="text-align:left;font-size:.85rem;line-height:1.5;margin-bottom:.7rem">' + items + '</div>' +
       '<div style="font-size:.78rem;opacity:.7;text-decoration:line-through">' + L("Avulso passaria de 1.500 coins/mês", "À la carte would be 1,500+ coins/mo", "Suelto pasaría de 1.500 coins/mes") + '</div>' +
-      '<button class="btn btn-primary btn-block" data-subbuy="' + escHtml(ck) + '" style="margin-top:.35rem">💜 ' + L("Entrar na Linha Privada", "Join the Private Line", "Entrar a la Línea Privada") + ' · ' + SUB_COINS + ' coins</button>' +
-      '<div style="font-size:.74rem;opacity:.72;margin-top:.45rem;text-align:center">' + L("Não curtiu no 1º dia? Devolvo teus coins. Sem drama.", "Not into it on day 1? I refund your coins. No drama.", "¿No te gustó el día 1? Te devuelvo tus coins. Sin dramas.") + '</div></div>';
+      '<button class="btn btn-primary btn-block" data-subpay="' + escHtml(ck) + '" style="margin-top:.35rem">💜 ' + L("Entrar agora", "Join now", "Entrar ahora") + ' · ' + subPriceTxt() + '</button>' +
+      '<div class="sub-pay-mount"></div>' +
+      '<button class="btn btn-ghost btn-sm btn-block" data-subbuy="' + escHtml(ck) + '" style="margin-top:.4rem;opacity:.8">' + L("ou usar ", "or use ", "o usar ") + SUB_COINS + ' coins</button>' +
+      '<div style="font-size:.74rem;opacity:.72;margin-top:.45rem;text-align:center">' + L("Não curtiu no 1º dia? Devolvo teu dinheiro. Sem drama.", "Not into it on day 1? I refund you. No drama.", "¿No te gustó el día 1? Te devuelvo tu dinero. Sin dramas.") + '</div></div>';
   }
   function wireSubBuy(scope, onOk) {
     scope.querySelectorAll("[data-subbuy]").forEach(function (b) {
@@ -5728,13 +5735,71 @@ fbq('track', 'PageView');
       };
     });
   }
+  // pagamento DIRETO da assinatura (sem passar por coins): BR -> Pix inline · resto -> Stripe
+  function wireSubPay(scope, onOk) {
+    scope.querySelectorAll("[data-subpay]").forEach(function (b) {
+      b.onclick = function () {
+        var ck = b.getAttribute("data-subpay"), t0 = b.textContent;
+        ensureSessionThen(function () {
+          if (!sb || !account) { return; }
+          try { if (window.clarity) window.clarity("event", "sub_pay_click"); } catch (e) {}
+          var mount = b.parentNode.querySelector(".sub-pay-mount");
+          if (coinMarket() === "br") {
+            b.disabled = true; b.textContent = L("Gerando Pix…", "Generating Pix…", "Generando Pix…");
+            if (mount) mount.innerHTML = '<div style="margin-top:.6rem;padding:.9rem;border:1px solid var(--line);border-radius:12px;text-align:center"><div class="muted-note">' + L("Gerando seu Pix…", "Generating your Pix…", "Generando tu Pix…") + '</div></div>';
+            sb.functions.invoke("sub_pix", { body: { creator_key: ck } }).then(function (res) {
+              var d = res && res.data;
+              b.disabled = false; b.textContent = t0;
+              if ((res && res.error) || !d || !d.pix_code) { if (mount) mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.5rem">' + L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏") + '</div>'; return; }
+              renderSubPix(mount, d.pix_code, d.identifier, d.amount, onOk);
+            }).catch(function () { b.disabled = false; b.textContent = t0; if (mount) mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.5rem">' + L("Falha de conexão 🙏", "Connection error 🙏", "Error de conexión 🙏") + '</div>'; });
+          } else {
+            b.disabled = true; b.textContent = L("Abrindo…", "Opening…", "Abriendo…");
+            sb.functions.invoke("sub_stripe", { body: { creator_key: ck } }).then(function (res) {
+              if (res && res.data && res.data.url) { window.location.href = res.data.url; }
+              else { b.disabled = false; b.textContent = t0; toast(L("Não abriu o checkout 🙏", "Checkout didn't open 🙏", "No abrió el checkout 🙏")); }
+            }).catch(function () { b.disabled = false; b.textContent = t0; toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
+          }
+        });
+      };
+    });
+  }
+  function renderSubPix(mount, code, identifier, amount, onOk) {
+    if (!mount) return;
+    var qr = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=" + encodeURIComponent(code);
+    mount.innerHTML = '<div style="margin-top:.7rem;padding:1rem;border:1px solid var(--line);border-radius:14px;text-align:center">' +
+      '<div style="font-weight:800;margin-bottom:.5rem">💜 ' + L("Linha Privada · 30 dias", "Private Line · 30 days", "Línea Privada · 30 días") + ' — R$ ' + (amount || 39.9).toFixed(2).replace(".", ",") + '</div>' +
+      '<div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.style.display=\'none\'"></div>' +
+      '<div style="font-size:.82rem;margin:.6rem 0 .35rem;opacity:.92">' + L("Abra o banco → Pix → Pagar com QR Code, ou copie:", "Open your bank → Pix → Pay with QR, or copy:", "Abre tu banco → Pix → Pagar con QR, o copia:") + '</div>' +
+      '<div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.55rem"><input readonly value="' + escHtml(code) + '" id="spix-code" style="flex:1;min-width:0;font-size:.7rem;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);color:inherit"><button id="spix-copy" class="btn btn-primary btn-sm" style="white-space:nowrap">' + L("Copiar", "Copy", "Copiar") + '</button></div>' +
+      '<div id="spix-status" style="font-size:.84rem;font-weight:700;color:var(--muted)">⏳ ' + L("Aguardando o pagamento… (confirma sozinho)", "Waiting for payment… (auto-confirms)", "Esperando el pago… (confirma solo)") + '</div></div>';
+    var cp = document.getElementById("spix-copy");
+    if (cp) cp.onclick = function () { try { var i = document.getElementById("spix-code"); i.select(); navigator.clipboard.writeText(code); } catch (e) {} cp.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); setTimeout(function () { cp.textContent = L("Copiar", "Copy", "Copiar"); }, 1500); };
+    var tries = 0, pp = setInterval(function () {
+      tries++;
+      if (!document.body.contains(mount) || tries > 150) { clearInterval(pp); return; }
+      sb.functions.invoke("sub_status", { body: { identifier: identifier } }).then(function (r) {
+        var d = r && r.data;
+        if (d && d.status === "completed") {
+          clearInterval(pp);
+          var st = document.getElementById("spix-status"); if (st) st.innerHTML = '✅ <span style="color:#16a34a">' + L("Assinatura ativa!", "Subscription active!", "¡Suscripción activa!") + '</span>';
+          try { if (window.fbq) fbq("track", "Subscribe", { value: amount || 39.9, currency: "BRL" }); } catch (e) {}
+          try { if (window.clarity) window.clarity("event", "subscribe"); } catch (e) {}
+          setTimeout(function () { if (typeof onOk === "function") onOk({ ok: true }); }, 900);
+        }
+      }, function () {});
+    }, 4000);
+  }
   function loadSubInto(host, ck, onChange) {
     if (!host || !sb) return;
     ensureSessionThen(function () {
       sb.rpc("is_subscribed", { p_creator: ck }).then(function (r) {
         var active = (r && r.data === true); _subCache[ck] = active;
         host.innerHTML = subCardHtml(ck, active);
-        if (!active) wireSubBuy(host, function () { loadSubInto(host, ck, onChange); if (typeof onChange === "function") onChange(true); });
+        if (!active) {
+          var done = function () { loadSubInto(host, ck, onChange); if (typeof onChange === "function") onChange(true); };
+          wireSubBuy(host, done); wireSubPay(host, done);
+        }
       }, function () { host.innerHTML = ""; });
     });
   }
@@ -5857,6 +5922,19 @@ fbq('track', 'PageView');
   function checkPaidReturn() {
     try {
       var q = new URLSearchParams(location.search);
+      if (q.get("sub_paid") === "1") {
+        var ssid = q.get("session_id") || "";
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        if (ssid && sb) {
+          ensureSessionThen(function () {
+            sb.functions.invoke("sub_stripe_confirm", { body: { session_id: ssid } }).then(function (r) {
+              var d = r && r.data;
+              if (d && d.status === "completed") { if (d.creator) _subCache[d.creator] = true; try { if (window.fbq) fbq("track", "Subscribe", { value: 19.99, currency: "USD" }); } catch (e) {} toast(L("Linha Privada ativa 💜", "Private Line active 💜", "¡Línea Privada activa 💜")); if (state.view === "store") render(); }
+            }).catch(function () {});
+          });
+        }
+        return;
+      }
       if (q.get("coins_paid") === "1") {
         var csid = q.get("session_id") || "";
         try { history.replaceState(null, "", location.pathname); } catch (e) {}
