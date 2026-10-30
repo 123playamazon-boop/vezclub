@@ -960,7 +960,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b95"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b96"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5274,10 +5274,10 @@ fbq('track', 'PageView');
     var pdOffered = false;
     function productTease() {
       if (pdOffered) return; pdOffered = true;
-      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:88%">' + escHtml(L("tenho umas coisas aqui que eu só mostro em particular... fotos, um conto meu 🙈 quer ver?", "i've got some things i only show in private... photos, a story of mine 🙈 wanna see?", "tengo cosas que solo muestro en privado... fotos, un cuento mío 🙈 ¿quieres ver?")) + '</div>');
-      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🛍 ' + L("ver o que é só nosso", "see what's just ours", "ver lo que es solo nuestro") + '</button></div>');
+      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L("posso te contar um segredo? 😏 a maioria dos caras trava na hora de puxar papo no WhatsApp e perde a menina ali mesmo. eu tenho 300 mensagens prontas que fazem qualquer mulher querer te responder — isso muda teu jogo de verdade. quer que eu te passo?", "can I tell you a secret? 😏 most guys freeze when it's time to text on WhatsApp and lose the girl right there. I've got 300 ready-to-send messages that make any girl want to reply — this really changes your game. want me to hand them over?", "¿te cuento un secreto? 😏 la mayoría se traba al escribir por WhatsApp y pierde a la chica ahí mismo. tengo 300 mensajes listos que hacen que cualquier mujer quiera responderte — esto cambia tu juego de verdad. ¿quieres que te los pase?")) + '</div>');
+      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🔥 ' + L("Quero as 300 mensagens", "I want the 300 messages", "Quiero los 300 mensajes") + '</button></div>');
       body.scrollTop = body.scrollHeight;
-      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { openProductStore(cid); };
+      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { openWhatsAppOffer(); };
     }
     var sending = false;
     function doSend() {
@@ -5307,7 +5307,7 @@ fbq('track', 'PageView');
         }
         her(d.reply);
         if (typeof d.free_left === "number" && d.free_left >= 0 && d.free_left <= 3) { note(L("restam " + d.free_left + " mensagens grátis 💜", d.free_left + " free messages left 💜", "quedan " + d.free_left + " mensajes gratis 💜")); }
-        if (body.querySelectorAll(".bub.me").length >= 3) setTimeout(productTease, 900); // ativa o desejo de desbloquear
+        if (body.querySelectorAll(".bub.me").length >= 2) setTimeout(productTease, 900); // ativa o desejo de desbloquear já na 2ª msg (mesmo no grátis)
         if (d.gift && d.gift.url) { setTimeout(function () {
           function showGiftImg() { body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:230px;position:relative"><img class="chat-img" src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)"><span style="position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:27px;height:27px;display:flex;align-items:center;justify-content:center;font-size:.92rem;pointer-events:none">🔍</span></div>'); body.scrollTop = body.scrollHeight; }
           if (d.gift.caption) { if (lang !== "pt") { translateOne(d.gift.caption, lang, function (t) { her(t || d.gift.caption); showGiftImg(); }); } else { her(d.gift.caption); showGiftImg(); } } else { showGiftImg(); }
@@ -6341,12 +6341,30 @@ fbq('track', 'PageView');
       renderProductsInto(ov.querySelector("#ps-body"), creatorKey, '<p class="muted-note">' + L("Ela ainda não postou nada aqui 💜", "Nothing here yet 💜", "Todavía no hay nada 💜") + '</p>');
     });
   }
+  // Oferta rápida no chat: o ebook das 300 mensagens de WhatsApp (abre por cima do chat, sem parar a conversa)
+  var WA_EBOOK_ID = "a2622826-ce27-4dbc-9672-c1c38503acfd";
+  function openWhatsAppOffer() {
+    if (!sb) return;
+    ensureSessionThen(function () {
+      var ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10001;display:flex;align-items:flex-end;justify-content:center";
+      ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:520px;width:100%;max-height:92vh;border-radius:18px 18px 0 0;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-bottom:1px solid var(--line,#eee);position:sticky;top:0;background:var(--panel,#fff);z-index:1"><b>💬 ' + L("300 mensagens de WhatsApp", "300 WhatsApp messages", "300 mensajes de WhatsApp") + '</b><button id="wa-x" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit">✕</button></div><div id="wa-body" style="padding:1rem 1.1rem"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+      document.body.appendChild(ov);
+      try { if (window.clarity) window.clarity("event", "wa_offer_open"); } catch (e) {}
+      ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
+      ov.querySelector("#wa-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
+      renderProductsInto(ov.querySelector("#wa-body"), "__id:" + WA_EBOOK_ID + "__", "");
+    });
+  }
   // renderiza os produtos (cards + desbloqueio) em qualquer container — usado no modal E no perfil
   function whoName(ck) { var c = CREATORS.find(function (x) { return x.id === ck; }); return c ? c.name : (ck || ""); }
   function renderProductsInto(host, creatorKey, emptyHtml) {
     if (!host || !sb) return;
+    var byId = /^__id:([0-9a-f-]+)__$/.exec(creatorKey || "");
     var sec = /^__kind:([a-z_]+)__$/.exec(creatorKey || "");
-    var q = sec
+    var q = byId
+      ? sb.from("content_public").select("*").eq("id", byId[1])
+      : sec
       ? sb.from("content_public").select("*").eq("kind", sec[1]).order("featured", { ascending: false }).order("created_at", { ascending: false })
       : sb.from("content_public").select("*").eq("creator_key", creatorKey).order("sort");
     Promise.all([
