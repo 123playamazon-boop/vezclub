@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b70"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b71"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1556,7 +1556,7 @@ fbq('track', 'PageView');
   };
   function ccFoot(c) {
     if (!c.hasChat) {
-      return '<div class="cc-foot" style="margin-top:0.95rem"><button class="btn btn-primary btn-block btn-sm" data-open="' + c.id + '">' + L("Ver perfil", "View profile", "Ver perfil") + '</button></div>';
+      return '<div class="cc-foot" style="margin-top:0.95rem;display:flex;gap:.4rem"><button class="btn btn-primary btn-sm" data-open="' + c.id + '" style="flex:1">' + L("Ver perfil", "View profile", "Ver perfil") + '</button><button class="btn btn-ghost btn-sm" data-shop="' + c.id + '" style="flex:0 0 auto">🛍 ' + L("Loja", "Shop", "Tienda") + '</button></div>';
     }
     var avBg = c.avatarUrl ? ("center/cover no-repeat url('" + avThumb(c, 90) + "')") : grad(c.color);
     var teaser = c.online
@@ -1575,7 +1575,7 @@ fbq('track', 'PageView');
         '</div>' +
       '</div>' +
       '<div class="cc-invite-sub" style="margin-top:.45rem">' + sub + '</div>' +
-      '<div class="cc-foot" style="margin-top:0.5rem"><button class="btn btn-ghost btn-block btn-sm" data-open="' + c.id + '">' + L("Ver perfil", "View profile", "Ver perfil") + '</button></div>';
+      '<div class="cc-foot" style="margin-top:0.5rem;display:flex;gap:.4rem"><button class="btn btn-ghost btn-sm" data-open="' + c.id + '" style="flex:1">' + L("Ver perfil", "View profile", "Ver perfil") + '</button><button class="btn btn-ghost btn-sm" data-shop="' + c.id + '" style="flex:0 0 auto">🛍 ' + L("Loja", "Shop", "Tienda") + '</button></div>';
   }
   function tickerLine() {
     var arr = TICKER_ACTS_I18N[lang] || TICKER_ACTS_I18N.pt;
@@ -4596,6 +4596,7 @@ fbq('track', 'PageView');
       '<div><div class="ch-name">' + escHtml(first) + '</div><div class="ch-stat" id="ch-stat">' + L("online agora", "online now", "en línea ahora") + '</div></div>' +
       '<span style="font-size:9px;color:var(--faint);align-self:flex-start;margin-left:auto">' + BUILD + '</span>' +
       '<span id="ch-time" style="margin-left:6px;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
+      '<button class="icon-btn" id="ch-shop" title="' + L("Loja dela", "Her shop", "Su tienda") + '" style="width:auto;padding:0 .35rem;font-size:1.05rem;margin-left:4px">🛍</button>' +
       '<button class="ch-x" data-close>' + XICON + '</button></div>' +
       '<div class="chat-body" id="chat-body"></div>' +
       '<div class="chat-input"><input id="chat-text" placeholder="' + escHtml(L("Escreve pra ", "Message ", "Escribe a ") + first) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
@@ -4603,6 +4604,7 @@ fbq('track', 'PageView');
 
     var body = document.getElementById("chat-body");
     var timeEl = document.getElementById("ch-time");
+    (function () { var shopB = document.getElementById("ch-shop"); if (shopB) shopB.onclick = function () { openProductStore(cid); }; })();
     fbt("ViewContent", { content_name: cid, content_category: "chat" }); // abriu uma conversa
     clar("event", "chat_open"); clar("set", "funnel_stage", "chat_open"); clar("set", "modelo", cid);
     function setBal(n) { bal = Math.max(0, n | 0); timeEl.textContent = "🪙 " + bal; } // agora mostra COINS, não tempo
@@ -5018,7 +5020,9 @@ fbq('track', 'PageView');
     var story = e.target.closest("[data-story]");
     var notif = e.target.closest("[data-notif]");
     var coll = e.target.closest("[data-coll]");
+    var shop = e.target.closest("[data-shop]");
 
+    if (shop) { openProductStore(shop.getAttribute("data-shop")); return; }
     if (notif) {
       enableNotif();
     } else if (coll) {
@@ -5499,6 +5503,81 @@ fbq('track', 'PageView');
         }
       }, function () {});
     }, 4000);
+  }
+
+  /* ================= PRODUTOS: vitrine "Loja dela" + desbloqueio por coins ================= */
+  function pdTitle(it) { return (lang === "en" ? (it.title_en || it.title) : (it.title || "")) || ""; }
+  function pdTeaser(it) { return (lang === "en" ? (it.teaser_en || it.teaser) : (it.teaser || "")) || ""; }
+  function pdIcon(k) { return k === "story" ? "📖" : k === "game" ? "🎲" : k === "video" ? "🎬" : "📸"; }
+  function revealContent(it) {
+    var host = document.getElementById("pc-media-" + it.id); if (!host) return;
+    host.innerHTML = '<div class="muted-note">' + L("Abrindo…", "Opening…", "Abriendo…") + '</div>';
+    sb.functions.invoke("content_url", { body: { content_id: it.id } }).then(function (r) {
+      var d = r && r.data;
+      if (!d || d.error) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
+      if (d.kind === "story") { host.innerHTML = '<div style="background:var(--surface-2,rgba(127,127,127,.08));border-radius:10px;padding:.75rem;font-size:.92rem;line-height:1.55;white-space:pre-wrap">' + escHtml(d.text || "") + '</div>'; return; }
+      if (!d.url) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
+      host.innerHTML = d.kind === "video"
+        ? '<video src="' + d.url + '" controls playsinline style="width:100%;border-radius:12px;display:block;background:#000"></video>'
+        : '<img src="' + d.url + '" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">';
+    }).catch(function () { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; });
+  }
+  function pdCard(it, owned) {
+    var locked = !owned && !it.coming_soon;
+    var media = owned
+      ? '<div id="pc-media-' + it.id + '" style="margin-top:.55rem"></div>'
+      : '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem">' + (it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(16px);transform:scale(1.1)">' : '<div style="height:150px;background:linear-gradient(135deg,#6d28d9,#db2777)"></div>') + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem">' + (it.coming_soon ? "⏳" : "🔒") + '</div></div>';
+    var btn = it.coming_soon
+      ? '<button class="btn btn-ghost btn-block" disabled style="margin-top:.55rem">' + L("Em breve", "Coming soon", "Pronto") + '</button>'
+      : owned
+        ? '<div style="margin-top:.5rem;text-align:center;color:#16a34a;font-weight:700">' + L("Desbloqueado ✓", "Unlocked ✓", "Desbloqueado ✓") + '</div>'
+        : '<button class="btn btn-primary btn-block" data-unlock="' + it.id + '" style="margin-top:.55rem">🪙 ' + L("Desbloquear por ", "Unlock for ", "Desbloquear por ") + it.unlock_cost_coins + '</button>';
+    return '<div style="border:1px solid var(--line,#eee);border-radius:14px;padding:.85rem;margin-bottom:.85rem"><div style="font-weight:700">' + pdIcon(it.kind) + ' ' + escHtml(pdTitle(it)) + '</div><div style="font-size:.84rem;color:var(--mut,#888);margin-top:.15rem">' + escHtml(pdTeaser(it)) + '</div>' + media + btn + '</div>';
+  }
+  function openProductStore(creatorKey) {
+    if (!sb) return;
+    ensureSessionThen(function () {
+      var ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:flex-end;justify-content:center";
+      ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:520px;width:100%;max-height:92vh;border-radius:18px 18px 0 0;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-bottom:1px solid var(--line,#eee);position:sticky;top:0;background:var(--panel,#fff);z-index:1"><b>🛍 ' + L("Loja dela", "Her shop", "Su tienda") + '</b><button id="ps-x" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit">✕</button></div><div id="ps-body" style="padding:1rem 1.1rem"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+      document.body.appendChild(ov);
+      ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
+      ov.querySelector("#ps-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
+      var psb = ov.querySelector("#ps-body");
+      function renderStore() {
+        Promise.all([
+          sb.from("content_items").select("*").eq("creator_key", creatorKey).eq("active", true).order("sort"),
+          sb.from("content_unlocks").select("content_id")
+        ]).then(function (res) {
+          var items = (res[0].data || []);
+          var owned = {}; (res[1].data || []).forEach(function (u) { owned[u.content_id] = true; });
+          if (!items.length) { psb.innerHTML = '<p class="muted-note">' + L("Ela ainda não postou nada aqui 💜", "Nothing here yet 💜", "Todavía no hay nada 💜") + '</p>'; return; }
+          psb.innerHTML = '<div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Desbloqueia com teus coins — é só teu, pra sempre.", "Unlock with your coins — yours forever.", "Desbloquea con tus coins — tuyo para siempre.") + '</div>' + items.map(function (it) { return pdCard(it, owned[it.id]); }).join("");
+          items.forEach(function (it) {
+            if (owned[it.id]) { revealContent(it); return; }
+            var b = psb.querySelector('[data-unlock="' + it.id + '"]');
+            if (b) b.onclick = function () {
+              b.disabled = true; b.textContent = L("Desbloqueando…", "Unlocking…", "Desbloqueando…");
+              sb.rpc("spend_coins", { p_content: it.id, p_type: "unlock", p_ref: it.id }).then(function (r) {
+                if (r.error) {
+                  var m = (r.error.message || "");
+                  b.disabled = false; b.textContent = "🪙 " + L("Desbloquear por ", "Unlock for ", "Desbloquear por ") + it.unlock_cost_coins;
+                  if (/saldo insuficiente/.test(m)) { toast(L("Coins insuficientes — pega mais 💜", "Not enough coins — grab more 💜", "Coins insuficientes 💜")); openCoinStore(); }
+                  else if (/ja desbloqueado/.test(m)) { renderStore(); }
+                  else { toast(L("Não deu pra desbloquear", "Couldn't unlock", "No se pudo")); }
+                  return;
+                }
+                if (typeof r.data === "number") setCoinBal(r.data);
+                try { if (window.fbq) fbq("track", "Purchase", { value: it.unlock_cost_coins, currency: "coins" }); } catch (e) {}
+                try { if (window.clarity) window.clarity("event", "content_unlock"); } catch (e) {}
+                renderStore();
+              });
+            };
+          });
+        });
+      }
+      renderStore();
+    });
   }
 
   function renderAccountBadge() {
