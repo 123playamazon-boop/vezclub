@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b78"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b79"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2676,8 +2676,13 @@ fbq('track', 'PageView');
     acCall({ action: "list", creator_key: ck }).then(function (r) {
       var items = (r && r.data && r.data.items) || [];
       acItemsById = {}; items.forEach(function (it) { acItemsById[it.id] = it; });
+      var nAlb = items.filter(function (i) { return i.kind === "photo_set"; }).length;
+      var nCon = items.filter(function (i) { return i.kind === "story"; }).length;
       box.innerHTML = items.map(acItemHtml).join("") +
-        '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-ghost btn-sm" data-ac-new="photo_set">+ Álbum</button><button class="btn btn-ghost btn-sm" data-ac-new="reveal">+ Vestida/sem roupa</button><button class="btn btn-ghost btn-sm" data-ac-new="story">+ Conto</button><button class="btn btn-ghost btn-sm" data-ac-new="game">+ Jogo</button></div>';
+        '<div style="border:2px dashed var(--accent,#6d28d9);border-radius:14px;padding:1rem;margin-top:1rem;background:rgba(109,40,217,.05)">' +
+        '<div style="font-weight:800;margin-bottom:.2rem">➕ Adicionar mais conteúdo pra ' + escHtml(whoName(ck) || "ela") + '</div>' +
+        '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">Pode ter vários álbuns e vários contos. Quem comprou um volta pra comprar o próximo — então adicione sempre. (Hoje: ' + nAlb + ' álbum(ns), ' + nCon + ' conto(s).)</div>' +
+        '<div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn btn-primary btn-sm" data-ac-new="photo_set">📸 + Álbum de fotos</button><button class="btn btn-primary btn-sm" data-ac-new="story">📖 + Conto erótico</button><button class="btn btn-ghost btn-sm" data-ac-new="reveal">👗 + Vestida/sem roupa</button><button class="btn btn-ghost btn-sm" data-ac-new="game">🎲 + Jogo</button></div></div>';
       acWire(box, ck);
     }, function () { box.innerHTML = '<p class="muted-note">Erro ao carregar.</p>'; });
   }
@@ -2772,10 +2777,13 @@ fbq('track', 'PageView');
     box.querySelectorAll("[data-ac-new]").forEach(function (b) {
       b.onclick = function () {
         var kind = b.getAttribute("data-ac-new");
-        var title = kind === "story" ? "Conto só nosso" : kind === "photo_set" ? "Álbum completo" : kind === "reveal" ? "Me vê sem roupa 👀" : "Jogo de casal";
+        var nSame = Object.keys(acItemsById).filter(function (id) { return acItemsById[id].kind === kind; }).length;
+        var suffix = nSame > 0 ? " " + (nSame + 1) : "";
+        var title = (kind === "story" ? "Conto só nosso" : kind === "photo_set" ? "Álbum completo" : kind === "reveal" ? "Me vê sem roupa 👀" : "Jogo de casal") + suffix;
         var teaser = kind === "reveal" ? "Essa é a versão de casa... quer me ver sem roupa? 🙈" : "";
         var price = kind === "story" ? 30 : kind === "game" ? 80 : kind === "reveal" ? 15 : 60;
-        acCall({ action: "save", item: { creator_key: ck, kind: kind, title: title, teaser: teaser, unlock_cost_coins: price, active: true, coming_soon: kind === "game" } }).then(function () { acLoad(ck); });
+        b.disabled = true;
+        acCall({ action: "save", item: { creator_key: ck, kind: kind, title: title, teaser: teaser, unlock_cost_coins: price, active: true, coming_soon: kind === "game", sort: nSame } }).then(function () { acLoad(ck); });
       };
     });
   }
