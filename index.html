@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b73"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b74"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2653,7 +2653,7 @@ fbq('track', 'PageView');
       var items = (r && r.data && r.data.items) || [];
       acItemsById = {}; items.forEach(function (it) { acItemsById[it.id] = it; });
       box.innerHTML = items.map(acItemHtml).join("") +
-        '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-ghost btn-sm" data-ac-new="photo_set">+ Álbum</button><button class="btn btn-ghost btn-sm" data-ac-new="story">+ Conto</button><button class="btn btn-ghost btn-sm" data-ac-new="game">+ Jogo</button></div>';
+        '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem"><button class="btn btn-ghost btn-sm" data-ac-new="photo_set">+ Álbum</button><button class="btn btn-ghost btn-sm" data-ac-new="reveal">+ Vestida/sem roupa</button><button class="btn btn-ghost btn-sm" data-ac-new="story">+ Conto</button><button class="btn btn-ghost btn-sm" data-ac-new="game">+ Jogo</button></div>';
       acWire(box, ck);
     }, function () { box.innerHTML = '<p class="muted-note">Erro ao carregar.</p>'; });
   }
@@ -2661,14 +2661,17 @@ fbq('track', 'PageView');
     return '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">' + label + '</label><input data-f="' + name + '" type="' + (type || "text") + '" value="' + escHtml(String(val == null ? "" : val)) + '" style="width:100%;padding:.45rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">';
   }
   function acItemHtml(it) {
-    var isStory = it.kind === "story", isPhoto = it.kind === "photo_set";
-    var kindLbl = isStory ? "📖 Conto" : isPhoto ? "📸 Álbum de fotos" : it.kind === "game" ? "🎲 Jogo" : it.kind;
+    var isStory = it.kind === "story", isReveal = it.kind === "reveal", isPhoto = it.kind === "photo_set";
+    var isGallery = isPhoto || isReveal;
+    var kindLbl = isStory ? "📖 Conto" : isReveal ? "👗 Vestida & sem roupa" : isPhoto ? "📸 Álbum de fotos" : it.kind === "game" ? "🎲 Jogo" : it.kind;
+    var galLbl = isReveal ? "Fotos SEM ROUPA (bloqueadas, revela ao desbloquear)" : "Fotos do álbum";
     return '<div class="ac-item" data-ac-id="' + it.id + '" data-kind="' + it.kind + '" style="border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:.9rem">' +
       '<div style="font-weight:700;margin-bottom:.3rem">' + kindLbl + '</div>' +
       acField("Título (PT)", "title", it.title) +
       acField("Chamada / teaser (PT)", "teaser", it.teaser) +
       (isStory ? '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">Texto do conto (PT — traduz sozinho pra EN/ES ao salvar)</label><textarea data-f="story_text" rows="5" style="width:100%;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">' + escHtml(it.story_text || "") + '</textarea>' : '') +
-      (isPhoto ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">Fotos do álbum</div><div class="ac-photos" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">+ Adicionar foto<input type="file" accept="image/*" data-ac-addphoto hidden></label>' : '') +
+      (isReveal ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">Foto VESTIDA (aparece pra todos)</div><div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem"><div class="ac-preview" style="width:62px;height:62px;border-radius:8px;overflow:hidden;background:' + (it.cover_url ? 'url(' + escHtml(it.cover_url) + ') center/cover' : 'var(--surface-2,rgba(127,127,127,.12))') + '"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">' + (it.cover_url ? "Trocar vestida" : "+ Foto vestida") + '<input type="file" accept="image/*" data-ac-addpreview hidden></label></div>' : '') +
+      (isGallery ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">' + galLbl + '</div><div class="ac-photos" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">+ Adicionar foto<input type="file" accept="image/*" data-ac-addphoto hidden></label>' : '') +
       '<div style="display:flex;gap:.7rem;align-items:center;margin-top:.6rem;flex-wrap:wrap">' +
       '<label style="font-size:.82rem">Preço <input data-f="unlock_cost_coins" type="number" value="' + (it.unlock_cost_coins || 0) + '" style="width:72px;padding:.4rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit"> coins</label>' +
       '<label style="font-size:.82rem"><input data-f="active" type="checkbox" ' + (it.active !== false ? "checked" : "") + '> ativo</label>' +
@@ -2714,6 +2717,23 @@ fbq('track', 'PageView');
         rd.readAsDataURL(f);
       });
     });
+    box.querySelectorAll("[data-ac-addpreview]").forEach(function (inp) {
+      inp.addEventListener("change", function () {
+        var f = inp.files && inp.files[0]; if (!f) return;
+        if (f.size > 12 * 1024 * 1024) { toast("Foto muito grande (máx 12MB)"); inp.value = ""; return; }
+        var el = inp.closest(".ac-item"); var id = el.getAttribute("data-ac-id");
+        var rd = new FileReader();
+        rd.onload = function () {
+          var b64 = String(rd.result || "").split(",")[1] || ""; toast("Subindo foto vestida…");
+          acCall({ action: "add_preview", id: id, b64: b64, content_type: f.type }).then(function (r) {
+            inp.value = "";
+            if (r && r.data && r.data.ok) { toast("Foto vestida salva ✓"); if (acItemsById[id]) acItemsById[id].cover_url = r.data.cover_url; var pv = el.querySelector(".ac-preview"); if (pv) pv.style.background = 'url(' + r.data.cover_url + ') center/cover'; }
+            else toast("não subiu a foto");
+          });
+        };
+        rd.readAsDataURL(f);
+      });
+    });
     box.querySelectorAll("[data-ac-save]").forEach(function (b) {
       b.onclick = function () {
         var el = b.closest(".ac-item"); var item = { id: el.getAttribute("data-ac-id"), creator_key: ck, kind: el.getAttribute("data-kind") };
@@ -2728,7 +2748,10 @@ fbq('track', 'PageView');
     box.querySelectorAll("[data-ac-new]").forEach(function (b) {
       b.onclick = function () {
         var kind = b.getAttribute("data-ac-new");
-        acCall({ action: "save", item: { creator_key: ck, kind: kind, title: kind === "story" ? "Conto só nosso" : kind === "photo_set" ? "Álbum completo" : "Jogo de casal", teaser: "", unlock_cost_coins: kind === "story" ? 30 : kind === "game" ? 80 : 60, active: true, coming_soon: kind === "game" } }).then(function () { acLoad(ck); });
+        var title = kind === "story" ? "Conto só nosso" : kind === "photo_set" ? "Álbum completo" : kind === "reveal" ? "Me vê sem roupa 👀" : "Jogo de casal";
+        var teaser = kind === "reveal" ? "Essa é a versão de casa... quer me ver sem roupa? 🙈" : "";
+        var price = kind === "story" ? 30 : kind === "game" ? 80 : kind === "reveal" ? 15 : 60;
+        acCall({ action: "save", item: { creator_key: ck, kind: kind, title: title, teaser: teaser, unlock_cost_coins: price, active: true, coming_soon: kind === "game" } }).then(function () { acLoad(ck); });
       };
     });
   }
@@ -5623,7 +5646,7 @@ fbq('track', 'PageView');
   /* ================= PRODUTOS: vitrine "Loja dela" + desbloqueio por coins ================= */
   function pdTitle(it) { return (lang === "en" ? (it.title_en || it.title) : (it.title || "")) || ""; }
   function pdTeaser(it) { return (lang === "en" ? (it.teaser_en || it.teaser) : (it.teaser || "")) || ""; }
-  function pdIcon(k) { return k === "story" ? "📖" : k === "game" ? "🎲" : k === "video" ? "🎬" : "📸"; }
+  function pdIcon(k) { return k === "story" ? "📖" : k === "game" ? "🎲" : k === "video" ? "🎬" : k === "reveal" ? "👗" : "📸"; }
   function revealContent(it) {
     var host = document.getElementById("pc-media-" + it.id); if (!host) return;
     host.innerHTML = '<div class="muted-note">' + L("Abrindo…", "Opening…", "Abriendo…") + '</div>';
@@ -5638,10 +5661,21 @@ fbq('track', 'PageView');
     }).catch(function () { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; });
   }
   function pdCard(it, owned) {
-    var locked = !owned && !it.coming_soon;
-    var media = owned
-      ? '<div id="pc-media-' + it.id + '" style="margin-top:.55rem"></div>'
-      : '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem">' + (it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(16px);transform:scale(1.1)">' : '<div style="height:150px;background:linear-gradient(135deg,#6d28d9,#db2777)"></div>') + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem">' + (it.coming_soon ? "⏳" : "🔒") + '</div></div>';
+    var isReveal = it.kind === "reveal";
+    var media;
+    if (owned) {
+      media = '<div id="pc-media-' + it.id + '" style="margin-top:.55rem"></div>';
+    } else if (isReveal) {
+      // vestida (nítida) | sem roupa (borrada + cadeado)
+      var dressed = it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block">' : '<div style="padding-top:125%;background:linear-gradient(135deg,#a78bfa,#f0abfc)"></div>';
+      var blurred = it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(20px) brightness(.9);transform:scale(1.2)">' : '<div style="padding-top:125%;background:linear-gradient(135deg,#6d28d9,#db2777)"></div>';
+      media = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:.55rem">' +
+        '<div style="position:relative;border-radius:10px;overflow:hidden">' + dressed + '<span style="position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,.55);color:#fff;font-size:.6rem;padding:1px 6px;border-radius:6px">' + L("vestida", "dressed", "vestida") + '</span></div>' +
+        '<div style="position:relative;border-radius:10px;overflow:hidden">' + blurred + '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:1.5rem">🔒</span><span style="color:#fff;font-size:.6rem;text-shadow:0 1px 2px #000">' + L("sem roupa", "undressed", "sin ropa") + '</span></div></div>' +
+        '</div>';
+    } else {
+      media = '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem">' + (it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(16px);transform:scale(1.1)">' : '<div style="height:150px;background:linear-gradient(135deg,#6d28d9,#db2777)"></div>') + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem">' + (it.coming_soon ? "⏳" : "🔒") + '</div></div>';
+    }
     var btn = it.coming_soon
       ? '<button class="btn btn-ghost btn-block" disabled style="margin-top:.55rem">' + L("Em breve", "Coming soon", "Pronto") + '</button>'
       : owned
