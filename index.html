@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b80"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b81"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2155,9 +2155,14 @@ fbq('track', 'PageView');
     // about
     html += '<div class="pf-section"><div class="pf-h">Sobre mim</div><p class="pf-about">' + c.story + '</p></div>';
 
-    // interests + universes
-    html += '<div class="pf-section"><div class="pf-h">O que eu curto</div><div class="tag-row">' + c.interests.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join("") + '</div>';
-    html += '<div class="pf-h" style="margin-top:1.3rem">Meus universos</div><div class="tag-row">' + c.universes.map(function (t) { return '<span class="tag univ">' + t + '</span>'; }).join("") + '</div></div>';
+    // interests + universes — só renderiza o que tiver conteúdo (seção vazia quebra a conversão)
+    var hasInt = c.interests && c.interests.length, hasUni = c.universes && c.universes.length;
+    if (hasInt || hasUni) {
+      html += '<div class="pf-section">';
+      if (hasInt) html += '<div class="pf-h">O que eu curto</div><div class="tag-row">' + c.interests.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join("") + '</div>';
+      if (hasUni) html += '<div class="pf-h"' + (hasInt ? ' style="margin-top:1.3rem"' : '') + '>Meus universos</div><div class="tag-row">' + c.universes.map(function (t) { return '<span class="tag univ">' + t + '</span>'; }).join("") + '</div>';
+      html += '</div>';
+    }
 
     // real content (free previews first, then paid) — ABOVE the paywall
     var _rcSub = chatOnly ? L("prévia dela", "a peek at her", "un vistazo a ella") : L("prévias grátis + desbloqueie", "free previews + unlock", "prévias gratis + desbloquea");
@@ -5881,15 +5886,25 @@ fbq('track', 'PageView');
     var unlockLabel = (it.kind === "photo_set" && nph)
       ? L("Desbloquear as " + nph + " fotos por ", "Unlock all " + nph + " photos for ", "Desbloquear las " + nph + " fotos por ")
       : L("Desbloquear por ", "Unlock for ", "Desbloquear por ");
+    // escassez HONESTA: edição limitada (o servidor trava em edition_sold>=edition_total)
+    var edTotal = it.edition_total || 0, edRem = edTotal ? Math.max(0, edTotal - (it.edition_sold || 0)) : 0;
+    var soldOut = edTotal > 0 && edRem <= 0;
+    var edition = (edTotal > 0 && !owned && !it.coming_soon)
+      ? (edRem > 0
+        ? '<div style="font-size:.76rem;font-weight:800;color:#b45309;margin-top:.5rem;text-align:center">⚡ ' + L("Edição limitada · sobram " + edRem + " de " + edTotal, "Limited edition · " + edRem + " of " + edTotal + " left", "Edición limitada · quedan " + edRem + " de " + edTotal) + '</div>'
+        : '<div style="font-size:.76rem;font-weight:800;color:#dc2626;margin-top:.5rem;text-align:center">' + L("Esgotado", "Sold out", "Agotado") + '</div>')
+      : '';
     var btn = it.coming_soon
       ? '<button class="btn btn-ghost btn-block" disabled style="margin-top:.55rem">' + L("Em breve", "Coming soon", "Pronto") + '</button>'
       : owned
         ? '<div style="margin-top:.5rem;text-align:center;color:#16a34a;font-weight:700">' + L("Desbloqueado ✓", "Unlocked ✓", "Desbloqueado ✓") + '</div>'
-        : '<button class="btn btn-primary btn-block" data-unlock="' + it.id + '" style="margin-top:.55rem">🪙 ' + unlockLabel + it.unlock_cost_coins + '</button>';
+        : soldOut
+          ? '<button class="btn btn-ghost btn-block" disabled style="margin-top:.55rem">' + L("Esgotado", "Sold out", "Agotado") + '</button>'
+          : '<button class="btn btn-primary btn-block" data-unlock="' + it.id + '" style="margin-top:.55rem">🪙 ' + unlockLabel + it.unlock_cost_coins + '</button>';
     var star = it.featured ? ' <span style="background:linear-gradient(135deg,#f59e0b,#db2777);color:#fff;padding:.05rem .4rem;border-radius:999px;font-size:.64rem;margin-left:.2rem">⭐ ' + L("Destaque", "Featured", "Destacado") + '</span>' : '';
     var who = (it._who || it.featured) ? '<div style="font-size:.72rem;color:var(--accent,#6d28d9);font-weight:800;margin-bottom:.1rem">' + escHtml(it._who || "") + star + '</div>' : '';
     var fborder = it.featured ? 'border:1.5px solid #f59e0b;box-shadow:0 6px 18px -10px rgba(245,158,11,.5)' : 'border:1px solid var(--line,#eee)';
-    return '<div style="' + fborder + ';border-radius:14px;padding:.85rem;margin-bottom:.85rem">' + who + '<div style="font-weight:700">' + pdIcon(it.kind) + ' ' + escHtml(pdTitle(it)) + '</div><div style="font-size:.84rem;color:var(--mut,#888);margin-top:.15rem">' + escHtml(pdTeaser(it)) + '</div>' + media + btn + '</div>';
+    return '<div style="' + fborder + ';border-radius:14px;padding:.85rem;margin-bottom:.85rem">' + who + '<div style="font-weight:700">' + pdIcon(it.kind) + ' ' + escHtml(pdTitle(it)) + '</div><div style="font-size:.84rem;color:var(--mut,#888);margin-top:.15rem">' + escHtml(pdTeaser(it)) + '</div>' + media + edition + btn + '</div>';
   }
   function openProductStore(creatorKey) {
     if (!sb) return;
