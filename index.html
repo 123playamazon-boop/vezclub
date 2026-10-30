@@ -59,6 +59,7 @@ fbq('track', 'PageView');
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://mfxyavlpbofcdiylnnjm.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="https://api.qrserver.com">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" as="script" crossorigin>
 <!-- fonte sem bloquear o render (display=swap ja evita texto invisivel) -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap"></noscript>
@@ -933,6 +934,7 @@ fbq('track', 'PageView');
 <style>@keyframes vzspin{to{transform:rotate(360deg)}}</style>
 <main id="app" class="wrap"><div style="min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif">
   <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(140deg,#7c3aed,#db2777);display:grid;place-items:center;color:#fff;font-weight:800;font-size:24px">V</div>
+  <div style="font-weight:800;font-size:22px;letter-spacing:-.01em;background:linear-gradient(135deg,#7c3aed,#db2777);-webkit-background-clip:text;background-clip:text;color:transparent">Vezclub</div>
   <div style="width:30px;height:30px;border:3px solid rgba(124,58,237,.22);border-top-color:#7c3aed;border-radius:50%;animation:vzspin .8s linear infinite"></div>
 </div></main>
 
@@ -960,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b96"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b97"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1950,11 +1952,7 @@ fbq('track', 'PageView');
   }
 
   function renderFeed() {
-    if (!feedLoaded) {
-      app.innerHTML = skeletonHtml();
-      setTimeout(function () { feedLoaded = true; renderFeed(); }, 520);
-      return;
-    }
+    feedLoaded = true; // sem delay artificial: o feed é estático, pinta imediatamente (melhora o LCP no mobile)
     var CATS = [{ k: "alta", t: "Em alta" }, { k: "online", t: "Online agora" }, { k: "fitness", t: "Fitness" }, { k: "fashion", t: "Fashion" }, { k: "lifestyle", t: "Lifestyle" }];
     var isca = PHOTO_LADDER[0].usd;
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
@@ -6116,14 +6114,25 @@ fbq('track', 'PageView');
   }
   function renderCoinPix(mount, code, identifier, priceCents, coins) {
     var qr = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=" + encodeURIComponent(code);
-    mount.innerHTML = '<div style="margin-top:.7rem;padding:1rem;border:1px solid var(--line);border-radius:14px;text-align:center">' +
-      '<div style="font-weight:800;margin-bottom:.5rem">🪙 ' + coins + ' coins — ' + money(priceCents, "brl") + '</div>' +
-      '<div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.style.display=\'none\'"></div>' +
-      '<div style="font-size:.82rem;margin:.6rem 0 .35rem;opacity:.92">' + L("Abra o app do banco → Pix → Pagar com QR Code, ou copie:", "Open your bank app → Pix → Pay with QR, or copy:", "Abre tu banco → Pix → Pagar con QR, o copia:") + '</div>' +
-      '<div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.55rem"><input readonly value="' + escHtml(code) + '" id="cpix-code" style="flex:1;min-width:0;font-size:.7rem;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);color:inherit"><button id="cpix-copy" class="btn btn-primary btn-sm" style="white-space:nowrap">' + L("Copiar", "Copy", "Copiar") + '</button></div>' +
-      '<div id="cpix-status" style="font-size:.84rem;font-weight:700;color:var(--muted)">⏳ ' + L("Aguardando o pagamento… (confirma sozinho)", "Waiting for payment… (auto-confirms)", "Esperando el pago… (confirma solo)") + '</div></div>';
+    // MOBILE BR: ninguém escaneia QR na própria tela. O herói é o COPIA E COLA; QR fica opcional.
+    mount.innerHTML = '<div style="margin-top:.7rem;padding:1rem;border:1px solid var(--line);border-radius:14px">' +
+      '<div style="font-weight:800;margin-bottom:.5rem;text-align:center">🪙 ' + coins + ' coins — ' + money(priceCents, "brl") + '</div>' +
+      '<div style="font-size:.82rem;line-height:1.6;margin:.2rem 0 .7rem">' + L("<b>1.</b> Toque em <b>Copiar código Pix</b><br><b>2.</b> Abra o app do seu banco → <b>Pix</b><br><b>3.</b> Escolha <b>Pix Copia e Cola</b> e cole o código<br><b>4.</b> Confirme — seus coins caem sozinhos aqui 💜", "<b>1.</b> Tap <b>Copy Pix code</b><br><b>2.</b> Open your bank app → <b>Pix</b><br><b>3.</b> Choose <b>Pix Copy & Paste</b> and paste<br><b>4.</b> Confirm — your coins land here automatically 💜", "<b>1.</b> Toca <b>Copiar código Pix</b><br><b>2.</b> Abre tu banco → <b>Pix</b><br><b>3.</b> Elige <b>Pix Copia y Pega</b> y pega<br><b>4.</b> Confirma — tus coins llegan solos 💜") + '</div>' +
+      '<button id="cpix-copy" class="btn btn-primary btn-block" style="font-size:1.02rem;padding:.85rem;font-weight:800">📋 ' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button>' +
+      '<textarea readonly id="cpix-code" style="position:absolute;left:-9999px;top:0">' + escHtml(code) + '</textarea>' +
+      '<button id="cpix-qr-t" class="btn btn-ghost btn-sm btn-block" style="margin-top:.5rem;opacity:.8">' + L("ou pagar escaneando o QR Code", "or pay by scanning the QR", "o pagar escaneando el QR") + '</button>' +
+      '<div id="cpix-qr" style="display:none;text-align:center;margin-top:.5rem"><div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.innerHTML=\'<div style=\\\'font-size:.76rem;color:#888;padding:1rem\\\'>' + L("Use o código acima 💜", "Use the code above 💜", "Usa el código 💜") + '</div>\'"></div></div>' +
+      '<div id="cpix-status" style="font-size:.86rem;font-weight:700;color:var(--muted);text-align:center;margin-top:.7rem">⏳ ' + L("Esperando seu pagamento… confirma sozinho aqui", "Waiting for your payment… auto-confirms here", "Esperando tu pago… confirma solo aquí") + '</div></div>';
+    function doCopy() {
+      var ok = false;
+      try { navigator.clipboard.writeText(code); ok = true; } catch (e) {}
+      if (!ok) { try { var t = document.getElementById("cpix-code"); t.style.left = "0"; t.focus(); t.select(); document.execCommand("copy"); t.style.left = "-9999px"; ok = true; } catch (e) {} }
+      return ok;
+    }
     var cp = document.getElementById("cpix-copy");
-    if (cp) cp.onclick = function () { try { var i = document.getElementById("cpix-code"); i.select(); navigator.clipboard.writeText(code); } catch (e) {} cp.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); setTimeout(function () { cp.textContent = L("Copiar", "Copy", "Copiar"); }, 1500); };
+    if (cp) cp.onclick = function () { doCopy(); cp.textContent = "✓ " + L("Código copiado — cole no seu banco", "Code copied — paste in your bank", "Código copiado — pega en tu banco"); try { if (window.clarity) window.clarity("event", "pix_code_copied"); } catch (e) {} setTimeout(function () { cp.innerHTML = "📋 " + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix"); }, 2500); };
+    var qt = document.getElementById("cpix-qr-t");
+    if (qt) qt.onclick = function () { var q = document.getElementById("cpix-qr"); if (q) q.style.display = q.style.display === "none" ? "block" : "none"; };
     var tries = 0, pp = setInterval(function () {
       tries++;
       if (!document.body.contains(mount) || tries > 150) { clearInterval(pp); return; }
