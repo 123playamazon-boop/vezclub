@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b75"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b76"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2162,6 +2162,9 @@ fbq('track', 'PageView');
     var _rcSub = chatOnly ? L("prévia dela", "a peek at her", "un vistazo a ella") : L("prévias grátis + desbloqueie", "free previews + unlock", "prévias gratis + desbloquea");
     html += '<div class="pf-section"><div class="pf-h">' + I.photo + ' ' + L("Conteúdo", "Content", "Contenido") + ' <span style="font-weight:600;font-size:0.8rem;color:var(--faint)">' + _rcSub + '</span></div><div id="rc-list"><p class="muted-note">Carregando…</p></div></div>';
 
+    // Linha Privada — assinatura em coins (30 dias de chat ilimitado + álbum), só nos modelos de chat (gap do funil)
+    if (chatOnly) html += '<div class="pf-section"><div id="pf-sub"></div></div>';
+
     // Loja dela — produtos desbloqueáveis por coins (fotos, contos, jogos)
     html += '<div class="pf-section"><div class="pf-h">🛍 ' + L("Loja dela", "Her shop", "Su tienda") + ' <span style="font-weight:600;font-size:0.8rem;color:var(--faint)">' + L("desbloqueie com coins", "unlock with coins", "desbloquea con coins") + '</span></div><div id="pf-shop"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
 
@@ -2283,6 +2286,7 @@ fbq('track', 'PageView');
       }
     }
     loadBuyerContent(c.id);
+    if (chatOnly) loadSubInto(document.getElementById("pf-sub"), c.id);
     renderProductsInto(document.getElementById("pf-shop"), c.id, '<p class="muted-note">' + L("Ela ainda não postou nada aqui 💜", "Nothing here yet 💜", "Todavía no hay nada 💜") + '</p>');
   }
 
@@ -4896,10 +4900,17 @@ fbq('track', 'PageView');
       var prev = document.getElementById("buy-panel"); if (prev) prev.remove();
       var h = '<div id="buy-panel" style="margin:.7rem 0 .2rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-2,rgba(127,127,127,.06));text-align:center">' +
         '<div style="font-weight:800;margin-bottom:.5rem;font-size:1.02rem">' + L("Acabaram nossos coins… e eu tava gostando 😏", "We ran out of coins… and I was into it 😏", "Se acabaron los coins… y me estabas gustando 😏") + '</div>' +
-        '<div style="font-size:.86rem;opacity:.9;margin-bottom:.8rem">' + L("Pega mais coins pra continuar comigo — e desbloquear minhas fotos 💜", "Grab more coins to keep going with me — and unlock my photos 💜", "Toma más coins para seguir conmigo — y desbloquear mis fotos 💜") + '</div>' +
-        '<button class="btn btn-primary btn-block" id="buy-coins-cta">🪙 ' + L("Comprar coins", "Buy coins", "Comprar coins") + '</button></div>';
+        '<div id="buy-sub" style="margin-bottom:.7rem"></div>' +
+        '<div style="font-size:.78rem;opacity:.65;margin-bottom:.5rem">' + L("ou só uns coins avulsos", "or just a few coins", "o solo unos coins sueltos") + '</div>' +
+        '<button class="btn btn-ghost btn-block" id="buy-coins-cta">🪙 ' + L("Comprar coins", "Buy coins", "Comprar coins") + '</button></div>';
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
       try { if (sb) sb.rpc("track_ux", { p_event: "recharge_view", p_creator_key: cid }).then(function () {}, function () {}); } catch (e) {}
+      var subHost = document.getElementById("buy-sub");
+      if (subHost) { subHost.innerHTML = subCardHtml(cid, false); wireSubBuy(subHost, function () {
+        var bp = document.getElementById("buy-panel"); if (bp) bp.remove();
+        note(L("Linha Privada ativa 💜 agora é sem limite — fala comigo 😏", "Private Line active 💜 no limits now — talk to me 😏", "Línea Privada activa 💜 sin límites ahora — háblame 😏"));
+        try { document.getElementById("chat-text").focus(); } catch (_) {}
+      }); }
       var cta = document.getElementById("buy-coins-cta");
       if (cta) cta.onclick = function () { openCoinStore(); };
     }
@@ -5662,6 +5673,70 @@ fbq('track', 'PageView');
         }
       }, function () {});
     }, 4000);
+  }
+
+  /* ================= LINHA PRIVADA: assinatura (passe 30 dias · chat ilimitado + álbum) ================= */
+  var SUB_COINS = 400;   // custo em coins (servidor manda: app_config SUB_PRICE_COINS)
+  var _subCache = {};    // creator_key -> ativo?
+  function subStack() {
+    return [
+      L("Conversa ILIMITADA com ela por 30 dias — sem contar mensagem", "UNLIMITED chat with her for 30 days — no counting", "Chat ILIMITADO con ella por 30 días — sin contar"),
+      L("O álbum completo dela destrava na hora", "Her full album unlocks instantly", "Su álbum completo se desbloquea al instante"),
+      L("Ela te responde primeiro — prioridade na fila", "She answers you first — priority", "Ella te responde primero — prioridad"),
+      L("Fotos e áudios que ela só manda na Linha Privada", "Photos & audios only sent on the Private Line", "Fotos y audios que solo manda en la Línea Privada"),
+      L("Online 24h — 2h da manhã inclusive", "Online 24h — 2am included", "En línea 24h — 2 de la mañana incluido")
+    ];
+  }
+  function subCardHtml(ck, active) {
+    if (active) {
+      return '<div style="border:1.5px solid #6d28d9;border-radius:16px;padding:1rem;background:linear-gradient(135deg,rgba(109,40,217,.14),rgba(219,39,119,.1))">' +
+        '<div style="font-weight:800;font-size:1rem">💜 ' + L("Linha Privada ativa", "Private Line active", "Línea Privada activa") + '</div>' +
+        '<div style="font-size:.84rem;opacity:.9;margin-top:.2rem">' + L("Conversa liberada e álbum destravado. Aproveita 😏", "Chat open and album unlocked. Enjoy 😏", "Chat libre y álbum desbloqueado. Disfruta 😏") + '</div></div>';
+    }
+    var items = subStack().map(function (t) { return '<div style="margin:.12rem 0">✓ ' + escHtml(t) + '</div>'; }).join("");
+    return '<div style="border:1.5px solid #6d28d9;border-radius:16px;padding:1rem;background:linear-gradient(135deg,rgba(109,40,217,.1),rgba(219,39,119,.08))">' +
+      '<div style="font-weight:800;font-size:1.05rem;margin-bottom:.1rem">💜 ' + L("A Linha Privada dela", "Her Private Line", "Su Línea Privada") + '</div>' +
+      '<div style="font-size:.8rem;opacity:.75;margin-bottom:.55rem">' + L("o jeito mais barato de ter ela — 30 dias inteiros", "the cheapest way to have her — a full 30 days", "la forma más barata de tenerla — 30 días completos") + '</div>' +
+      '<div style="text-align:left;font-size:.85rem;line-height:1.5;margin-bottom:.7rem">' + items + '</div>' +
+      '<div style="font-size:.78rem;opacity:.7;text-decoration:line-through">' + L("Avulso passaria de 1.500 coins/mês", "À la carte would be 1,500+ coins/mo", "Suelto pasaría de 1.500 coins/mes") + '</div>' +
+      '<button class="btn btn-primary btn-block" data-subbuy="' + escHtml(ck) + '" style="margin-top:.35rem">💜 ' + L("Entrar na Linha Privada", "Join the Private Line", "Entrar a la Línea Privada") + ' · ' + SUB_COINS + ' coins</button>' +
+      '<div style="font-size:.74rem;opacity:.72;margin-top:.45rem;text-align:center">' + L("Não curtiu no 1º dia? Devolvo teus coins. Sem drama.", "Not into it on day 1? I refund your coins. No drama.", "¿No te gustó el día 1? Te devuelvo tus coins. Sin dramas.") + '</div></div>';
+  }
+  function wireSubBuy(scope, onOk) {
+    scope.querySelectorAll("[data-subbuy]").forEach(function (b) {
+      b.onclick = function () {
+        var ck = b.getAttribute("data-subbuy"), t0 = b.textContent;
+        b.disabled = true; b.textContent = L("Entrando…", "Joining…", "Entrando…");
+        ensureSessionThen(function () {
+          if (!sb || !account) { b.disabled = false; b.textContent = t0; return; }
+          sb.rpc("buy_subscription", { p_creator: ck }).then(function (r) {
+            var d = r && r.data;
+            if (r.error || !d || !d.ok) {
+              b.disabled = false; b.textContent = t0;
+              if (d && d.error === "no_credit") { toast(L("Pega coins e volta pra entrar 💜", "Grab coins then come back 💜", "Toma coins y vuelve 💜")); openCoinStore(); }
+              else { toast(L("Não deu agora. Tenta de novo 🙏", "Didn't work. Try again 🙏", "No funcionó. Inténtalo 🙏")); }
+              return;
+            }
+            _subCache[ck] = true;
+            if (typeof d.coins === "number") setCoinBal(d.coins);
+            try { if (window.fbq) fbq("track", "Subscribe", { value: SUB_COINS, currency: "coins" }); } catch (e) {}
+            try { if (window.clarity) window.clarity("event", "subscribe"); } catch (e) {}
+            toast(L("Bem-vindo à Linha Privada 💜", "Welcome to the Private Line 💜", "Bienvenido a la Línea Privada 💜"));
+            if (typeof onOk === "function") onOk(d);
+          }).catch(function () { b.disabled = false; b.textContent = t0; toast(L("Falha de conexão 🙏", "Connection error 🙏", "Error de conexión 🙏")); });
+        });
+      };
+    });
+  }
+  function loadSubInto(host, ck, onChange) {
+    if (!host || !sb) return;
+    ensureSessionThen(function () {
+      sb.rpc("is_subscribed", { p_creator: ck }).then(function (r) {
+        var active = (r && r.data === true); _subCache[ck] = active;
+        host.innerHTML = subCardHtml(ck, active);
+        if (!active) wireSubBuy(host, function () { loadSubInto(host, ck, onChange); if (typeof onChange === "function") onChange(true); });
+      }, function () { host.innerHTML = ""; });
+    });
   }
 
   /* ================= PRODUTOS: vitrine "Loja dela" + desbloqueio por coins ================= */
