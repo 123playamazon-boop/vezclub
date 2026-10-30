@@ -960,7 +960,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b92"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b93"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1942,7 +1942,7 @@ fbq('track', 'PageView');
   }
 
   function freeBanner() {
-    return '<div class="free-ban">' +
+    return '<div class="free-ban" data-trial="1" style="cursor:pointer">' +
       '<div class="fb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.6-.8L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg><span class="fb-dot"></span></div>' +
       '<div class="fb-txt"><h2>' + L("1º minuto ", "First minute ", "1er minuto ") + '<span class="fb-free">' + L("grátis", "free", "gratis") + '</span></h2>' +
         '<p>' + L("Sem cartão · sem cadastro · é só escolher uma modelo e começar a conversar", "No card · no signup · just pick a model and start chatting", "Sin tarjeta · sin registro · solo elige una modelo y empieza a hablar") + '</p></div>' +
@@ -5329,6 +5329,17 @@ fbq('track', 'PageView');
     try { if (!window.matchMedia("(max-width:560px)").matches) document.getElementById("chat-text").focus(); } catch (e) {}
   }
 
+  // banner "1º minuto grátis": abre direto um chat com uma modelo (prefere online), pra ele testar na hora
+  function openTrialChat() {
+    var pool = (CREATORS || []).filter(function (c) { return c.hasChat; });
+    if (!pool.length) { state.view = "feed"; render(); return; }
+    var online = pool.filter(function (c) { return c.online; });
+    var from = online.length ? online : pool;
+    var pick = from[Math.floor(Math.random() * from.length)];
+    try { if (window.clarity) window.clarity("event", "trial_banner_chat"); } catch (e) {}
+    openAiChat(pick.id);
+  }
+
   // ===== CUPIDO IA (coach de conquista) — chat limpo, reusa a função chat (coins), 3 grátis depois cobra =====
   function openCoachChat() {
     if (!ageOk()) { ageGate(function () { openCoachChat(); }); return; }
@@ -5587,7 +5598,9 @@ fbq('track', 'PageView');
     var giftShop = e.target.closest("[data-gift-shop]");
     var quizBtn = e.target.closest("[data-quiz]");
     var coachBtn = e.target.closest("[data-coach]");
+    var trialBtn = e.target.closest("[data-trial]");
 
+    if (trialBtn) { openTrialChat(); return; }
     if (coachBtn) { openCoachChat(); return; }
     if (quizBtn) { startQuiz(); return; }
     if (giftShop) { openGiftShop(); return; }
