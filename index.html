@@ -950,7 +950,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b81"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b82"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2036,15 +2036,33 @@ fbq('track', 'PageView');
   function loadCollection() {
     var box = document.getElementById("coll-body"); if (!box) return;
     if (!sb || !account) { box.innerHTML = '<p class="muted-note">' + L("Entre pra ver sua coleção.", "Sign in to see your collection.", "Entra para ver tu colección.") + '</p>'; return; }
-    sb.rpc("my_collection").then(function (r) {
+    // busca os dois mundos: posts antigos (my_collection) + conteúdo de coins (content_unlocks)
+    sb.from("content_unlocks").select("content_id").then(function (ur) {
+      var ids = (ur && ur.data || []).map(function (u) { return u.content_id; });
+      var cq = ids.length ? sb.from("content_public").select("*").in("id", ids) : Promise.resolve({ data: [] });
+      Promise.all([sb.rpc("my_collection"), cq]).then(function (res) {
+        renderCollectionBody((res[0] && res[0].data) || [], (res[1] && res[1].data) || []);
+      });
+    });
+  }
+  function renderCollectionBody(items, coinItems) {
       var b = document.getElementById("coll-body"); if (!b) return;
-      if (r.error) { b.innerHTML = '<p class="muted-note">Erro: ' + escHtml(r.error.message) + '</p>'; return; }
-      var items = r.data || [];
-      if (!items.length) {
+      if (!items.length && !coinItems.length) {
         b.innerHTML = '<div class="pf-final"><h3>' + L("Sua coleção está vazia.", "Your collection is empty.", "Tu colección está vacía.") + '</h3><p>' + L("Desbloqueie um conteúdo ou assine uma criadora pra começar.", "Unlock content or subscribe to a creator to get started.", "Desbloquea contenido o suscríbete a una creadora para empezar.") + '</p><button class="btn btn-primary" data-coll-feed="1">' + L("Explorar criadoras", "Explore creators", "Explorar creadoras") + '</button></div>';
         var gob = b.querySelector("[data-coll-feed]"); if (gob) gob.onclick = function () { state.view = "feed"; render(); };
         return;
       }
+      // === conteúdo comprado com coins (álbuns, contos) — o "troféu" ===
+      if (coinItems.length) {
+        var cg = {}, corder = [];
+        coinItems.forEach(function (it) { it._who = whoName(it.creator_key); var k = it.creator_key || ""; if (!cg[k]) { cg[k] = []; corder.push(k); } cg[k].push(it); });
+        var chtml = '<div class="pf-h" style="margin:0 0 .4rem">🪙 ' + L("Desbloqueado com coins", "Unlocked with coins", "Desbloqueado con coins") + '</div>';
+        corder.forEach(function (ck) { chtml += cg[ck].map(function (it) { return pdCard(it, true); }).join(""); });
+        b.innerHTML = '<div id="coll-coins" style="max-width:560px;margin:0 auto 1.6rem">' + chtml + '</div><div id="coll-old"></div>';
+        coinItems.forEach(function (it) { revealContent(it); });
+        b = document.getElementById("coll-old");
+      }
+      if (!items.length) { return; }
       var groups = {}, order = [];
       items.forEach(function (p) { if (!groups[p.creator_key]) { groups[p.creator_key] = []; order.push(p.creator_key); } groups[p.creator_key].push(p); });
       var html = '<p class="muted-note" style="margin:-0.3rem 0 1rem">' + L("Você tem ", "You have ", "Tienes ") + items.length + L(" conteúdos desbloqueados.", " unlocked items.", " contenidos desbloqueados.") + '</p>';
@@ -2060,7 +2078,6 @@ fbq('track', 'PageView');
       items.forEach(function (p) { signUrl(p.media_path).then(function (u) { var el = document.getElementById("col-" + p.id); if (!el || !u) return; el.innerHTML = (p.media_type === "video" ? '<video src="' + u + '" muted playsinline></video>' : '<img src="' + u + '" alt="">') + wmHtml(); }); });
       b.querySelectorAll("[data-coll-open]").forEach(function (row) { row.onclick = function () { state.creatorId = row.getAttribute("data-coll-open"); state.view = "store"; render(); }; });
       applyDynTranslation();
-    });
   }
 
   /* ---------------- buyer: storefront ---------------- */
@@ -5647,6 +5664,26 @@ fbq('track', 'PageView');
     if (!sb) return;
     sb.from("wallets").select("coin_balance").maybeSingle().then(function (r) { setCoinBal((r.data && r.data.coin_balance) || 0); }, function () {});
   }
+  // 🎁 Barra de meta de presente: junta coins gastos; ao bater a meta, ganha coins de presente (gasto por impulso)
+  function loadGiftGoal(host) {
+    if (!host || !sb || !account) return;
+    sb.rpc("gift_goal").then(function (r) {
+      var d = r && r.data; if (!d || !d.ok) { host.innerHTML = ""; return; }
+      var pct = Math.min(100, Math.round((d.spent / Math.max(1, d.goal)) * 100));
+      var falta = Math.max(0, d.goal - d.spent);
+      if (d.just_won) { if (typeof d.balance === "number") setCoinBal(d.balance); try { if (window.clarity) window.clarity("event", "gift_goal_won"); } catch (e) {} }
+      var inner;
+      if (d.claimed) {
+        inner = '<div style="font-weight:800;font-size:.9rem">🎁 ' + (d.just_won ? L("Presente liberado! +" + d.reward + " coins 💜", "Gift unlocked! +" + d.reward + " coins 💜", "¡Regalo liberado! +" + d.reward + " coins 💜") : L("Presente de boas-vindas resgatado ✓", "Welcome gift claimed ✓", "Regalo de bienvenida canjeado ✓")) + '</div>';
+        pct = 100;
+      } else {
+        inner = '<div style="font-weight:800;font-size:.9rem;margin-bottom:.1rem">🎁 ' + L("Meta de presente", "Gift goal", "Meta de regalo") + '</div>' +
+          '<div style="font-size:.78rem;opacity:.9;margin-bottom:.45rem">' + L("Faltam " + falta + " coins pra ganhar +" + d.reward + " de presente", falta + " coins to go for +" + d.reward + " free", "Faltan " + falta + " coins para ganar +" + d.reward + " de regalo") + '</div>';
+      }
+      host.innerHTML = '<div style="border:1px solid var(--line,#eee);border-radius:14px;padding:.8rem;margin-bottom:.9rem;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(219,39,119,.08))">' + inner +
+        '<div style="height:12px;background:rgba(127,127,127,.2);border-radius:999px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#f59e0b,#db2777);transition:width .4s"></div></div></div>';
+    }, function () { host.innerHTML = ""; });
+  }
   function openCoinStore() {
     if (!sb) return;
     ensureSessionThen(function () {
@@ -5661,12 +5698,13 @@ fbq('track', 'PageView');
       sb.from("coin_packs").select("*").eq("market", mkt).eq("active", true).order("sort").then(function (r) {
         var packs = (r.data || []);
         if (!packs.length) { csBody.innerHTML = '<p class="muted-note">' + L("Sem pacotes agora.", "No packs right now.", "Sin paquetes ahora.") + '</p>'; return; }
-        csBody.innerHTML = '<div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Coins desbloqueiam fotos, presentes e mais — e nunca expiram.", "Coins unlock photos, gifts and more — and never expire.", "Los coins desbloquean fotos, regalos y más — nunca caducan.") + '</div>' +
+        csBody.innerHTML = '<div id="gift-goal"></div><div style="font-size:.82rem;color:var(--mut,#888);margin-bottom:.8rem">' + L("Coins desbloqueiam fotos, presentes e mais — e nunca expiram.", "Coins unlock photos, gifts and more — and never expire.", "Los coins desbloquean fotos, regalos y más — nunca caducan.") + '</div>' +
           packs.map(function (p) {
             var coins = p.coins + (p.bonus_coins || 0);
             var bonus = p.bonus_coins > 0 ? ' <span style="color:#ffd84d;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.25)">+' + p.bonus_coins + ' ' + L("bônus", "bonus", "bono") + '</span>' : '';
             return '<button class="btn btn-primary btn-block" data-pack="' + p.code + '" data-price="' + p.price_cents + '" data-coins="' + coins + '" style="margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem"><span>🪙 ' + coins + ' coins' + bonus + '</span><span style="font-weight:800">' + money(p.price_cents, p.currency) + '</span></button>';
           }).join("") + '<div id="cs-pay"></div>';
+        loadGiftGoal(csBody.querySelector("#gift-goal"));
         csBody.querySelectorAll("[data-pack]").forEach(function (b) {
           b.onclick = function () {
             var code = b.getAttribute("data-pack"), price = +b.getAttribute("data-price"), coins = +b.getAttribute("data-coins");
