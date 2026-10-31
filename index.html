@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b98"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b99"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5272,10 +5272,10 @@ fbq('track', 'PageView');
     var pdOffered = false;
     function productTease() {
       if (pdOffered) return; pdOffered = true;
-      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L("posso te contar um segredo? 😏 a maioria dos caras trava na hora de puxar papo no WhatsApp e perde a menina ali mesmo. eu tenho 300 mensagens prontas que fazem qualquer mulher querer te responder — isso muda teu jogo de verdade. quer que eu te passo?", "can I tell you a secret? 😏 most guys freeze when it's time to text on WhatsApp and lose the girl right there. I've got 300 ready-to-send messages that make any girl want to reply — this really changes your game. want me to hand them over?", "¿te cuento un secreto? 😏 la mayoría se traba al escribir por WhatsApp y pierde a la chica ahí mismo. tengo 300 mensajes listos que hacen que cualquier mujer quiera responderte — esto cambia tu juego de verdad. ¿quieres que te los pase?")) + '</div>');
-      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🔥 ' + L("Quero as 300 mensagens", "I want the 300 messages", "Quiero los 300 mensajes") + '</button></div>');
+      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L("você tá me deixando com vontade… 🔥 tem coisa que eu não mostro aqui — eu guardo num cantinho só meu. quer ver meu lado mais quente?", "you're getting me in the mood… 🔥 there's stuff I don't show in here — I keep it somewhere just mine. wanna see my hottest side?", "me estás poniendo… 🔥 hay cosas que no muestro aquí — las guardo en un rincón solo mío. ¿quieres ver mi lado más caliente?")) + '</div>');
+      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🔓 ' + L("Quero ver", "Show me", "Quiero ver") + '</button></div>');
       body.scrollTop = body.scrollHeight;
-      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { openWhatsAppOffer(); };
+      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { openHerPacks(); };
     }
     var sending = false;
     function doSend() {
@@ -6363,6 +6363,20 @@ fbq('track', 'PageView');
       ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
       ov.querySelector("#wa-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
       renderProductsInto(ov.querySelector("#wa-body"), "__id:" + WA_EBOOK_ID + "__", "");
+    });
+  }
+  // tease dentro do chat quente: abre os packs de foto (Galeria Secreta) pra desbloquear com coins
+  function openHerPacks() {
+    if (!sb) return;
+    ensureSessionThen(function () {
+      var ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10001;display:flex;align-items:flex-end;justify-content:center";
+      ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--ink,#111);max-width:520px;width:100%;max-height:92vh;border-radius:18px 18px 0 0;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.1rem;border-bottom:1px solid var(--line,#eee);position:sticky;top:0;background:var(--panel,#fff);z-index:1"><b>🔥 ' + L("O lado mais quente delas", "Their hottest side", "Su lado más caliente") + '</b><button id="hp-x" style="border:0;background:none;font-size:1.3rem;cursor:pointer;color:inherit">✕</button></div><div id="hp-body" style="padding:1rem 1.1rem"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+      document.body.appendChild(ov);
+      try { if (window.clarity) window.clarity("event", "her_packs_open"); } catch (e) {}
+      ov.onclick = function (e) { if (e.target === ov) document.body.removeChild(ov); };
+      ov.querySelector("#hp-x").onclick = function () { if (ov.parentNode) document.body.removeChild(ov); };
+      renderProductsInto(ov.querySelector("#hp-body"), "__kind:photo_set__", '<p class="muted-note" style="text-align:center">' + L("Em breve 💜", "Coming soon 💜", "Pronto 💜") + '</p>');
     });
   }
   // renderiza os produtos (cards + desbloqueio) em qualquer container — usado no modal E no perfil
