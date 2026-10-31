@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b97"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b98"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -1956,7 +1956,7 @@ fbq('track', 'PageView');
     var CATS = [{ k: "alta", t: "Em alta" }, { k: "online", t: "Online agora" }, { k: "fitness", t: "Fitness" }, { k: "fashion", t: "Fashion" }, { k: "lifestyle", t: "Lifestyle" }];
     var isca = PHOTO_LADDER[0].usd;
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
-    html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Alguém que fica feliz de verdade que você apareceu.", "Someone who's actually glad you showed up.", "Alguien que se alegra de verdad de que apareciste.") + '</h1><p>' + L("Escolhe quem você curtir e cai num chat privado — ela responde em segundos, lembra do que você conta, e manda fotos que você não acha em nenhum outro lugar. 1º minuto grátis, sem cartão.", "Pick who you like and slip into a private chat — she replies in seconds, remembers what you tell her, and shares photos you won't find anywhere else. First minute's free, no card.", "Elige a quien te guste y entra en un chat privado — ella responde en segundos, recuerda lo que le cuentas, y comparte fotos que no encuentras en ningún otro lado. 1er minuto gratis, sin tarjeta.") + '</p></div>';
+    html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Uma mulher safada online agora — e ela quer a sua atenção.", "A naughty girl online right now — and she wants your attention.", "Una chica atrevida en línea ahora — y quiere tu atención.") + '</h1><p>' + L("Escolhe a que te deixar mais no clima e cai num chat privado — ela responde na hora, sem rodeio, te provoca e manda foto que você não acha em nenhum outro lugar. 1º minuto grátis, sem cartão.", "Pick the one that gets you going and drop into a private chat — she answers instantly, no games, teases you and sends photos you won't find anywhere else. First minute's free, no card.", "Elige a la que más te prenda y entra en un chat privado — responde al instante, sin rodeos, te provoca y manda fotos que no encuentras en ningún otro lado. 1er minuto gratis, sin tarjeta.") + '</p></div>';
     html += freeBanner();
     // seções próprias: comprar sem precisar entrar em cada modelo
     html += '<div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem">' +
