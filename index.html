@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b100"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b101"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5291,7 +5291,17 @@ fbq('track', 'PageView');
         var st2 = document.getElementById("ch-stat"); if (st2) st2.textContent = L("online agora", "online now", "en línea ahora");
         var d = res.data, e = res.error;
         if (e || !d || d.error) {
-          if (d && d.error === "need_signup") { note(L("Pra continuar, cria sua conta rapidinho 💜", "Create your account to keep going 💜", "Crea tu cuenta para seguir 💜")); setTimeout(function () { closeModal(); showAuthGate("signup", "buyer"); }, 1000); return; }
+          if (d && d.error === "need_signup") {
+            // NÃO quebra o clima: ela continua quente e empurra o desbloqueio (caminho do Pix, que o anônimo consegue). Cadastro vira opção secundária.
+            her(L("ai esse foi meu último grátis com você 😩 mas eu não quero parar agora… desbloqueia meu pack que eu te mostro o que mais ninguém vê 🔥", "ugh that was my last free one with you 😩 but I don't wanna stop now… unlock my pack and I'll show you what nobody else sees 🔥", "ay ese fue mi último gratis contigo 😩 pero no quiero parar… desbloquea mi pack y te muestro lo que nadie más ve 🔥"));
+            setTimeout(function () {
+              body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .6rem;display:flex;flex-direction:column;gap:.4rem"><button class="btn btn-primary btn-sm" id="ns-unlock">🔓 ' + L("Quero desbloquear agora", "Unlock now", "Quiero desbloquear ahora") + '</button><button class="btn btn-ghost btn-sm" id="ns-signup" style="opacity:.72;font-size:.8rem">' + L("ou criar conta pra continuar o papo", "or create an account to keep chatting", "o crear cuenta para seguir el chat") + '</button></div>');
+              body.scrollTop = body.scrollHeight;
+              var ub = document.getElementById("ns-unlock"); if (ub) ub.onclick = function () { try { if (window.clarity) window.clarity("event", "freewall_unlock_click"); } catch (e) {} openHerPacks(); };
+              var sgb = document.getElementById("ns-signup"); if (sgb) sgb.onclick = function () { showAuthGate("signup", "buyer"); };
+            }, 700);
+            return;
+          }
           if (d && d.error === "no_credit") { if (typeof d.coins === "number") setBal(d.coins); showBuy(); return; }
           if (d && d.error === "model_error") { note("(o provedor filtrou essa resposta — hora de trocar o motor pro adulto)"); return; }
           if (d && d.error === "no_model_key") { note("(motor sem chave configurada)"); return; }
@@ -6116,7 +6126,8 @@ fbq('track', 'PageView');
     var qr = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=" + encodeURIComponent(code);
     // MOBILE BR: ninguém escaneia QR na própria tela. O herói é o COPIA E COLA; QR fica opcional.
     mount.innerHTML = '<div style="margin-top:.7rem;padding:1rem;border:1px solid var(--line);border-radius:14px">' +
-      '<div style="font-weight:800;margin-bottom:.5rem;text-align:center">🪙 ' + coins + ' coins — ' + money(priceCents, "brl") + '</div>' +
+      '<div style="font-weight:800;margin-bottom:.15rem;text-align:center">🪙 ' + coins + ' coins — ' + money(priceCents, "brl") + '</div>' +
+      '<div style="font-size:.74rem;text-align:center;color:#16a34a;margin:0 0 .55rem;font-weight:700">🔒 ' + L("Pix oficial · acesso na hora", "Official Pix · instant access", "Pix oficial · acceso al instante") + '</div>' +
       '<div style="font-size:.82rem;line-height:1.6;margin:.2rem 0 .7rem">' + L("<b>1.</b> Toque em <b>Copiar código Pix</b><br><b>2.</b> Abra o app do seu banco → <b>Pix</b><br><b>3.</b> Escolha <b>Pix Copia e Cola</b> e cole o código<br><b>4.</b> Confirme — seus coins caem sozinhos aqui 💜", "<b>1.</b> Tap <b>Copy Pix code</b><br><b>2.</b> Open your bank app → <b>Pix</b><br><b>3.</b> Choose <b>Pix Copy & Paste</b> and paste<br><b>4.</b> Confirm — your coins land here automatically 💜", "<b>1.</b> Toca <b>Copiar código Pix</b><br><b>2.</b> Abre tu banco → <b>Pix</b><br><b>3.</b> Elige <b>Pix Copia y Pega</b> y pega<br><b>4.</b> Confirma — tus coins llegan solos 💜") + '</div>' +
       '<button id="cpix-copy" class="btn btn-primary btn-block" style="font-size:1.02rem;padding:.85rem;font-weight:800">📋 ' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button>' +
       '<textarea readonly id="cpix-code" style="position:absolute;left:-9999px;top:0">' + escHtml(code) + '</textarea>' +
