@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b99"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b100"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -5224,7 +5224,7 @@ fbq('track', 'PageView');
       // modelo de COINS: as 10 primeiras mensagens são grátis (controlado no servidor); aqui só carrega o saldo e fisga.
       sb.from("wallets").select("coin_balance").maybeSingle().then(function (r) {
         setBal((r.data && r.data.coin_balance) || 0);
-        note(L("Tuas primeiras 10 mensagens são por minha conta 💜 é só escrever", "Your first 10 messages are on me 💜 just start typing", "Tus primeros 10 mensajes van por mi cuenta 💜 solo escribe"));
+        note(L("Tuas primeiras 20 mensagens são por minha conta 💜 é só escrever", "Your first 20 messages are on me 💜 just start typing", "Tus primeros 20 mensajes van por mi cuenta 💜 solo escribe"));
         maybeAutoSend();
       }, function () { setBal(0); maybeAutoSend(); });
     }
