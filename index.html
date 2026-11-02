@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b110"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b111"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -4668,18 +4668,22 @@ fbq('track', 'PageView');
       wirePersonaEditors(b, rows);
     });
   }
+  function pgThumbsHtml(k, gifts) {
+    gifts = gifts || [];
+    return gifts.map(function (g, i) {
+      return '<div data-gthumb="' + k + '" data-idx="' + i + '" draggable="true" style="position:relative;display:inline-block;margin:3px 8px 10px 3px;cursor:grab;vertical-align:top">' +
+        '<img src="' + mediaUrl(g.path) + '" style="width:58px;height:58px;object-fit:cover;border-radius:9px;border:1px solid var(--line);display:block" draggable="false">' +
+        '<span style="position:absolute;top:-6px;left:-6px;background:var(--accent,#6d28d9);color:#fff;border-radius:50%;width:17px;height:17px;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center">' + (i + 1) + '</span>' +
+        '<button data-giftdel="' + k + '|' + i + '" title="Remover" style="position:absolute;top:-7px;right:-7px;background:#111;color:#fff;border:0;border-radius:50%;width:20px;height:20px;line-height:1;cursor:pointer">×</button>' +
+        '<button data-gmv="' + k + '|' + i + '|-1" title="esquerda" ' + (i === 0 ? 'disabled ' : '') + 'style="position:absolute;bottom:-9px;left:2px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;width:20px;height:17px;line-height:1;cursor:pointer;font-size:.74rem;opacity:' + (i === 0 ? '.3' : '1') + '">‹</button>' +
+        '<button data-gmv="' + k + '|' + i + '|1" title="direita" ' + (i === gifts.length - 1 ? 'disabled ' : '') + 'style="position:absolute;bottom:-9px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;width:20px;height:17px;line-height:1;cursor:pointer;font-size:.74rem;opacity:' + (i === gifts.length - 1 ? '.3' : '1') + '">›</button>' +
+        '</div>';
+    }).join("");
+  }
   function personaRow(p) {
     var det = "pa-" + p.creator_key;
     var gifts = (Array.isArray(p.gift_images) ? p.gift_images : []);
-    var thumbs = gifts.map(function (g, i) {
-      return '<div data-gthumb="' + p.creator_key + '" data-idx="' + i + '" draggable="true" style="position:relative;display:inline-block;margin:3px 8px 10px 3px;cursor:grab;vertical-align:top">' +
-        '<img src="' + mediaUrl(g.path) + '" style="width:58px;height:58px;object-fit:cover;border-radius:9px;border:1px solid var(--line);display:block">' +
-        '<span style="position:absolute;top:-6px;left:-6px;background:var(--accent,#6d28d9);color:#fff;border-radius:50%;width:17px;height:17px;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center">' + (i + 1) + '</span>' +
-        '<button data-giftdel="' + p.creator_key + '|' + i + '" title="Remover" style="position:absolute;top:-7px;right:-7px;background:#111;color:#fff;border:0;border-radius:50%;width:20px;height:20px;line-height:1;cursor:pointer">×</button>' +
-        '<button data-gmv="' + p.creator_key + '|' + i + '|-1" title="esquerda" ' + (i === 0 ? 'disabled ' : '') + 'style="position:absolute;bottom:-9px;left:2px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;width:20px;height:17px;line-height:1;cursor:pointer;font-size:.74rem;opacity:' + (i === 0 ? '.3' : '1') + '">‹</button>' +
-        '<button data-gmv="' + p.creator_key + '|' + i + '|1" title="direita" ' + (i === gifts.length - 1 ? 'disabled ' : '') + 'style="position:absolute;bottom:-9px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;width:20px;height:17px;line-height:1;cursor:pointer;font-size:.74rem;opacity:' + (i === gifts.length - 1 ? '.3' : '1') + '">›</button>' +
-        '</div>';
-    }).join("");
+    var thumbs = pgThumbsHtml(p.creator_key, gifts);
     return '<div class="app-item"><div class="app-row">' +
       '<div class="app-info"><div class="app-name">' + escHtml(p.display_name) + ' <small class="muted-note">' + escHtml(p.creator_key) + '</small></div><div class="app-meta">presente a cada ' + (p.gift_every || 4) + ' msgs · ' + gifts.length + ' foto(s)</div></div>' +
       '<div class="app-actions"><button class="btn btn-ghost btn-sm" data-paedit="' + det + '">Editar</button></div>' +
@@ -4688,7 +4692,7 @@ fbq('track', 'PageView');
         field("Tom / personalidade (como ela fala, o que curte, como conquista)", '<textarea id="pa-sys-' + p.creator_key + '" rows="9" style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:0.6rem;color:var(--fg);font-family:inherit;font-size:0.88rem">' + escHtml(p.system_prompt || "") + '</textarea>') +
         field("Primeira mensagem (saudação)", '<input id="pa-greet-' + p.creator_key + '" value="' + escHtml(p.greeting || "") + '">') +
         field("Mandar presente a cada N mensagens", '<input id="pa-every-' + p.creator_key + '" type="number" min="1" value="' + (p.gift_every || 4) + '" style="max-width:120px">') +
-        '<div class="muted-note" style="margin:.4rem 0 .4rem">Fotos de presente: <span style="opacity:.8">· arraste pra ordenar (ou use ‹ ›) — a nº1 é a que ela manda primeiro</span></div><div>' + (thumbs || '<span class="muted-note">nenhuma</span>') + '</div>' +
+        '<div class="muted-note" style="margin:.4rem 0 .4rem">Fotos de presente: <span style="opacity:.8">· arraste pra ordenar (ou use ‹ ›) — a nº1 é a que ela manda primeiro</span></div><div id="pg-' + p.creator_key + '">' + (thumbs || '<span class="muted-note">nenhuma</span>') + '</div>' +
         '<label class="btn btn-ghost btn-sm" style="margin-top:.5rem;display:inline-block;cursor:pointer">+ Adicionar fotos (várias)<input type="file" accept="image/*" data-giftadd="' + p.creator_key + '" multiple hidden></label>' +
         '<div class="ob-actions" style="margin-top:.7rem"><button class="btn btn-primary" data-pasave="' + p.creator_key + '">Salvar persona</button></div>' +
       '</div>' +
@@ -4712,17 +4716,45 @@ fbq('track', 'PageView');
         });
       };
     });
-    b.querySelectorAll("[data-giftdel]").forEach(function (btn) {
-      btn.onclick = function () {
-        var parts = btn.getAttribute("data-giftdel").split("|"); var k = parts[0], idx = +parts[1];
-        var row = rows.find(function (x) { return x.creator_key === k; }); if (!row) return;
-        var gl = (Array.isArray(row.gift_images) ? row.gift_images.slice() : []); gl.splice(idx, 1);
-        sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) {
-          if (r.error) { toast("Erro: " + r.error.message); return; }
-          toast("Presente removido."); loadPersonaAdmin();
-        });
-      };
-    });
+    // === fotos de presente: wiring por persona, re-render NO LUGAR (não fecha o painel) ===
+    function gReorder(k, fromI, toI) {
+      var row = rows.find(function (x) { return x.creator_key === k; }); if (!row) return;
+      var gl = (Array.isArray(row.gift_images) ? row.gift_images.slice() : []);
+      if (fromI < 0 || toI < 0 || fromI >= gl.length || toI >= gl.length || fromI === toI) return;
+      var m = gl.splice(fromI, 1)[0]; gl.splice(toI, 0, m); row.gift_images = gl;
+      pgRerender(k); // já mostra a nova ordem com o painel aberto
+      sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) { if (r.error) toast("Erro ao ordenar: " + r.error.message); });
+    }
+    function pgRerender(k) {
+      var row = rows.find(function (x) { return x.creator_key === k; }); if (!row) return;
+      var host = document.getElementById("pg-" + k); if (!host) return;
+      var gifts = Array.isArray(row.gift_images) ? row.gift_images : [];
+      host.innerHTML = gifts.length ? pgThumbsHtml(k, gifts) : '<span class="muted-note">nenhuma</span>';
+      var item = host.closest(".app-item"); if (item) { var mEl = item.querySelector(".app-meta"); if (mEl) mEl.textContent = 'presente a cada ' + (row.gift_every || 4) + ' msgs · ' + gifts.length + ' foto(s)'; }
+      pgWire(k);
+    }
+    function pgWire(k) {
+      var host = document.getElementById("pg-" + k); if (!host) return;
+      host.querySelectorAll("[data-giftdel]").forEach(function (btn) {
+        btn.onclick = function (e) { if (e) e.stopPropagation();
+          var idx = +btn.getAttribute("data-giftdel").split("|")[1];
+          var row = rows.find(function (x) { return x.creator_key === k; }); if (!row) return;
+          var gl = (Array.isArray(row.gift_images) ? row.gift_images.slice() : []); gl.splice(idx, 1); row.gift_images = gl;
+          pgRerender(k);
+          sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) { if (r.error) toast("Erro: " + r.error.message); });
+        };
+      });
+      host.querySelectorAll("[data-gmv]").forEach(function (btn) {
+        btn.onclick = function (e) { if (e) e.stopPropagation(); var pr = btn.getAttribute("data-gmv").split("|"); gReorder(pr[0], +pr[1], +pr[1] + (+pr[2])); };
+      });
+      var from = null;
+      host.querySelectorAll("[data-gthumb]").forEach(function (cell) {
+        cell.addEventListener("dragstart", function (e) { if (e.target && e.target.tagName === "BUTTON") { e.preventDefault(); return; } from = +cell.getAttribute("data-idx"); cell.style.opacity = ".4"; try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", "g"); } catch (_) {} });
+        cell.addEventListener("dragend", function () { cell.style.opacity = ""; });
+        cell.addEventListener("dragover", function (e) { e.preventDefault(); });
+        cell.addEventListener("drop", function (e) { e.preventDefault(); e.stopPropagation(); if (from == null) return; var t = +cell.getAttribute("data-idx"); var f = from; from = null; gReorder(k, f, t); });
+      });
+    }
     b.querySelectorAll("[data-giftadd]").forEach(function (inp) {
       inp.onchange = function () {
         var files = inp.files ? Array.prototype.slice.call(inp.files) : []; if (!files.length) return;
@@ -4735,7 +4767,8 @@ fbq('track', 'PageView');
             sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) {
               inp.value = "";
               if (r.error) { toast("Erro ao salvar: " + r.error.message); return; }
-              toast(okc + "/" + total + " foto(s) adicionada(s)!"); loadPersonaAdmin();
+              if (row) row.gift_images = gl;
+              toast(okc + "/" + total + " foto(s) adicionada(s)!"); pgRerender(k);
             });
             return;
           }
@@ -4750,28 +4783,9 @@ fbq('track', 'PageView');
         })(0);
       };
     });
-    // reordenar fotos de presente (arrastar ou setas ‹ ›)
-    function gReorder(k, from, to) {
-      var row = rows.find(function (x) { return x.creator_key === k; }); if (!row) return;
-      var gl = (Array.isArray(row.gift_images) ? row.gift_images.slice() : []);
-      if (from < 0 || to < 0 || from >= gl.length || to >= gl.length || from === to) return;
-      var m = gl.splice(from, 1)[0]; gl.splice(to, 0, m);
-      row.gift_images = gl;
-      sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) {
-        if (r.error) { toast("Erro ao ordenar: " + r.error.message); return; }
-        loadPersonaAdmin();
-      });
-    }
-    b.querySelectorAll("[data-gmv]").forEach(function (btn) {
-      btn.onclick = function (e) { if (e) e.stopPropagation(); var pr = btn.getAttribute("data-gmv").split("|"); gReorder(pr[0], +pr[1], +pr[1] + (+pr[2])); };
-    });
-    var gDragFrom = null, gDragKey = null;
-    b.querySelectorAll("[data-gthumb]").forEach(function (cell) {
-      cell.addEventListener("dragstart", function (e) { if (e.target && e.target.tagName === "BUTTON") { e.preventDefault(); return; } gDragFrom = +cell.getAttribute("data-idx"); gDragKey = cell.getAttribute("data-gthumb"); cell.style.opacity = ".4"; try { e.dataTransfer.effectAllowed = "move"; } catch (_) {} });
-      cell.addEventListener("dragend", function () { cell.style.opacity = ""; });
-      cell.addEventListener("dragover", function (e) { e.preventDefault(); });
-      cell.addEventListener("drop", function (e) { e.preventDefault(); var k = cell.getAttribute("data-gthumb"); if (gDragKey !== k || gDragFrom == null) return; gReorder(k, gDragFrom, +cell.getAttribute("data-idx")); });
-    });
+    rows.forEach(function (p) { pgWire(p.creator_key); });
+    // trava global: impede o navegador de "abrir" uma imagem solta fora da miniatura (o que reiniciava o app)
+    if (!window.__pgDropGuard) { window.__pgDropGuard = true; document.addEventListener("dragover", function (e) { e.preventDefault(); }, false); document.addEventListener("drop", function (e) { e.preventDefault(); }, false); }
   }
 
   /* ---- admin: AI models (owner-only) ---- */
