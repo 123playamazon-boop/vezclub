@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b101"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b102"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -6119,6 +6119,9 @@ fbq('track', 'PageView');
     sb.functions.invoke("coins_pix", { body: { pack_code: code, bump: !!bump } }).then(function (res) {
       var d = res && res.data;
       if ((res && res.error) || !d || !d.pix_code) { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} return; }
+      // Pix gerado = chegou no checkout: avisa o pixel pra Meta poder otimizar pra quem realmente chega aqui (e parar de trazer lixo)
+      try { if (window.fbq) fbq("track", "InitiateCheckout", { value: (d.amount || priceCents / 100), currency: "BRL", content_name: code, content_type: "coins_pix" }); } catch (e) {}
+      try { if (window.clarity) window.clarity("event", "pix_generated"); } catch (e) {}
       renderCoinPix(mount, d.pix_code, d.identifier, Math.round((d.amount || priceCents / 100) * 100), (d.coins || coins));
     }).catch(function () { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} });
   }
