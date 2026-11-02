@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b106"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b107"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -6250,16 +6250,23 @@ fbq('track', 'PageView');
     mount.innerHTML = '<div style="margin-top:.7rem;padding:1rem;border:1px solid var(--line);border-radius:14px">' +
       '<div style="font-weight:800;margin-bottom:.15rem;text-align:center">🪙 ' + coins + ' coins — ' + money(priceCents, "brl") + '</div>' +
       '<div style="font-size:.74rem;text-align:center;color:#16a34a;margin:0 0 .55rem;font-weight:700">🔒 ' + L("Pix oficial · acesso na hora", "Official Pix · instant access", "Pix oficial · acceso al instante") + '</div>' +
+      (isInApp() ? '<div style="font-size:.76rem;background:rgba(245,158,11,.12);border:1px solid #f59e0b;border-radius:10px;padding:.55rem .6rem;margin:0 0 .6rem;line-height:1.45">⚠️ ' + L("Você está no navegador do Facebook/Instagram. Se o botão copiar não funcionar, <b>segure no código abaixo</b> pra copiar — ou toque em <b>⋯</b> e <b>Abrir no navegador</b>.", "You're in the Facebook/Instagram browser. If the copy button doesn't work, <b>press and hold the code below</b> to copy — or tap <b>⋯</b> then <b>Open in browser</b>.", "Estás en el navegador de Facebook/Instagram. Si el botón copiar no funciona, <b>mantén pulsado el código</b> para copiar — o toca <b>⋯</b> y <b>Abrir en el navegador</b>.") + '</div>' : '') +
       '<div style="font-size:.82rem;line-height:1.6;margin:.2rem 0 .7rem">' + L("<b>1.</b> Toque em <b>Copiar código Pix</b><br><b>2.</b> Abra o app do seu banco → <b>Pix</b><br><b>3.</b> Escolha <b>Pix Copia e Cola</b> e cole o código<br><b>4.</b> Confirme — seus coins caem sozinhos aqui 💜", "<b>1.</b> Tap <b>Copy Pix code</b><br><b>2.</b> Open your bank app → <b>Pix</b><br><b>3.</b> Choose <b>Pix Copy & Paste</b> and paste<br><b>4.</b> Confirm — your coins land here automatically 💜", "<b>1.</b> Toca <b>Copiar código Pix</b><br><b>2.</b> Abre tu banco → <b>Pix</b><br><b>3.</b> Elige <b>Pix Copia y Pega</b> y pega<br><b>4.</b> Confirma — tus coins llegan solos 💜") + '</div>' +
       '<button id="cpix-copy" class="btn btn-primary btn-block" style="font-size:1.02rem;padding:.85rem;font-weight:800">📋 ' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button>' +
-      '<textarea readonly id="cpix-code" style="position:absolute;left:-9999px;top:0">' + escHtml(code) + '</textarea>' +
+      '<div style="font-size:.7rem;color:var(--muted);text-align:center;margin:.5rem 0 .15rem">' + L("ou copie o código na mão (segure e selecione tudo):", "or copy the code manually (press & hold, select all):", "o copia el código a mano (mantén pulsado):") + '</div>' +
+      '<div id="cpix-code" style="user-select:all;-webkit-user-select:all;font-family:monospace;font-size:.72rem;word-break:break-all;background:var(--surface,rgba(127,127,127,.08));border:1px solid var(--line);border-radius:10px;padding:.55rem;max-height:80px;overflow:auto;line-height:1.35;cursor:text">' + escHtml(code) + '</div>' +
       '<button id="cpix-qr-t" class="btn btn-ghost btn-sm btn-block" style="margin-top:.5rem;opacity:.8">' + L("ou pagar escaneando o QR Code", "or pay by scanning the QR", "o pagar escaneando el QR") + '</button>' +
       '<div id="cpix-qr" style="display:none;text-align:center;margin-top:.5rem"><div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.innerHTML=\'<div style=\\\'font-size:.76rem;color:#888;padding:1rem\\\'>' + L("Use o código acima 💜", "Use the code above 💜", "Usa el código 💜") + '</div>\'"></div></div>' +
       '<div id="cpix-status" style="font-size:.86rem;font-weight:700;color:var(--muted);text-align:center;margin-top:.7rem">⏳ ' + L("Esperando seu pagamento… confirma sozinho aqui", "Waiting for your payment… auto-confirms here", "Esperando tu pago… confirma solo aquí") + '</div></div>';
     function doCopy() {
       var ok = false;
       try { navigator.clipboard.writeText(code); ok = true; } catch (e) {}
-      if (!ok) { try { var t = document.getElementById("cpix-code"); t.style.left = "0"; t.focus(); t.select(); document.execCommand("copy"); t.style.left = "-9999px"; ok = true; } catch (e) {} }
+      if (!ok) { try {
+        var el = document.getElementById("cpix-code");
+        var range = document.createRange(); range.selectNodeContents(el);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        ok = document.execCommand("copy"); // se falhar, o texto fica SELECIONADO pro usuário copiar na mão
+      } catch (e) {} }
       return ok;
     }
     var cp = document.getElementById("cpix-copy");
