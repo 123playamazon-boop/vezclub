@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b102"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b103"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2926,7 +2926,7 @@ fbq('track', 'PageView');
       acField("Chamada / teaser (PT)", "teaser", it.teaser) +
       (isStory ? '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">Texto do conto (PT — traduz sozinho pra EN/ES ao salvar)</label><textarea data-f="story_text" rows="5" style="width:100%;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">' + escHtml(it.story_text || "") + '</textarea>' : '') +
       (isReveal ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">Foto VESTIDA (aparece pra todos)</div><div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem"><div class="ac-preview" style="width:62px;height:62px;border-radius:8px;overflow:hidden;background:' + (it.cover_url ? 'url(' + escHtml(it.cover_url) + ') center/cover' : 'var(--surface-2,rgba(127,127,127,.12))') + '"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">' + (it.cover_url ? "Trocar vestida" : "+ Foto vestida") + '<input type="file" accept="image/*" data-ac-addpreview hidden></label></div>' : '') +
-      (isGallery ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">' + galLbl + '</div><div class="ac-photos" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">+ Adicionar foto<input type="file" accept="image/*" data-ac-addphoto hidden></label>' : '') +
+      (isGallery ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">' + galLbl + ' <span style="opacity:.7">· arraste pra reordenar (ou use ‹ ›)</span></div><div class="ac-photos" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">+ Adicionar fotos (várias)<input type="file" accept="image/*" data-ac-addphoto multiple hidden></label>' : '') +
       '<div style="display:flex;gap:.7rem;align-items:center;margin-top:.6rem;flex-wrap:wrap">' +
       '<label style="font-size:.82rem">Preço <input data-f="unlock_cost_coins" type="number" value="' + (it.unlock_cost_coins || 0) + '" style="width:72px;padding:.4rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit"> coins</label>' +
       '<label style="font-size:.82rem"><input data-f="active" type="checkbox" ' + (it.active !== false ? "checked" : "") + '> ativo</label>' +
@@ -2936,9 +2936,21 @@ fbq('track', 'PageView');
       '</div>';
   }
   function acLoadPhotos(id, host) {
-    var it = acItemsById[id]; var paths = (it && Array.isArray(it.media_paths)) ? it.media_paths : [];
+    var it = acItemsById[id]; var paths = (it && Array.isArray(it.media_paths)) ? it.media_paths.slice() : [];
     if (!paths.length) { host.innerHTML = '<span class="muted-note" style="font-size:.76rem">sem fotos ainda</span>'; return; }
-    host.innerHTML = paths.map(function (p) { return '<div data-p="' + escHtml(p) + '" style="position:relative;width:62px;height:62px;border-radius:8px;overflow:hidden;background:var(--surface-2,rgba(127,127,127,.12));display:flex;align-items:center;justify-content:center"><span style="font-size:.6rem;color:var(--muted)">…</span><button data-ac-rmphoto title="remover" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.6);color:#fff;border:0;width:18px;height:18px;border-radius:0 0 0 6px;cursor:pointer;font-size:.72rem;line-height:1">×</button></div>'; }).join("");
+    function persist(newPaths) {
+      if (acItemsById[id]) acItemsById[id].media_paths = newPaths;
+      acLoadPhotos(id, host); // re-render otimista na nova ordem
+      acCall({ action: "set_photo_order", id: id, paths: newPaths }).then(function (r) { if (!(r && r.data && r.data.ok)) toast("não deu pra salvar a ordem"); });
+    }
+    host.innerHTML = paths.map(function (p, i) {
+      return '<div data-p="' + escHtml(p) + '" data-idx="' + i + '" draggable="true" style="position:relative;width:62px;height:62px;border-radius:8px;overflow:hidden;background:var(--surface-2,rgba(127,127,127,.12));display:flex;align-items:center;justify-content:center;cursor:grab">' +
+        '<span style="font-size:.6rem;color:var(--muted)">…</span>' +
+        '<button data-ac-rmphoto title="remover" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.6);color:#fff;border:0;width:18px;height:18px;border-radius:0 0 0 6px;cursor:pointer;font-size:.72rem;line-height:1">×</button>' +
+        '<button data-mv="-1" title="esquerda" ' + (i === 0 ? 'disabled ' : '') + 'style="position:absolute;bottom:0;left:0;background:rgba(0,0,0,.55);color:#fff;border:0;width:20px;height:17px;cursor:pointer;font-size:.74rem;line-height:1;opacity:' + (i === 0 ? '.3' : '1') + '">‹</button>' +
+        '<button data-mv="1" title="direita" ' + (i === paths.length - 1 ? 'disabled ' : '') + 'style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,.55);color:#fff;border:0;width:20px;height:17px;cursor:pointer;font-size:.74rem;line-height:1;opacity:' + (i === paths.length - 1 ? '.3' : '1') + '">›</button>' +
+        '</div>';
+    }).join("");
     paths.forEach(function (p) {
       acCall({ action: "sign", path: p }).then(function (r) {
         var url = r && r.data && r.data.url; if (!url) return;
@@ -2947,29 +2959,56 @@ fbq('track', 'PageView');
       });
     });
     host.querySelectorAll("[data-ac-rmphoto]").forEach(function (b) {
-      b.onclick = function () {
+      b.onclick = function (e) { if (e) e.stopPropagation();
         var p = b.closest("[data-p]").getAttribute("data-p");
         acCall({ action: "remove_photo", id: id, path: p }).then(function (r) { if (r && r.data && r.data.ok) { if (acItemsById[id]) acItemsById[id].media_paths = r.data.paths; acLoadPhotos(id, host); } });
       };
+    });
+    // setas ‹ › (funciona no touch; fallback do arrastar)
+    host.querySelectorAll("[data-mv]").forEach(function (b) {
+      b.onclick = function (e) { if (e) e.stopPropagation();
+        var cur = (acItemsById[id] && Array.isArray(acItemsById[id].media_paths)) ? acItemsById[id].media_paths.slice() : paths.slice();
+        var from = +b.closest("[data-p]").getAttribute("data-idx"); var to = from + (+b.getAttribute("data-mv"));
+        if (to < 0 || to >= cur.length || from === to) return;
+        var moved = cur.splice(from, 1)[0]; cur.splice(to, 0, moved); persist(cur);
+      };
+    });
+    // arrastar e soltar (desktop)
+    var dragFrom = null;
+    host.querySelectorAll("[data-p]").forEach(function (cell) {
+      cell.addEventListener("dragstart", function (e) { dragFrom = +cell.getAttribute("data-idx"); cell.style.opacity = ".4"; try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(dragFrom)); } catch (_) {} });
+      cell.addEventListener("dragend", function () { cell.style.opacity = ""; });
+      cell.addEventListener("dragover", function (e) { e.preventDefault(); try { e.dataTransfer.dropEffect = "move"; } catch (_) {} });
+      cell.addEventListener("drop", function (e) { e.preventDefault();
+        var to = +cell.getAttribute("data-idx"); var from = dragFrom;
+        if (from == null) { try { from = +e.dataTransfer.getData("text/plain"); } catch (_) { from = null; } }
+        if (from == null || isNaN(from) || from === to) return;
+        var cur = (acItemsById[id] && Array.isArray(acItemsById[id].media_paths)) ? acItemsById[id].media_paths.slice() : paths.slice();
+        var moved = cur.splice(from, 1)[0]; cur.splice(to, 0, moved); persist(cur);
+      });
     });
   }
   function acWire(box, ck) {
     box.querySelectorAll(".ac-item").forEach(function (el) { var ph = el.querySelector(".ac-photos"); if (ph) acLoadPhotos(el.getAttribute("data-ac-id"), ph); });
     box.querySelectorAll("[data-ac-addphoto]").forEach(function (inp) {
       inp.addEventListener("change", function () {
-        var f = inp.files && inp.files[0]; if (!f) return;
-        if (f.size > 12 * 1024 * 1024) { toast("Foto muito grande (máx 12MB)"); inp.value = ""; return; }
+        var files = inp.files ? Array.prototype.slice.call(inp.files) : []; if (!files.length) return;
+        if (files.some(function (f) { return f.size > 12 * 1024 * 1024; })) { toast("Alguma foto passa de 12MB — tira ela e tenta de novo"); inp.value = ""; return; }
         var id = inp.closest(".ac-item").getAttribute("data-ac-id");
-        var rd = new FileReader();
-        rd.onload = function () {
-          var b64 = String(rd.result || "").split(",")[1] || ""; toast("Subindo foto…");
-          acCall({ action: "add_photo", id: id, b64: b64, content_type: f.type }).then(function (r) {
-            inp.value = "";
-            if (r && r.data && r.data.ok) { toast("Foto adicionada ✓"); if (acItemsById[id]) acItemsById[id].media_paths = r.data.paths; acLoadPhotos(id, inp.closest(".ac-item").querySelector(".ac-photos")); }
-            else toast("não subiu a foto");
+        var host = inp.closest(".ac-item").querySelector(".ac-photos");
+        var total = files.length, okc = 0;
+        function readB64(f) { return new Promise(function (res) { var rd = new FileReader(); rd.onload = function () { res(String(rd.result || "").split(",")[1] || ""); }; rd.onerror = function () { res(""); }; rd.readAsDataURL(f); }); }
+        (function next(i) {
+          if (i >= total) { inp.value = ""; toast(okc + "/" + total + " foto(s) adicionada(s) ✓"); if (host) acLoadPhotos(id, host); return; }
+          toast("Subindo " + (i + 1) + "/" + total + "…");
+          readB64(files[i]).then(function (b64) {
+            if (!b64) { next(i + 1); return; }
+            acCall({ action: "add_photo", id: id, b64: b64, content_type: files[i].type }).then(function (r) {
+              if (r && r.data && r.data.ok) { okc++; if (acItemsById[id]) acItemsById[id].media_paths = r.data.paths; }
+              next(i + 1);
+            }).catch(function () { next(i + 1); });
           });
-        };
-        rd.readAsDataURL(f);
+        })(0);
       });
     });
     box.querySelectorAll("[data-ac-addpreview]").forEach(function (inp) {
