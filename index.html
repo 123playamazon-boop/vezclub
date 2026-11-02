@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b108"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b109"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -4683,7 +4683,7 @@ fbq('track', 'PageView');
         field("Primeira mensagem (saudação)", '<input id="pa-greet-' + p.creator_key + '" value="' + escHtml(p.greeting || "") + '">') +
         field("Mandar presente a cada N mensagens", '<input id="pa-every-' + p.creator_key + '" type="number" min="1" value="' + (p.gift_every || 4) + '" style="max-width:120px">') +
         '<div class="muted-note" style="margin:.4rem 0 .2rem">Fotos de presente:</div><div>' + (thumbs || '<span class="muted-note">nenhuma</span>') + '</div>' +
-        '<label class="btn btn-ghost btn-sm" style="margin-top:.5rem;display:inline-block;cursor:pointer">+ Adicionar foto<input type="file" accept="image/*" data-giftadd="' + p.creator_key + '" hidden></label>' +
+        '<label class="btn btn-ghost btn-sm" style="margin-top:.5rem;display:inline-block;cursor:pointer">+ Adicionar fotos (várias)<input type="file" accept="image/*" data-giftadd="' + p.creator_key + '" multiple hidden></label>' +
         '<div class="ob-actions" style="margin-top:.7rem"><button class="btn btn-primary" data-pasave="' + p.creator_key + '">Salvar persona</button></div>' +
       '</div>' +
     '</div>';
@@ -4719,21 +4719,29 @@ fbq('track', 'PageView');
     });
     b.querySelectorAll("[data-giftadd]").forEach(function (inp) {
       inp.onchange = function () {
-        var f = inp.files[0]; if (!f) return;
+        var files = inp.files ? Array.prototype.slice.call(inp.files) : []; if (!files.length) return;
         var k = inp.getAttribute("data-giftadd");
-        var ext = (f.name.split(".").pop() || "webp").toLowerCase();
-        var path = k + "/gift-" + Date.now() + "." + ext;
-        toast("Enviando foto…");
-        sb.storage.from("avatars").upload(path, f, { upsert: true, contentType: f.type }).then(function (u) {
-          if (u.error) { toast("Erro no upload: " + u.error.message); return; }
-          var row = rows.find(function (x) { return x.creator_key === k; });
-          var gl = (row && Array.isArray(row.gift_images)) ? row.gift_images.slice() : [];
-          gl.push({ path: path, caption: "tenho um presente pra você 🙈" });
-          sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) {
-            if (r.error) { toast("Erro: " + r.error.message); return; }
-            toast("Foto de presente adicionada!"); loadPersonaAdmin();
-          });
-        });
+        var row = rows.find(function (x) { return x.creator_key === k; });
+        var gl = (row && Array.isArray(row.gift_images)) ? row.gift_images.slice() : [];
+        var total = files.length, okc = 0;
+        (function next(i) {
+          if (i >= total) {
+            sb.from("chat_personas").update({ gift_images: gl }).eq("creator_key", k).then(function (r) {
+              inp.value = "";
+              if (r.error) { toast("Erro ao salvar: " + r.error.message); return; }
+              toast(okc + "/" + total + " foto(s) adicionada(s)!"); loadPersonaAdmin();
+            });
+            return;
+          }
+          var f = files[i];
+          toast("Enviando " + (i + 1) + "/" + total + "…");
+          var ext = (f.name.split(".").pop() || "webp").toLowerCase();
+          var path = k + "/gift-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6) + "." + ext;
+          sb.storage.from("avatars").upload(path, f, { upsert: true, contentType: f.type }).then(function (u) {
+            if (!u.error) { gl.push({ path: path, caption: "tenho um presente pra você 🙈" }); okc++; }
+            next(i + 1);
+          }, function () { next(i + 1); });
+        })(0);
       };
     });
   }
