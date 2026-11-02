@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b103"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b104"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
 
   /* ---------------- data ---------------- */
   var PHOTO_LADDER = [
@@ -2904,13 +2904,81 @@ fbq('track', 'PageView');
       acItemsById = {}; items.forEach(function (it) { acItemsById[it.id] = it; });
       var nAlb = items.filter(function (i) { return i.kind === "photo_set"; }).length;
       var nCon = items.filter(function (i) { return i.kind === "story"; }).length;
-      box.innerHTML = items.map(acItemHtml).join("") +
+      box.innerHTML = '<div id="gf-panel"></div>' + items.map(acItemHtml).join("") +
         '<div style="border:2px dashed var(--accent,#6d28d9);border-radius:14px;padding:1rem;margin-top:1rem;background:rgba(109,40,217,.05)">' +
         '<div style="font-weight:800;margin-bottom:.2rem">➕ Adicionar mais conteúdo pra ' + escHtml(whoName(ck) || "ela") + '</div>' +
         '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">Pode ter vários álbuns e vários contos. Quem comprou um volta pra comprar o próximo — então adicione sempre. (Hoje: ' + nAlb + ' álbum(ns), ' + nCon + ' conto(s).)</div>' +
         '<div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn btn-primary btn-sm" data-ac-new="photo_set">📸 + Álbum de fotos</button><button class="btn btn-primary btn-sm" data-ac-new="story">📖 + Conto erótico</button><button class="btn btn-ghost btn-sm" data-ac-new="reveal">👗 + Vestida/sem roupa</button><button class="btn btn-ghost btn-sm" data-ac-new="game">🎲 + Jogo</button></div></div>';
       acWire(box, ck);
+      gfLoad(ck);
     }, function () { box.innerHTML = '<p class="muted-note">Erro ao carregar.</p>'; });
+  }
+  /* ===== Fotos que a modelo manda NO CHAT (chat_personas.gift_images) ===== */
+  var gfState = {};
+  function gfCall(payload) { return sb.functions.invoke("admin_gifts", { body: payload }); }
+  function gfLoad(ck) {
+    var host = document.getElementById("gf-panel"); if (!host) return;
+    host.innerHTML = '<p class="muted-note" style="font-size:.8rem">Carregando fotos do chat…</p>';
+    gfCall({ action: "list", creator_key: ck }).then(function (r) {
+      var d = r && r.data; if (!d || !d.ok) { host.innerHTML = '<p class="muted-note">Erro nas fotos do chat.</p>'; return; }
+      gfState[ck] = { gifts: d.gifts || [], base: d.base, every: d.gift_every };
+      gfRender(ck);
+    }, function () { host.innerHTML = '<p class="muted-note">Erro nas fotos do chat.</p>'; });
+  }
+  function gfRender(ck) {
+    var host = document.getElementById("gf-panel"); if (!host) return;
+    var st = gfState[ck]; var gifts = st.gifts; var base = st.base;
+    var rows = gifts.length ? gifts.map(function (g, i) {
+      return '<div data-gp="' + escHtml(g.path) + '" data-idx="' + i + '" draggable="true" style="display:flex;gap:.5rem;align-items:center;border:1px solid var(--line);border-radius:10px;padding:.4rem;cursor:grab">' +
+        '<div style="flex:0 0 auto;width:54px;height:54px;border-radius:8px;background:url(' + base + encodeURI(g.path) + ') center/cover"></div>' +
+        '<input data-gf-cap type="text" value="' + escHtml(g.caption || "") + '" placeholder="legenda (ela escreve isso ao mandar)" style="flex:1;min-width:0;padding:.4rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit;font-size:.82rem">' +
+        '<button data-gf-mv="-1" title="subir" ' + (i === 0 ? 'disabled ' : '') + 'style="border:0;background:rgba(127,127,127,.15);border-radius:6px;width:24px;height:28px;cursor:pointer;opacity:' + (i === 0 ? '.3' : '1') + '">‹</button>' +
+        '<button data-gf-mv="1" title="descer" ' + (i === gifts.length - 1 ? 'disabled ' : '') + 'style="border:0;background:rgba(127,127,127,.15);border-radius:6px;width:24px;height:28px;cursor:pointer;opacity:' + (i === gifts.length - 1 ? '.3' : '1') + '">›</button>' +
+        '<button data-gf-rm title="remover" style="border:0;background:rgba(220,38,38,.12);color:#dc2626;border-radius:6px;width:28px;height:28px;cursor:pointer;font-weight:800">×</button>' +
+        '</div>';
+    }).join("") : '<span class="muted-note" style="font-size:.78rem">sem fotos ainda</span>';
+    host.innerHTML = '<div style="border:2px dashed #db2777;border-radius:14px;padding:1rem;margin:0 0 1rem;background:rgba(219,39,119,.05)">' +
+      '<div style="font-weight:800;margin-bottom:.2rem">📨 Fotos que ela manda no chat</div>' +
+      '<div style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">Ela solta essas no meio da conversa. Arraste pra reordenar (ou ‹ ›). A legenda é o que ela escreve ao mandar.</div>' +
+      '<label style="font-size:.8rem;display:block;margin-bottom:.6rem">Manda 1 foto a cada <input id="gf-every" type="number" min="1" max="20" value="' + (st.every || 4) + '" style="width:56px;padding:.35rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit"> mensagens</label>' +
+      '<div id="gf-grid" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.6rem">' + rows + '</div>' +
+      '<label class="btn btn-ghost btn-sm" style="cursor:pointer">+ Adicionar fotos (várias)<input id="gf-add" type="file" accept="image/*" multiple hidden></label>' +
+      '</div>';
+    gfWire(ck);
+  }
+  function gfWire(ck) {
+    var st = gfState[ck];
+    function persist(next) { st.gifts = next; gfRender(ck); gfCall({ action: "set_order", creator_key: ck, paths: next.map(function (g) { return g.path; }) }).then(function (r) { if (!(r && r.data && r.data.ok)) toast("não deu pra salvar a ordem"); }); }
+    var ev = document.getElementById("gf-every");
+    if (ev) ev.onchange = function () { var n = Math.max(1, Math.min(20, parseInt(ev.value, 10) || 4)); ev.value = n; st.every = n; gfCall({ action: "set_every", creator_key: ck, n: n }).then(function (r) { if (r && r.data && r.data.ok) toast("cadência salva ✓"); }); };
+    document.querySelectorAll("#gf-grid [data-gf-cap]").forEach(function (inp) {
+      inp.onblur = function () { var row = inp.closest("[data-gp]"); var p = row.getAttribute("data-gp"); var g = st.gifts.find(function (x) { return x.path === p; }); if (g && (g.caption || "") !== inp.value) { g.caption = inp.value; gfCall({ action: "caption", creator_key: ck, path: p, caption: inp.value }).then(function (r) { if (r && r.data && r.data.ok) toast("legenda salva ✓"); }); } };
+    });
+    document.querySelectorAll("#gf-grid [data-gf-rm]").forEach(function (b) {
+      b.onclick = function (e) { if (e) e.stopPropagation(); var p = b.closest("[data-gp]").getAttribute("data-gp"); gfCall({ action: "remove", creator_key: ck, path: p }).then(function (r) { if (r && r.data && r.data.ok) { st.gifts = r.data.gifts || []; gfRender(ck); } }); };
+    });
+    document.querySelectorAll("#gf-grid [data-gf-mv]").forEach(function (b) {
+      b.onclick = function (e) { if (e) e.stopPropagation(); var from = +b.closest("[data-gp]").getAttribute("data-idx"); var to = from + (+b.getAttribute("data-gf-mv")); var cur = st.gifts.slice(); if (to < 0 || to >= cur.length || from === to) return; var m = cur.splice(from, 1)[0]; cur.splice(to, 0, m); persist(cur); };
+    });
+    var dragFrom = null;
+    document.querySelectorAll("#gf-grid [data-gp]").forEach(function (row) {
+      row.addEventListener("dragstart", function (e) { if (e.target && e.target.tagName === "INPUT") { e.preventDefault(); return; } dragFrom = +row.getAttribute("data-idx"); row.style.opacity = ".4"; try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(dragFrom)); } catch (_) {} });
+      row.addEventListener("dragend", function () { row.style.opacity = ""; });
+      row.addEventListener("dragover", function (e) { e.preventDefault(); });
+      row.addEventListener("drop", function (e) { e.preventDefault(); var to = +row.getAttribute("data-idx"); var from = dragFrom; if (from == null) { try { from = +e.dataTransfer.getData("text/plain"); } catch (_) { from = null; } } if (from == null || isNaN(from) || from === to) return; var cur = st.gifts.slice(); var m = cur.splice(from, 1)[0]; cur.splice(to, 0, m); persist(cur); });
+    });
+    var add = document.getElementById("gf-add");
+    if (add) add.addEventListener("change", function () {
+      var files = add.files ? Array.prototype.slice.call(add.files) : []; if (!files.length) return;
+      if (files.some(function (f) { return f.size > 12 * 1024 * 1024; })) { toast("Alguma foto passa de 12MB — tira ela"); add.value = ""; return; }
+      var total = files.length, okc = 0;
+      function readB64(f) { return new Promise(function (res) { var rd = new FileReader(); rd.onload = function () { res(String(rd.result || "").split(",")[1] || ""); }; rd.onerror = function () { res(""); }; rd.readAsDataURL(f); }); }
+      (function next(i) {
+        if (i >= total) { add.value = ""; toast(okc + "/" + total + " foto(s) adicionada(s) ✓"); gfLoad(ck); return; }
+        toast("Subindo " + (i + 1) + "/" + total + "…");
+        readB64(files[i]).then(function (b64) { if (!b64) { next(i + 1); return; } gfCall({ action: "add", creator_key: ck, b64: b64, content_type: files[i].type }).then(function (r) { if (r && r.data && r.data.ok) { okc++; st.gifts = r.data.gifts || st.gifts; } next(i + 1); }).catch(function () { next(i + 1); }); });
+      })(0);
+    });
   }
   function acField(label, name, val, type) {
     return '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">' + label + '</label><input data-f="' + name + '" type="' + (type || "text") + '" value="' + escHtml(String(val == null ? "" : val)) + '" style="width:100%;padding:.45rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">';
