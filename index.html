@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b107"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b108"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -1174,12 +1174,14 @@ fbq('track', 'PageView');
   function pickI18n(row, base) { return (lang === "en" ? (row[base + "_en"] || row[base]) : lang === "es" ? (row[base + "_es"] || row[base]) : row[base]) || ""; }
   function buildCreatorFromDb(row) {
     var hook = pickI18n(row, "hook"), tg = pickI18n(row, "tag");
+    var isNewC = !!(row.created_at && (Date.now() - new Date(row.created_at).getTime() < 10 * 24 * 3600 * 1000));
     if (DEMO[row.key]) {
       var d = DEMO[row.key]; d.ai = !!row.is_ai; d.hasChat = (row.has_chat !== false); d.hasSub = (row.has_subscription !== false);
       // texto sempre do banco no idioma certo (evita bio em PT com UI em EN)
       if (hook) { d.hook = hook; d.story = hook; d.offerLine = hook; } if (tg) d.tag = tg;
       if (row.avatar_path) { d.avatarUrl = mediaUrl(row.avatar_path); d.avatarPath = row.avatar_path; }
       if (row.cover_path) { d.coverUrl = mediaUrl(row.cover_path); d.coverPath = row.cover_path; }
+      d.isNew = isNewC; d.created_at = row.created_at;
       return d;
     }
     var color = [row.color1 || "#2f6bff", row.color2 || "#7a3cff"];
@@ -1190,6 +1192,7 @@ fbq('track', 'PageView');
     c.hasChat = (row.has_chat !== false);
     c.hasSub = (row.has_subscription !== false);
     c.tiles = mkTiles(c.id, c.color);
+    c.isNew = isNewC; c.created_at = row.created_at;
     return c;
   }
   var AI_PERSONAS = {};
@@ -1202,11 +1205,13 @@ fbq('track', 'PageView');
   }
   function loadCreators(cb) {
     if (!sb) { if (cb) cb(); return; }
-    sb.from("creators").select("key,display_name,handle,tag,tag_en,tag_es,sub_price_cents,is_ai,online,hook,hook_en,hook_es,color1,color2,avatar_path,cover_path,has_chat,has_subscription").then(function (r) {
+    sb.from("creators").select("key,display_name,handle,tag,tag_en,tag_es,sub_price_cents,is_ai,online,hook,hook_en,hook_es,color1,color2,avatar_path,cover_path,has_chat,has_subscription,created_at").then(function (r) {
       if (!r.error && r.data && r.data.length) {
         // modelos com fotos em baixa resolução vão pro final do feed até serem atualizadas
         var LOWRES = { nina: 1, sofia: 1, emma: 1, maya: 1 };
         r.data.sort(function (a, b) {
+          var ta = a.created_at ? new Date(a.created_at).getTime() : 0, tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+          if (tb !== ta) return tb - ta; // modelo mais NOVA entra no topo (destaque)
           var la = LOWRES[a.key] ? 1 : 0, lb = LOWRES[b.key] ? 1 : 0;
           if (la !== lb) return la - lb;
           return (a.is_ai ? 1 : 0) - (b.is_ai ? 1 : 0);
@@ -2001,7 +2006,7 @@ fbq('track', 'PageView');
           return '<div class="mini-tile" style="background:' + grad(t.grad) + '">' + (owned ? I.check : I.lock) + '</div>';
         }).join("");
       }
-      var ribbon = c.left <= 8 ? '<div class="ribbon warn">' + I.bolt + 'Últimas vagas</div>' : (c.subs >= 1700 ? '<div class="ribbon">Em alta</div>' : "");
+      var ribbon = c.isNew ? '<div class="ribbon" style="background:linear-gradient(135deg,#db2777,#f59e0b);color:#fff">✨ ' + L("NOVA", "NEW", "NUEVA") + '</div>' : (c.left <= 8 ? '<div class="ribbon warn">' + I.bolt + 'Últimas vagas</div>' : (c.subs >= 1700 ? '<div class="ribbon">Em alta</div>' : ""));
       var status = !c.hasChat
         ? '<div class="cc-status on"><span class="live-dot"></span>' + L("Online · conteúdo novo", "Online · new content", "Online · contenido nuevo") + '</div>'
         : c.online
