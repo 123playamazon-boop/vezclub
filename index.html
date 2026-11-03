@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b112"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b113"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -1919,7 +1919,7 @@ fbq('track', 'PageView');
   }
   function applyDynTranslation() {
     var tl = lang;
-    var nodes = document.querySelectorAll(".rc-cap, .ph-time ~ .post-cap, .post-cap");
+    var nodes = document.querySelectorAll(".cc-hook2, .pf-hook, .pf-about, .sv-hook, .rc-cap, .ph-time ~ .post-cap, .post-cap");
     nodes.forEach(function (el) {
       if (el.querySelector && el.querySelector("*")) return; // only plain-text nodes
       var orig = el.getAttribute("data-orig");
