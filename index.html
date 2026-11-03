@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b131"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b132"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6361,8 +6361,215 @@ fbq('track', 'PageView');
   // NOVO: manda pro checkout próprio (QR + copia-e-cola + order bumps + confiança). Passa o token da sessão no #fragment pra creditar a conta certa.
   function openCheckout(code, addId, backChat) {
     try { if (window.clarity) window.clarity("event", "open_checkout"); } catch (e) {}
-    function go(tok) { var url = "checkout.html?pack=" + encodeURIComponent(code) + (addId ? ("&add=" + encodeURIComponent(addId)) : "") + (backChat ? ("&cb=" + encodeURIComponent(backChat)) : "") + (tok ? ("#t=" + encodeURIComponent(tok)) : ""); window.location.href = url; }
-    try { sb.auth.getSession().then(function (r) { go((r && r.data && r.data.session && r.data.session.access_token) || ""); }, function () { go(""); }); } catch (e) { go(""); }
+    openCheckoutModal(code || "br_start", addId || "", backChat || "");
+  }
+  // CHECKOUT EM OVERLAY (sem 2ª página) — portado do checkout.html pra rodar dentro do app.
+  // Mata o recarregamento que derrubava 87% entre "abriu checkout" e "gerou pix".
+  function injectCkStyle() {
+    if (document.getElementById("vck-style")) return;
+    var st = document.createElement("style"); st.id = "vck-style";
+    st.textContent = ''
+      + '.vck-wrap{padding:14px 16px 26px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5;color:#16161f}'
+      + '.vck-top{display:flex;align-items:center;justify-content:space-between;padding:2px 0 8px}'
+      + '.vck-sec{display:flex;align-items:center;gap:6px;color:#15a34a;font-size:.76rem;font-weight:700}'
+      + '.vck-x{border:0;background:#ececf4;color:#4a4a5a;width:30px;height:30px;border-radius:50%;font-size:1rem;cursor:pointer;line-height:1;flex:0 0 auto}'
+      + '.vck-card{background:#fff;border:1px solid #e8e8f0;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(20,20,40,.04)}'
+      + '.vck-hero{background:linear-gradient(135deg,#e5106a,#ff7a1a);color:#fff;border:0;text-align:center;box-shadow:0 12px 30px -12px rgba(229,16,106,.6)}'
+      + '.vck-hero h1{font-size:1.28rem;margin:0 0 3px;font-weight:800}.vck-hero p{margin:0;font-size:.9rem;opacity:.96}'
+      + '.vck-h2{font-size:1.02rem;margin:0 0 8px;font-weight:800}.vck-sub{color:#6b6b7c;font-size:.84rem;margin:0 0 10px}'
+      + '.vck-li{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px dashed #e8e8f0}.vck-li:last-child{border-bottom:0}'
+      + '.vck-li .nm{font-weight:700;font-size:.95rem}.vck-li .ds{color:#6b6b7c;font-size:.78rem}.vck-li .pr{text-align:right;white-space:nowrap}'
+      + '.vck-li .was{color:#8a8a99;text-decoration:line-through;font-size:.76rem;display:block}.vck-li .now{font-weight:800}'
+      + '.vck-bump{display:flex;gap:11px;align-items:flex-start;padding:11px;border:1.5px solid #e8e8f0;border-radius:13px;margin-top:9px;cursor:pointer;transition:all .15s;background:#fff}'
+      + '.vck-bump.on{border-color:#e5106a;background:#fff0f6}'
+      + '.vck-bump input{margin-top:3px;width:19px;height:19px;accent-color:#e5106a;flex:0 0 auto}'
+      + '.vck-bump .t{font-weight:800}.vck-bump .d{color:#6b6b7c;font-size:.78rem}.vck-bump .p{margin-left:auto;text-align:right;white-space:nowrap}'
+      + '.vck-bump .p .was{color:#8a8a99;text-decoration:line-through;font-size:.74rem;display:block}.vck-bump .p .now{font-weight:800;color:#e5106a}'
+      + '.vck-tag{display:inline-block;background:#ff7a1a;color:#fff;font-size:.66rem;font-weight:800;padding:1px 7px;border-radius:999px;margin-bottom:3px;letter-spacing:.03em}'
+      + '.vck-totbox{background:#fff0f6;border:1px solid #f6d0e2;border-radius:13px;padding:12px 14px}'
+      + '.vck-totrow{display:flex;justify-content:space-between;align-items:center}.vck-totrow .k{color:#6b6b7c;font-size:.86rem}'
+      + '.vck-totrow.save .v{color:#15a34a;font-weight:800}.vck-totrow.big{margin-top:4px}'
+      + '.vck-totrow.big .k{font-size:1.05rem;font-weight:800;color:#16161f}.vck-totrow.big .v{font-size:1.5rem;font-weight:800}'
+      + '.vck-scar{display:flex;align-items:center;justify-content:center;gap:8px;background:#fff6e9;border:1px solid #ffd79c;border-radius:12px;padding:10px;color:#9a5a00;font-size:.84rem;font-weight:700;margin-bottom:12px}'
+      + '.vck-scar b{font-variant-numeric:tabular-nums;background:#9a3412;color:#fff;border-radius:7px;padding:1px 8px}'
+      + '.vck-guar{display:flex;gap:11px;align-items:center;background:#effcf2;border:1px solid #bfe9cc;border-radius:13px;padding:12px 14px;margin-bottom:4px}'
+      + '.vck-guar .ic{font-size:1.6rem;line-height:1}.vck-guar .t{font-weight:800;font-size:.92rem;color:#14733a}.vck-guar .d{font-size:.78rem;color:#2f7d4f}'
+      + '.vck-btn{display:block;width:100%;border:0;border-radius:14px;padding:1.05rem;font-size:1.08rem;font-weight:800;color:#fff;background:linear-gradient(100deg,#e5106a,#ff2d6f);cursor:pointer;box-shadow:0 10px 24px -10px rgba(229,16,106,.7)}'
+      + '.vck-btn:active{transform:scale(.99)}.vck-btn:disabled{opacity:.6}.vck-btn.sec{background:#15a34a;box-shadow:0 10px 24px -10px rgba(21,163,74,.6)}.vck-btn.block2{margin-top:9px}'
+      + '.vck-btn.ghost{background:#ececf4;color:#4a4a5a;box-shadow:none;font-size:.9rem;padding:.7rem}'
+      + '.vck-trust{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:12px 0 0;color:#6b6b7c;font-size:.74rem}'
+      + '.vck-center{text-align:center}.vck-hide{display:none!important}'
+      + '.vck-big{font-size:2rem;font-weight:800;margin:4px 0}'
+      + '.vck-code{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;word-break:break-all;background:#f6f6fb;border:1px solid #e8e8f0;border-radius:10px;padding:10px;user-select:all;-webkit-user-select:all;color:#3a3a4a;cursor:text}'
+      + '.vck-note{background:#fff0f6;border:1px solid #f6d0e2;border-radius:11px;padding:11px;font-size:.82rem;margin-top:11px;color:#8a1048;text-align:left}'
+      + '.vck-warn{font-size:.76rem;background:rgba(245,158,11,.12);border:1px solid #f59e0b;border-radius:10px;padding:.55rem .6rem;margin:0 0 .6rem;line-height:1.45;text-align:left;color:#7a4a00}'
+      + '.vck-okc{width:74px;height:74px;border-radius:50%;background:#15a34a;display:flex;align-items:center;justify-content:center;margin:6px auto 10px;font-size:2.3rem;color:#fff}'
+      + '.vck-pulse{width:46px;height:46px;border-radius:50%;border:3px solid rgba(229,16,106,.18);border-top-color:#e5106a;animation:vcksp 1s linear infinite;margin:10px auto}'
+      + '@keyframes vcksp{to{transform:rotate(360deg)}}'
+      + '.vck-foot{color:#8a8a99;font-size:.74rem;text-align:center;margin-top:12px}'
+      + '#vck-qr{display:flex;justify-content:center;padding:10px;background:#fff;border:1px solid #e8e8f0;border-radius:14px;margin:4px auto 10px;width:max-content}#vck-qr img{display:block;width:196px;height:196px}';
+    document.head.appendChild(st);
+  }
+  function openCheckoutModal(code, addId, backChat) {
+    injectCkStyle();
+    var packCode = code || "br_start";
+    var pack = null, bumps = [], selected = {}, identifier = null, poll = null;
+    function esc(s) { return escHtml(String(s == null ? "" : s)); }
+    function brl(c) { return "R$ " + ((c || 0) / 100).toFixed(2).replace(".", ","); }
+    function anchor(c) { return Math.round((c || 0) * 2); }
+    var q = function (sel) { return modalRoot.querySelector(sel); };
+
+    modalRoot.innerHTML = '<div class="modal-bg" id="vck-bg">'
+      + '<div class="modal" style="max-width:460px;width:100%;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f3f4fb;color:#16161f;border:0;border-radius:18px;padding:0">'
+      + '<div class="vck-wrap">'
+      + '<div class="vck-top"><div class="vck-sec">🔐 Pagamento seguro · Pix</div><button class="vck-x" data-close aria-label="Fechar">✕</button></div>'
+      // etapa 1: carrinho
+      + '<div id="vck-cart">'
+      + '<div class="vck-card vck-hero"><h1>Falta 1 passo 🔥</h1><p>Libera agora o que ela guarda só pra quem desbloqueia.</p></div>'
+      + '<div class="vck-scar">⏳ Essa condição de lançamento expira em <b id="vck-timer">10:00</b></div>'
+      + '<div class="vck-card"><div class="vck-h2">Seu pedido</div><div id="vck-order"><p class="vck-sub">Carregando…</p></div></div>'
+      + '<div class="vck-card" id="vck-bumps-card"><div class="vck-h2">Leve junto agora 🔥</div><p class="vck-sub">Cada pack é <b>100% diferente</b> — as fotos de um <b>não se repetem</b> no outro. Quem leva mais, monta o acervo completo. Tudo no mesmo Pix, liberado na hora.</p><div id="vck-bumps"><p class="vck-sub">—</p></div><div style="display:flex;align-items:center;gap:8px;background:#eef7ff;border:1px solid #c9e4ff;border-radius:11px;padding:10px 12px;margin-top:10px;font-size:.82rem;color:#0b5aa6;font-weight:600">✓ Conteúdo exclusivo em cada pack — nada repetido. Pode levar todos.</div></div>'
+      + '<div class="vck-card"><div class="vck-totbox"><div class="vck-totrow"><span class="k">Valor total</span><span class="v" id="vck-was" style="text-decoration:line-through;color:#8a8a99">—</span></div><div class="vck-totrow save"><span class="k">Você economiza</span><span class="v" id="vck-save">—</span></div><div class="vck-totrow big"><span class="k">Hoje você paga</span><span class="v" id="vck-now">—</span></div></div>'
+      + '<button class="vck-btn block2" id="vck-gen" style="margin-top:12px">🔓 Quero liberar agora</button>'
+      + '<div class="vck-trust"><span>🔒 Pix seguro</span><span>⚡ Na hora</span><span>🛡️ 7 dias de garantia</span></div></div>'
+      + '<div class="vck-guar"><div class="ic">🛡️</div><div><div class="t">Garantia de 7 dias — risco zero</div><div class="d">Não curtiu? Devolve 100% do seu dinheiro. Sem pergunta, sem burocracia.</div></div></div>'
+      + '</div>'
+      // etapa 2: pix
+      + '<div id="vck-pix" class="vck-hide">'
+      + '<div class="vck-scar">⏳ Pague em até <b id="vck-timer2">10:00</b> pra garantir o preço</div>'
+      + '<div class="vck-card vck-center"><div class="vck-h2">Falta só pagar 💜</div>'
+      + '<div class="vck-big" id="vck-amount">—</div>'
+      + '<div id="vck-warn" class="vck-warn vck-hide">⚠️ Você está no navegador do Facebook/Instagram. Se o botão copiar não funcionar, <b>segure no código abaixo</b> pra copiar — ou toque em <b>⋯</b> e <b>Abrir no navegador</b>.</div>'
+      + '<div style="font-size:.82rem;line-height:1.6;margin:.2rem 0 .7rem;text-align:left"><b>1.</b> Toque em <b>Copiar código Pix</b><br><b>2.</b> Abra o app do seu banco → <b>Pix</b><br><b>3.</b> Escolha <b>Pix Copia e Cola</b> e cole<br><b>4.</b> Confirme — seu acesso cai sozinho aqui 💜</div>'
+      + '<button class="vck-btn block2" id="vck-copy">📋 Copiar código Pix</button>'
+      + '<div style="font-size:.7rem;color:#6b6b7c;text-align:center;margin:.5rem 0 .15rem">ou copie o código na mão (segure e selecione tudo):</div>'
+      + '<div class="vck-code" id="vck-code">—</div>'
+      + '<button class="vck-btn sec block2" id="vck-openbank">📲 Abrir meu banco</button>'
+      + '<button class="vck-btn ghost block2" id="vck-qr-t">ou pagar escaneando o QR Code</button>'
+      + '<div id="vck-qr" class="vck-hide"></div>'
+      + '<div class="vck-note">Assim que o Pix cair, seu acesso é <b>liberado na hora</b> e você volta pra conversa automaticamente. 🛡️ E lembra: <b>7 dias de garantia</b> — não curtiu, devolvemos. Pode pagar tranquilo. 💜</div></div>'
+      + '<div class="vck-card vck-center"><div class="vck-pulse"></div><p class="vck-sub" id="vck-pollmsg" style="margin:0">Aguardando seu pagamento… confirma sozinho aqui.</p></div>'
+      + '</div>'
+      // etapa 3: sucesso
+      + '<div id="vck-ok" class="vck-hide"><div class="vck-card vck-center"><div class="vck-okc">✓</div><div class="vck-h2">Pagamento confirmado!</div><p class="vck-sub">Seu acesso foi liberado. Te levando de volta pra conversa…</p><div class="vck-pulse"></div></div></div>'
+      + '<div class="vck-foot">Vezclub · conteúdo +18 · pagamento processado com segurança · garantia de 7 dias</div>'
+      + '</div></div></div>';
+    document.body.classList.add("modal-open");
+
+    function lines() {
+      var out = [];
+      if (pack) { var coins = (pack.coins || 0) + (pack.bonus_coins || 0); out.push({ nm: coins + " coins", ds: "liberam suas mensagens no chat", was: anchor(pack.price_cents), now: pack.price_cents }); }
+      bumps.forEach(function (b) { if (selected[b.id]) out.push({ nm: (b.kind === "video" ? "🎥 " : "🔥 ") + b.title + (b.vol ? " · Vol. " + b.vol : ""), ds: b.preview_text || "", was: anchor(b.price_cents), now: b.price_cents }); });
+      return out;
+    }
+    function nowTotal() { var t = pack ? pack.price_cents : 0; bumps.forEach(function (b) { if (selected[b.id]) t += b.price_cents; }); return t; }
+    function wasTotal() { var t = pack ? anchor(pack.price_cents) : 0; bumps.forEach(function (b) { if (selected[b.id]) t += anchor(b.price_cents); }); return t; }
+    function renderOrder() {
+      var host = q("#vck-order"); if (!host) return;
+      host.innerHTML = lines().map(function (l) {
+        return '<div class="vck-li"><div><div class="nm">' + esc(l.nm) + '</div>' + (l.ds ? '<div class="ds">' + esc(l.ds) + '</div>' : '') + '</div><div class="pr"><span class="was">' + brl(l.was) + '</span><span class="now">' + brl(l.now) + '</span></div></div>';
+      }).join("");
+      var w = wasTotal(), n = nowTotal(), s = w - n;
+      q("#vck-was").textContent = brl(w);
+      q("#vck-save").textContent = brl(s) + (w > 0 ? " (" + Math.round(s / w * 100) + "%)" : "");
+      q("#vck-now").textContent = brl(n);
+    }
+
+    Promise.all([
+      sb.from("coin_packs").select("code,price_cents,coins,bonus_coins").eq("code", packCode).maybeSingle(),
+      sb.functions.invoke("packs_list", { body: {} })
+    ]).then(function (res) {
+      pack = (res[0] && res[0].data) || { code: packCode, price_cents: 990, coins: 100, bonus_coins: 0 };
+      bumps = (((res[1] && res[1].data && res[1].data.packs) || []).filter(function (b) { return b.active; }));
+      var host = q("#vck-bumps");
+      if (!bumps.length) { var bc = q("#vck-bumps-card"); if (bc) bc.classList.add("vck-hide"); }
+      else if (host) {
+        host.innerHTML = "";
+        bumps.forEach(function (b) {
+          var lab = document.createElement("label"); lab.className = "vck-bump";
+          lab.innerHTML = '<input type="checkbox"><div style="flex:1;min-width:0"><span class="vck-tag">50% OFF</span>' + (b.vol ? '<span class="vck-tag" style="background:#6b21a8">VOL. ' + b.vol + '</span>' : '') + '<div class="t">' + (b.kind === "video" ? "🎥 " : "🔥 ") + esc(b.title) + '</div><div class="d">' + esc(b.preview_text || "") + '</div></div><div class="p"><span class="was">' + brl(anchor(b.price_cents)) + '</span><span class="now">' + brl(b.price_cents) + '</span></div>';
+          var cb = lab.querySelector("input");
+          cb.addEventListener("change", function () { selected[b.id] = cb.checked; lab.classList.toggle("on", cb.checked); renderOrder(); });
+          if (b.id === addId) { cb.checked = true; selected[b.id] = true; lab.classList.add("on"); }
+          host.appendChild(lab);
+        });
+      }
+      renderOrder();
+    }).catch(function () { renderOrder(); });
+
+    // contador de escassez
+    (function () {
+      var KEY = "vez_ck_deadline", dl;
+      try { dl = parseInt(sessionStorage.getItem(KEY), 10); } catch (e) {}
+      if (!dl || dl < Date.now()) { dl = Date.now() + 10 * 60 * 1000; try { sessionStorage.setItem(KEY, String(dl)); } catch (e) {} }
+      function tick() {
+        if (!document.getElementById("vck-bg")) return;
+        var left = Math.max(0, Math.floor((dl - Date.now()) / 1000));
+        var m = Math.floor(left / 60), s = left % 60, t = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+        var a = q("#vck-timer"), b = q("#vck-timer2"); if (a) a.textContent = t; if (b) b.textContent = t;
+      }
+      tick(); var iv = setInterval(function () { if (!document.getElementById("vck-bg")) { clearInterval(iv); return; } tick(); }, 1000);
+    })();
+
+    // gerar pix
+    q("#vck-gen").addEventListener("click", function () {
+      var btn = this; btn.disabled = true; btn.textContent = "Gerando seu Pix…";
+      var ids = bumps.filter(function (b) { return selected[b.id]; }).map(function (b) { return b.id; });
+      sb.functions.invoke("checkout_pix", { body: { pack_code: packCode, bump_ids: ids } }).then(function (r) {
+        var d = r && r.data;
+        if ((r && r.error) || !d || !d.pix_code) { btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏")); return; }
+        identifier = d.identifier;
+        try { if (window.fbq) fbq("track", "InitiateCheckout", { value: (d.amount_cents ? d.amount_cents / 100 : nowTotal() / 100), currency: "BRL", content_name: packCode, content_type: "checkout_pix" }); } catch (e) {}
+        try { if (window.clarity) window.clarity("event", "pix_generated"); } catch (e) {}
+        showPix(d.pix_code, d.amount_cents || nowTotal());
+      }).catch(function () { btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏")); });
+    });
+
+    function showPix(codeStr, cents) {
+      q("#vck-cart").classList.add("vck-hide");
+      q("#vck-pix").classList.remove("vck-hide");
+      q("#vck-amount").textContent = brl(cents);
+      q("#vck-code").textContent = codeStr;
+      if (isInApp()) { var w = q("#vck-warn"); if (w) w.classList.remove("vck-hide"); }
+      q("#vck-copy").addEventListener("click", function () {
+        var ok = false;
+        try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(codeStr); ok = true; } } catch (e) {}
+        if (!ok) { try { var el = q("#vck-code"); var rg = document.createRange(); rg.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); document.execCommand("copy"); ok = true; } catch (e) {} }
+        this.textContent = ok ? "✓ Código copiado!" : "Selecione o código acima e copie";
+        try { if (window.clarity) window.clarity("event", "pix_code_copied"); } catch (e) {}
+      });
+      q("#vck-openbank").addEventListener("click", function () { try { location.href = "pix://" + codeStr; } catch (e) {} });
+      q("#vck-qr-t").addEventListener("click", function () {
+        var box = q("#vck-qr"); if (!box) return;
+        if (box.classList.contains("vck-hide")) { box.innerHTML = '<img alt="QR Pix" src="https://api.qrserver.com/v1/create-qr-code/?size=196x196&margin=0&data=' + encodeURIComponent(codeStr) + '">'; box.classList.remove("vck-hide"); this.textContent = "ocultar QR Code"; }
+        else { box.classList.add("vck-hide"); this.textContent = "ou pagar escaneando o QR Code"; }
+      });
+      startPoll();
+    }
+
+    function startPoll() {
+      if (poll) return; var tries = 0;
+      poll = setInterval(function () {
+        if (!document.getElementById("vck-bg")) { clearInterval(poll); poll = null; return; }
+        tries++;
+        sb.functions.invoke("coins_status", { body: { identifier: identifier } }).then(function (r) {
+          var d = (r && r.data) || {}; if (d.status === "completed") { clearInterval(poll); poll = null; success(); }
+        }).catch(function () {});
+        if (tries > 240) { clearInterval(poll); poll = null; var pm = q("#vck-pollmsg"); if (pm) pm.textContent = "Se já pagou e não liberou, volte pro app — libera sozinho em instantes."; }
+      }, 4000);
+    }
+
+    function success() {
+      try { q("#vck-pix").classList.add("vck-hide"); q("#vck-ok").classList.remove("vck-hide"); } catch (e) {}
+      try { renderWalletChip(); } catch (e) {}
+      try { if (window.clarity) { window.clarity("event", "purchase"); window.clarity("set", "funnel_stage", "paid"); } } catch (e) {}
+      try { if (window.fbq) fbq("track", "Purchase", { content_type: "coins", content_name: backChat || packCode, currency: "BRL" }); } catch (e) {}
+      setTimeout(function () {
+        try { closeModal(); } catch (e) {}
+        try { toast(L("Pagamento confirmado! Liberado 💜", "Payment confirmed! Unlocked 💜", "¡Pago confirmado! Liberado 💜")); } catch (e) {}
+        if (backChat) { setTimeout(function () { try { openAiChat(backChat); } catch (e) {} }, 300); }
+      }, 2000);
+    }
   }
   function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {
     if (!mount) return;
