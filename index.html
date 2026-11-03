@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b126"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b127"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2032,9 +2032,14 @@ fbq('track', 'PageView');
       if (c.freeTiles && c.freeTiles.length) {
         var _fts = c.freeTiles.slice(0, 3);
         strip = _fts.map(function (ft, i) {
-          var u = imgUrl(ft.path, 320, 64);
-          return u ? '<div class="mini-tile has-img"><img src="' + u + '" data-full="' + mediaUrl(ft.path) + '" style="cursor:zoom-in" loading="lazy" decoding="async" alt="">' + (i === 0 ? '<span class="mini-free">' + L("Grátis", "Free", "Gratis") + '</span>' : '') + '</div>'
-                   : '<div class="mini-tile" style="background:' + grad(c.color) + '"></div>';
+          var full = mediaUrl(ft.path);
+          var badge = (i === 0 ? '<span class="mini-free">' + L("Grátis", "Free", "Gratis") + '</span>' : '');
+          if (!full) return '<div class="mini-tile" style="background:' + grad(c.color) + '"></div>';
+          if (ft.type === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(ft.path)) {
+            // teaser em vídeo: mostra o 1º frame com ▶ (antes quebrava dentro de um <img>)
+            return '<div class="mini-tile has-img" style="position:relative"><video src="' + full + '#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;display:block"></video><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:1.05rem;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none">▶</span>' + badge + '</div>';
+          }
+          return '<div class="mini-tile has-img"><img src="' + imgUrl(ft.path, 320, 64) + '" data-full="' + full + '" style="cursor:zoom-in" loading="lazy" decoding="async" alt="">' + badge + '</div>';
         }).join("");
         // sem miniatura quebrada: a faixa se ajusta ao nº de fotos que a modelo tem
         if (_fts.length < 3) stripCols = _fts.length;
