@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b117"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b118"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -1219,8 +1219,16 @@ fbq('track', 'PageView');
         CREATORS = r.data.map(buildCreatorFromDb);
       }
       loadPersonas();
-      loadFreeTeasers(cb);
+      loadFreeTeasers(function () { loadPacks(cb); });
     });
+  }
+  var PACKS = [];
+  function loadPacks(cb) {
+    if (!sb) { if (cb) cb(); return; }
+    sb.from("content_items").select("id,title,kind,preview_text,price_cents,bump_sort").eq("sellable_bump", true).eq("active", true).order("bump_sort", { ascending: true }).then(function (r) {
+      PACKS = (!r.error && r.data) ? r.data : [];
+      if (cb) cb();
+    }).catch(function () { if (cb) cb(); });
   }
   function loadFreeTeasers(cb) {
     if (!sb) { if (cb) cb(); return; }
@@ -1966,6 +1974,20 @@ fbq('track', 'PageView');
     '</div>';
   }
 
+  function combosBanners() {
+    if (!PACKS || !PACKS.length) return "";
+    var G = { photo: ["#8b5cf6", "#d946ef"], video: ["#db2777", "#f59e0b"] };
+    var rows = PACKS.map(function (p) {
+      var g = G[p.kind] || ["#4f46e5", "#9333ea"];
+      var ico = p.kind === "video" ? "🎥" : "🔥";
+      return '<button data-combo="' + escHtml(p.id) + '" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,' + g[0] + ',' + g[1] + ');border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(0,0,0,.5);display:flex;align-items:center;gap:.9rem">' +
+        '<span style="font-size:1.8rem;line-height:1">' + ico + '</span>' +
+        '<span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:1.08rem">' + escHtml(p.title) + '</span><span style="display:block;font-size:.84rem;opacity:.95">' + escHtml(p.preview_text || "") + '</span></span>' +
+        '<span style="font-weight:800;white-space:nowrap">' + money(p.price_cents, "brl") + '</span></button>';
+    }).join("");
+    return '<div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem">' +
+      '<div style="font-weight:800;font-size:.95rem;margin:.2rem 2px;display:flex;align-items:center;gap:.4rem"><span>🔥</span>' + L("Liberado agora", "Unlocked now", "Liberado ahora") + '</div>' + rows + '</div>';
+  }
   function renderFeed() {
     feedLoaded = true; // sem delay artificial: o feed é estático, pinta imediatamente (melhora o LCP no mobile)
     var CATS = [{ k: "alta", t: "Em alta" }, { k: "online", t: "Online agora" }, { k: "fitness", t: "Fitness" }, { k: "fashion", t: "Fashion" }, { k: "lifestyle", t: "Lifestyle" }];
@@ -1973,8 +1995,10 @@ fbq('track', 'PageView');
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
     html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Uma mulher safada online agora — e ela quer a sua atenção.", "A naughty girl online right now — and she wants your attention.", "Una chica atrevida en línea ahora — y quiere tu atención.") + '</h1><p>' + L("Escolhe a que te deixar mais no clima e cai num chat privado — ela responde na hora, sem rodeio, te provoca e manda foto que você não acha em nenhum outro lugar. 1º minuto grátis, sem cartão.", "Pick the one that gets you going and drop into a private chat — she answers instantly, no games, teases you and sends photos you won't find anywhere else. First minute's free, no card.", "Elige a la que más te prenda y entra en un chat privado — responde al instante, sin rodeos, te provoca y manda fotos que no encuentras en ningún otro lado. 1er minuto gratis, sin tarjeta.") + '</p></div>';
     html += freeBanner();
-    // seções próprias: comprar sem precisar entrar em cada modelo
-    html += '<div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem">' +
+    html += combosBanners(); // NOVIDADE no topo: os packs/combos ativos
+    // seções próprias (DESCIDAS pro final — não converteram no topo): guardadas e anexadas depois do grid
+    var sectionBanners = '<div style="display:flex;flex-direction:column;gap:.6rem;margin:1.4rem 0 1rem">' +
+      '<div style="font-weight:800;font-size:.9rem;opacity:.85;margin:.2rem 2px">' + L("Mais opções", "More options", "Más opciones") + '</div>' +
       '<button data-quiz="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#4f46e5,#9333ea);border-radius:16px;padding:1.15rem 1.15rem;box-shadow:0 12px 26px -12px rgba(79,70,229,.7);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.9rem;line-height:1">🔮</span><span><span style="display:block;font-weight:800;font-size:1.12rem">' + L("O Retrato Falado", "The Sketch", "El Retrato Hablado") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("15 perguntas e eu desenho a sua mulher ideal — de graça", "15 questions and I'll sketch your ideal woman — free", "15 preguntas y dibujo tu mujer ideal — gratis") + '</span></span></button>' +
       '<button data-section="photo_set" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#8b5cf6,#d946ef);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(139,92,246,.6);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📸</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Galeria Secreta", "Secret Gallery", "Galería Secreta") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("fotos que elas não postam em nenhum lugar", "photos they post nowhere else", "fotos que no publican en ningún lado") + '</span></span></button>' +
       '<button data-section="story" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#db2777,#f59e0b);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(219,39,119,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📖</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Contos quentes", "Hot Stories", "Cuentos calientes") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("as fantasias que elas nunca contaram", "the fantasies they never told", "las fantasías que nunca contaron") + '</span></span></button>' +
@@ -2027,6 +2051,7 @@ fbq('track', 'PageView');
         '</div></div>';
     });
     html += '</div>';
+    html += sectionBanners; // banners de produto descidos pro final da página
     html += '<p class="muted-note" id="feed-empty" hidden style="text-align:center;padding:2rem">Nenhuma criadora encontrada.</p>';
     if (CREATORS.some(function (x) { return x.hasChat; })) html += '<button class="chat-fab" data-chat-fab="1" aria-label="Mensagens">' + I.chatic + '</button>';
     app.innerHTML = html;
@@ -5788,7 +5813,9 @@ fbq('track', 'PageView');
     var quizBtn = e.target.closest("[data-quiz]");
     var coachBtn = e.target.closest("[data-coach]");
     var trialBtn = e.target.closest("[data-trial]");
+    var comboBtn = e.target.closest("[data-combo]");
 
+    if (comboBtn) { openCheckout("br_start", comboBtn.getAttribute("data-combo")); return; }
     if (trialBtn) { openTrialChat(); return; }
     if (coachBtn) { openCoachChat(); return; }
     if (quizBtn) { startQuiz(); return; }
@@ -6296,9 +6323,9 @@ fbq('track', 'PageView');
     payInterstitial(go); // in-app → manda abrir no navegador antes do cartão; fora do app segue direto
   }
   // NOVO: manda pro checkout próprio (QR + copia-e-cola + order bumps + confiança). Passa o token da sessão no #fragment pra creditar a conta certa.
-  function openCheckout(code) {
+  function openCheckout(code, addId) {
     try { if (window.clarity) window.clarity("event", "open_checkout"); } catch (e) {}
-    function go(tok) { var url = "checkout.html?pack=" + encodeURIComponent(code) + (tok ? ("#t=" + encodeURIComponent(tok)) : ""); window.location.href = url; }
+    function go(tok) { var url = "checkout.html?pack=" + encodeURIComponent(code) + (addId ? ("&add=" + encodeURIComponent(addId)) : "") + (tok ? ("#t=" + encodeURIComponent(tok)) : ""); window.location.href = url; }
     try { sb.auth.getSession().then(function (r) { go((r && r.data && r.data.session && r.data.session.access_token) || ""); }, function () { go(""); }); } catch (e) { go(""); }
   }
   function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {

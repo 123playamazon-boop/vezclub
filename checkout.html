@@ -117,6 +117,7 @@
   var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   var q=new URLSearchParams(location.search);
   var packCode=q.get("pack")||"br_start";
+  var addId=q.get("add")||"";
   // token da sessão do usuário (passado pelo app via #t=) — garante creditar a conta certa
   var hash=new URLSearchParams((location.hash||"").replace(/^#/,""));
   var TOKEN=hash.get("t")||"";
@@ -148,6 +149,7 @@
         lab.innerHTML='<input type="checkbox"><div><div class="t">'+(b.kind==="video"?"🎥 ":"📸 ")+esc(b.title)+'</div><div class="d">'+esc(b.preview_text||"")+'</div></div><div class="p">'+money(b.price_cents)+'</div>';
         var cb=lab.querySelector("input");
         cb.addEventListener("change",function(){ selected[b.id]=cb.checked; lab.classList.toggle("on",cb.checked); renderTotal(); });
+        if(b.id===addId){ cb.checked=true; selected[b.id]=true; lab.classList.add("on"); }
         host.appendChild(lab);
       });
     }
