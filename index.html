@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b115"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b116"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -6269,7 +6269,7 @@ fbq('track', 'PageView');
           b.onclick = function () {
             var code = b.getAttribute("data-pack"), price = +b.getAttribute("data-price"), coins = +b.getAttribute("data-coins");
             var bumpEl = document.getElementById("cs-bump"), bump = !!(bumpEl && bumpEl.checked);
-            if (mkt === "br") { buyCoinsPix(code, price, coins, csBody.querySelector("#cs-pay"), b, bump); }
+            if (mkt === "br") { openCheckout(code); }
             else { buyCoinsStripe(code, b, bump); }
           };
         });
@@ -6285,6 +6285,12 @@ fbq('track', 'PageView');
       }).catch(function () { try { btn.disabled = false; } catch (e) {} toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
     };
     payInterstitial(go); // in-app → manda abrir no navegador antes do cartão; fora do app segue direto
+  }
+  // NOVO: manda pro checkout próprio (QR + copia-e-cola + order bumps + confiança). Passa o token da sessão no #fragment pra creditar a conta certa.
+  function openCheckout(code) {
+    try { if (window.clarity) window.clarity("event", "open_checkout"); } catch (e) {}
+    function go(tok) { var url = "checkout.html?pack=" + encodeURIComponent(code) + (tok ? ("#t=" + encodeURIComponent(tok)) : ""); window.location.href = url; }
+    try { sb.auth.getSession().then(function (r) { go((r && r.data && r.data.session && r.data.session.access_token) || ""); }, function () { go(""); }); } catch (e) { go(""); }
   }
   function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {
     if (!mount) return;
