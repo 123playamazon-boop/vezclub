@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b129"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b130"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -3073,19 +3073,24 @@ fbq('track', 'PageView');
       acLoadPhotos(id, host); // re-render otimista na nova ordem
       acCall({ action: "set_photo_order", id: id, paths: newPaths }).then(function (r) { if (!(r && r.data && r.data.ok)) toast("não deu pra salvar a ordem"); });
     }
+    var isVid = !!(it && it.kind === "video");
     host.innerHTML = paths.map(function (p, i) {
       return '<div data-p="' + escHtml(p) + '" data-idx="' + i + '" draggable="true" style="position:relative;width:62px;height:62px;border-radius:8px;overflow:hidden;background:var(--surface-2,rgba(127,127,127,.12));display:flex;align-items:center;justify-content:center;cursor:grab">' +
-        '<span style="font-size:.6rem;color:var(--muted)">…</span>' +
-        '<button data-ac-rmphoto title="remover" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.6);color:#fff;border:0;width:18px;height:18px;border-radius:0 0 0 6px;cursor:pointer;font-size:.72rem;line-height:1">×</button>' +
-        '<button data-mv="-1" title="esquerda" ' + (i === 0 ? 'disabled ' : '') + 'style="position:absolute;bottom:0;left:0;background:rgba(0,0,0,.55);color:#fff;border:0;width:20px;height:17px;cursor:pointer;font-size:.74rem;line-height:1;opacity:' + (i === 0 ? '.3' : '1') + '">‹</button>' +
-        '<button data-mv="1" title="direita" ' + (i === paths.length - 1 ? 'disabled ' : '') + 'style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,.55);color:#fff;border:0;width:20px;height:17px;cursor:pointer;font-size:.74rem;line-height:1;opacity:' + (i === paths.length - 1 ? '.3' : '1') + '">›</button>' +
+        (isVid ? '<video data-thumb muted playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video><span style="position:absolute;bottom:2px;left:2px;font-size:.6rem;color:#fff;text-shadow:0 1px 2px #000;pointer-events:none;z-index:1">▶</span>' : '') +
+        '<span class="ac-ph" style="font-size:.6rem;color:var(--muted)">…</span>' +
+        '<button data-ac-rmphoto title="remover" style="position:absolute;top:0;right:0;background:rgba(0,0,0,.6);color:#fff;border:0;width:18px;height:18px;border-radius:0 0 0 6px;cursor:pointer;font-size:.72rem;line-height:1;z-index:2">×</button>' +
+        '<button data-mv="-1" title="esquerda" ' + (i === 0 ? 'disabled ' : '') + 'style="position:absolute;bottom:0;left:0;background:rgba(0,0,0,.55);color:#fff;border:0;width:20px;height:17px;cursor:pointer;font-size:.74rem;line-height:1;opacity:' + (i === 0 ? '.3' : '1') + ';z-index:2">‹</button>' +
+        '<button data-mv="1" title="direita" ' + (i === paths.length - 1 ? 'disabled ' : '') + 'style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,.55);color:#fff;border:0;width:20px;height:17px;cursor:pointer;font-size:.74rem;line-height:1;opacity:' + (i === paths.length - 1 ? '.3' : '1') + ';z-index:2">›</button>' +
         '</div>';
     }).join("");
     paths.forEach(function (p) {
       acCall({ action: "sign", path: p }).then(function (r) {
         var url = r && r.data && r.data.url; if (!url) return;
         var cell; try { cell = host.querySelector('[data-p="' + (window.CSS && CSS.escape ? CSS.escape(p) : p) + '"]'); } catch (e) { cell = null; }
-        if (cell) { cell.style.background = 'url(' + url + ') center/cover'; var sp = cell.querySelector("span"); if (sp) sp.remove(); }
+        if (!cell) return;
+        var ph = cell.querySelector(".ac-ph"); if (ph) ph.remove();
+        if (isVid) { var v = cell.querySelector("video[data-thumb]"); if (v) v.src = url + "#t=0.1"; }
+        else { cell.style.background = 'url(' + url + ') center/cover'; }
       });
     });
     host.querySelectorAll("[data-ac-rmphoto]").forEach(function (b) {
