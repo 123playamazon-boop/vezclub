@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b130"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b131"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6562,8 +6562,8 @@ fbq('track', 'PageView');
       if (d.kind === "story" || d.kind === "ebook") { var tall = d.kind === "ebook" ? "max-height:62vh;overflow:auto;" : ""; host.innerHTML = '<div style="background:var(--surface-2,rgba(127,127,127,.08));border-radius:10px;padding:.85rem;font-size:.92rem;line-height:1.6;white-space:pre-wrap;' + tall + '">' + escHtml(d.text || "") + '</div>'; return; }
       var urls = (d.urls && d.urls.length) ? d.urls : (d.url ? [d.url] : []);
       if (!urls.length) { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; return; }
-      if (d.kind === "video") { host.innerHTML = '<video src="' + urls[0] + '" controls playsinline style="width:100%;border-radius:12px;display:block;background:#000"></video>'; return; }
-      host.innerHTML = '<div style="display:grid;grid-template-columns:' + (urls.length > 1 ? '1fr 1fr' : '1fr') + ';gap:6px">' + urls.map(function (u) { return '<img src="' + u + '" alt="" style="width:100%;border-radius:10px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">'; }).join("") + '</div>';
+      if (d.kind === "video") { host.innerHTML = '<div style="font-size:.76rem;color:var(--muted);margin:0 0 .4rem">🎥 ' + urls.length + ' ' + L("vídeos", "videos", "videos") + '</div><div style="display:grid;grid-template-columns:' + (urls.length > 1 ? '1fr 1fr' : '1fr') + ';gap:6px">' + urls.map(function (u) { return '<video src="' + u + '#t=0.1" controls playsinline preload="metadata" style="width:100%;border-radius:10px;display:block;background:#000"></video>'; }).join("") + '</div>'; return; }
+      host.innerHTML = '<div style="font-size:.76rem;color:var(--muted);margin:0 0 .4rem">📸 ' + urls.length + ' ' + L("fotos", "photos", "fotos") + '</div><div style="display:grid;grid-template-columns:' + (urls.length > 1 ? '1fr 1fr' : '1fr') + ';gap:6px">' + urls.map(function (u) { return '<img src="' + u + '" alt="" loading="lazy" style="width:100%;border-radius:10px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)">'; }).join("") + '</div>';
     }).catch(function () { host.innerHTML = '<div class="muted-note">' + L("(indisponível)", "(unavailable)", "(no disponible)") + '</div>'; });
   }
   function pdPreview(it) { return (lang === "en" ? (it.preview_text_en || it.preview_text) : lang === "es" ? (it.preview_text_es || it.preview_text) : it.preview_text) || ""; }
