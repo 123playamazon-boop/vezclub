@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b134"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b135"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -5567,13 +5567,18 @@ fbq('track', 'PageView');
         inp.value = v; doSend();
       }, 650);
     }
-    var pdOffered = false;
+    var pdOffered = false, userTurns = 0;
+    // Oferta suave do pack nas primeiras mensagens (copy Amanda) — natural, NAO cadeada: deixa claro que dá pra comprar um pack, não é só papo.
     function productTease() {
       if (pdOffered) return; pdOffered = true;
-      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L("você tá me deixando com vontade… 🔥 tem coisa que eu não mostro aqui — eu guardo num cantinho só meu. quer ver meu lado mais quente?", "you're getting me in the mood… 🔥 there's stuff I don't show in here — I keep it somewhere just mine. wanna see my hottest side?", "me estás poniendo… 🔥 hay cosas que no muestro aquí — las guardo en un rincón solo mío. ¿quieres ver mi lado más caliente?")) + '</div>');
-      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🔓 ' + L("Quero ver", "Show me", "Quiero ver") + '</button></div>');
+      body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L(
+        "deixa eu te contar um segredinho 🙈 eu e minhas amigas a gente tem um cantinho que quase ninguém vê — um pack nosso, daquelas fotos que a gente não posta em lugar nenhum. você não precisa pagar nada pra continuar falando comigo, viu? isso aqui é só se você quiser se divertir um pouquinho mais comigo 👇",
+        "let me tell you a little secret 🙈 me and my girls have a little corner almost nobody gets to see — a pack of ours, the kind of photos we don't post anywhere. you don't have to pay anything to keep talking to me, ok? this is just if you wanna have a little more fun with me 👇",
+        "te cuento un secretito 🙈 mis amigas y yo tenemos un rincón que casi nadie ve — un pack nuestro, de esas fotos que no publicamos en ningún lado. no tienes que pagar nada para seguir hablando conmigo, ¿eh? esto es solo si quieres divertirte un poquito más conmigo 👇"
+      )) + '</div>');
+      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">👀 ' + L("quero dar uma espiada", "lemme take a peek", "quiero espiar") + '</button></div>');
       body.scrollTop = body.scrollHeight;
-      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { try { if (window.clarity) window.clarity("event", "tease_unlock_click"); } catch (e) {} if (coinMarket() === "br") { openCheckout("br_start", null, cid); } else { openHerPacks(); } };
+      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { try { if (window.clarity) window.clarity("event", "pack_tease_click"); } catch (e) {} if (coinMarket() === "br") { openCheckout("br_start", null, cid); } else { openHerPacks(); } };
     }
     var sending = false;
     function doSend() {
@@ -5612,8 +5617,10 @@ fbq('track', 'PageView');
           return;
         }
         her(d.reply);
+        userTurns++;
+        if (userTurns === 3 && !pdOffered) setTimeout(productTease, 1100); // oferta suave do pack cedo (3ª msg): a pessoa entende que dá pra comprar, não é só papo
         if (typeof d.free_left === "number" && d.free_left >= 0 && d.free_left <= 3) { note(L("restam " + d.free_left + " mensagens grátis 💜", d.free_left + " free messages left 💜", "quedan " + d.free_left + " mensajes gratis 💜")); }
-        if (typeof d.free_left === "number" && d.free_left >= 0 && d.free_left <= 2) setTimeout(productTease, 900); // só no FINAL do grátis (não quebra o começo da conversa)
+        if (typeof d.free_left === "number" && d.free_left >= 0 && d.free_left <= 2) setTimeout(productTease, 900); // fallback: se não apareceu antes, mostra no fim do grátis
         if (d.gift && d.gift.url) { setTimeout(function () {
           function showGiftImg() { body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:230px;position:relative"><img class="chat-img" src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)"><span style="position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:27px;height:27px;display:flex;align-items:center;justify-content:center;font-size:.92rem;pointer-events:none">🔍</span></div>'); body.scrollTop = body.scrollHeight; }
           if (d.gift.caption) { var tgtLang = gLang(d.reply) || gLang(v) || lang || "pt"; var capL = gLang(d.gift.caption); if (capL && capL !== tgtLang) { translateOne(d.gift.caption, tgtLang, function (t) { her(t || d.gift.caption); showGiftImg(); }); } else { her(d.gift.caption); showGiftImg(); } } else { showGiftImg(); }
