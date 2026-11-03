@@ -965,7 +965,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b121"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b122"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -3042,16 +3042,17 @@ fbq('track', 'PageView');
   }
   function acItemHtml(it) {
     var isStory = it.kind === "story", isReveal = it.kind === "reveal", isPhoto = it.kind === "photo_set";
-    var isGallery = isPhoto || isReveal;
-    var kindLbl = isStory ? "📖 Conto" : isReveal ? "👗 Vestida & sem roupa" : isPhoto ? "📸 Álbum de fotos" : it.kind === "game" ? "🎲 Jogo" : it.kind;
-    var galLbl = isReveal ? "Fotos SEM ROUPA (bloqueadas, revela ao desbloquear)" : "Fotos do álbum";
+    var isVideoPack = it.kind === "video", isPhotoPack = it.kind === "photo", isPack = isVideoPack || isPhotoPack;
+    var isGallery = isPhoto || isReveal || isPack;
+    var kindLbl = isStory ? "📖 Conto" : isReveal ? "👗 Vestida & sem roupa" : isPhoto ? "📸 Álbum de fotos" : it.kind === "game" ? "🎲 Jogo" : isVideoPack ? "🎥 Pack de vídeos (loja)" : isPhotoPack ? "🔥 Pack de fotos (loja)" : it.kind;
+    var galLbl = isReveal ? "Fotos SEM ROUPA (bloqueadas, revela ao desbloquear)" : isVideoPack ? "Vídeos do pack" : isPack ? "Fotos do pack" : "Fotos do álbum";
     return '<div class="ac-item" data-ac-id="' + it.id + '" data-kind="' + it.kind + '" style="border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:.9rem">' +
       '<div style="font-weight:700;margin-bottom:.3rem">' + kindLbl + '</div>' +
       acField("Título (PT)", "title", it.title) +
       acField("Chamada / teaser (PT)", "teaser", it.teaser) +
       (isStory ? '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">Texto do conto (PT — traduz sozinho pra EN/ES ao salvar)</label><textarea data-f="story_text" rows="5" style="width:100%;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">' + escHtml(it.story_text || "") + '</textarea>' : '') +
       (isReveal ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">Foto VESTIDA (aparece pra todos)</div><div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem"><div class="ac-preview" style="width:62px;height:62px;border-radius:8px;overflow:hidden;background:' + (it.cover_url ? 'url(' + escHtml(it.cover_url) + ') center/cover' : 'var(--surface-2,rgba(127,127,127,.12))') + '"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">' + (it.cover_url ? "Trocar vestida" : "+ Foto vestida") + '<input type="file" accept="image/*" data-ac-addpreview hidden></label></div>' : '') +
-      (isGallery ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">' + galLbl + ' <span style="opacity:.7">· arraste pra reordenar (ou use ‹ ›)</span></div><div class="ac-photos" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">+ Adicionar fotos (várias)<input type="file" accept="image/*" data-ac-addphoto multiple hidden></label>' : '') +
+      (isGallery ? '<div style="font-size:.76rem;color:var(--muted);margin:.5rem 0 .3rem">' + galLbl + ' <span style="opacity:.7">· arraste pra reordenar (ou use ‹ ›)</span></div><div class="ac-photos" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem"></div><label class="btn btn-ghost btn-sm" style="cursor:pointer">+ ' + (isVideoPack ? "Adicionar vídeos (vários)" : "Adicionar fotos (várias)") + '<input type="file" accept="' + (isVideoPack ? "video/*" : "image/*") + '" data-ac-addphoto multiple hidden></label>' : '') +
       '<div style="display:flex;gap:.7rem;align-items:center;margin-top:.6rem;flex-wrap:wrap">' +
       '<label style="font-size:.82rem">Preço <input data-f="unlock_cost_coins" type="number" value="' + (it.unlock_cost_coins || 0) + '" style="width:72px;padding:.4rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit"> coins</label>' +
       '<label style="font-size:.82rem"><input data-f="active" type="checkbox" ' + (it.active !== false ? "checked" : "") + '> ativo</label>' +
@@ -3118,7 +3119,7 @@ fbq('track', 'PageView');
     box.querySelectorAll("[data-ac-addphoto]").forEach(function (inp) {
       inp.addEventListener("change", function () {
         var files = inp.files ? Array.prototype.slice.call(inp.files) : []; if (!files.length) return;
-        if (files.some(function (f) { return f.size > 12 * 1024 * 1024; })) { toast("Alguma foto passa de 12MB — tira ela e tenta de novo"); inp.value = ""; return; }
+        if (files.some(function (f) { return f.size > 45 * 1024 * 1024; })) { toast("Algum arquivo passa de 45MB — tira ele e tenta de novo (vídeo grande sobe em partes)"); inp.value = ""; return; }
         var id = inp.closest(".ac-item").getAttribute("data-ac-id");
         var host = inp.closest(".ac-item").querySelector(".ac-photos");
         var total = files.length, okc = 0;
@@ -3209,6 +3210,7 @@ fbq('track', 'PageView');
     // ===== Conteúdo & álbuns (admin) =====
     html += '<div class="card" data-pane="conteudo"><div class="card-head"><h3>📸 Conteúdo &amp; álbuns</h3><span class="hint">fotos, contos e preço — por modelo</span></div>' +
       '<select id="ac-creator" style="width:100%;padding:.6rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;margin-bottom:.9rem"><option value="">— escolhe uma modelo —</option>' +
+      '<option value="_packs">🔥 Combos / Packs (loja — fotos &amp; vídeos)</option>' +
       CREATORS.filter(function (c) { return AI_PERSONAS[c.id]; }).map(function (c) { return '<option value="' + escHtml(c.id) + '">' + escHtml(c.name) + '</option>'; }).join("") +
       '</select><div id="ac-list"><p class="muted-note">Escolhe uma modelo pra ver e editar o conteúdo dela (álbum de fotos, conto, jogo).</p></div></div>';
 
