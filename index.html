@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b132"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b133"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -1241,6 +1241,7 @@ fbq('track', 'PageView');
     if (!sb) { if (cb) cb(); return; }
     sb.functions.invoke("packs_list", { body: {} }).then(function (r) {
       PACKS = (r && r.data && Array.isArray(r.data.packs)) ? r.data.packs : [];
+      if (!window.__vezExitArmed) { window.__vezExitArmed = true; try { armExitCombo(); } catch (e) {} }
       if (cb) cb();
     }, function () { PACKS = []; if (cb) cb(); });
   }
@@ -3690,6 +3691,69 @@ fbq('track', 'PageView');
         else { buyCoinsStripe(p.code, btn, false); }
       };
     }, function () { if (onDone) onDone(); });
+  }
+
+  // EXIT INTENT DE COMBO — quando a pessoa tenta sair, oferece o combo de fotos e cai no checkout overlay.
+  // Mobile (91% do tráfego): intercepta o botão voltar. Desktop: mouse saindo pelo topo.
+  function gatewayPack() {
+    var ps = PACKS.filter(function (p) { return p.active && p.price_cents; });
+    if (!ps.length) return null;
+    var photos = ps.filter(function (p) { return p.kind !== "video"; });
+    var pool = photos.length ? photos : ps;
+    pool.sort(function (a, b) { return a.price_cents - b.price_cents; });
+    return pool[0]; // combo de entrada = pack de fotos mais barato ativo
+  }
+  function exitComboOffer() {
+    var p = gatewayPack(); if (!p) return;
+    if (document.getElementById("vck-exit")) return;
+    try { sessionStorage.setItem("vez_exitcombo_shown", "1"); } catch (e) {}
+    try { if (window.clarity) window.clarity("event", "exit_combo_view"); } catch (e) {}
+    var price = money(p.price_cents, "brl"), was = money(Math.round(p.price_cents * 2), "brl");
+    var prevOv = document.body.style.overflow; document.body.style.overflow = "hidden";
+    var ov = document.createElement("div"); ov.id = "vck-exit";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10002;display:flex;align-items:center;justify-content:center;padding:1rem";
+    ov.innerHTML = '<div style="background:#f3f4fb;color:#16161f;max-width:390px;width:100%;border-radius:20px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.5);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif">'
+      + '<div style="background:linear-gradient(135deg,#e5106a,#ff7a1a);color:#fff;padding:14px 16px;text-align:center"><div style="font-weight:800;font-size:1.15rem">' + L("Peraí! 🔥", "Wait! 🔥", "¡Espera! 🔥") + '</div><div style="font-size:.86rem;opacity:.96">' + L("Não vai embora sem levar isso…", "Don\'t leave without this…", "No te vayas sin esto…") + '</div></div>'
+      + '<div style="padding:16px">'
+      + '<div style="font-weight:800;font-size:1.05rem;margin-bottom:.15rem">' + (p.kind === "video" ? "🎥 " : "🔥 ") + escHtml(p.title) + (p.vol ? " · Vol. " + p.vol : "") + '</div>'
+      + '<div style="font-size:.85rem;color:#6b6b7c;margin-bottom:.7rem">' + escHtml(p.preview_text || "") + '</div>'
+      + '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:.3rem;flex-wrap:wrap"><span style="color:#8a8a99;text-decoration:line-through;font-size:.9rem">' + was + '</span><span style="font-weight:800;font-size:1.6rem;color:#e5106a">' + price + '</span><span style="background:#ff7a1a;color:#fff;font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px">50% OFF</span></div>'
+      + '<div style="font-size:.78rem;color:#2f7d4f;background:#effcf2;border:1px solid #bfe9cc;border-radius:10px;padding:8px 10px;margin:.5rem 0 .9rem">' + L("✓ 100% diferente do que ela posta de graça · Pix na hora · 🛡️ 7 dias de garantia", "✓ 100% different from her free posts · Instant Pix · 🛡️ 7-day guarantee", "✓ 100% diferente de lo gratis · Pix al instante · 🛡️ 7 días de garantía") + '</div>'
+      + '<button id="vxe-buy" style="display:block;width:100%;border:0;border-radius:14px;padding:1rem;font-size:1.05rem;font-weight:800;color:#fff;background:linear-gradient(100deg,#e5106a,#ff2d6f);cursor:pointer;box-shadow:0 10px 24px -10px rgba(229,16,106,.7)">🔓 ' + L("Quero agora", "I want it now", "Lo quiero ahora") + ' — ' + price + '</button>'
+      + '<button id="vxe-no" style="display:block;width:100%;border:0;background:transparent;color:#8a8a99;font-size:.85rem;padding:.6rem;margin-top:.3rem;cursor:pointer">' + L("Não, pode fechar", "No thanks", "No, cerrar") + '</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    var close = function () { try { if (ov.parentNode) document.body.removeChild(ov); } catch (e) {} document.body.style.overflow = prevOv; };
+    ov.querySelector("#vxe-no").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.querySelector("#vxe-buy").onclick = function () {
+      try { if (window.clarity) window.clarity("event", "exit_combo_click"); } catch (e) {}
+      close();
+      openCheckout("br_start", p.id, "");
+    };
+  }
+  function armExitCombo() {
+    var ready = false; setTimeout(function () { ready = true; }, 4000); // nao dispara em saida acidental nos primeiros segundos
+    function eligible() {
+      if (!ready) return false;
+      try { if (sessionStorage.getItem("vez_exitcombo_shown")) return false; } catch (e) {}
+      if (coinMarket() !== "br") return false;
+      if (!gatewayPack()) return false;
+      if (document.querySelector(".modal-bg")) return false; // chat/checkout aberto
+      if (document.getElementById("vck-exit")) return false;
+      return true;
+    }
+    document.addEventListener("mouseout", function (e) { // desktop: mouse saindo pelo topo
+      if (e.clientY > 0 || e.relatedTarget) return;
+      if (!eligible()) return;
+      exitComboOffer();
+    });
+    try { history.pushState({ vez: 1 }, ""); } catch (e) {} // mobile: absorve um "voltar"
+    window.addEventListener("popstate", function () {
+      if (!eligible()) return; // nao elegivel -> deixa sair normalmente
+      try { history.pushState({ vez: 1 }, ""); } catch (e) {}
+      exitComboOffer();
+    });
   }
 
   var chatCh = null, chatTypingTimer = null;
