@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b116"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b117"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -3330,6 +3330,15 @@ fbq('track', 'PageView');
       }
     }).observe(modalRoot, { childList: true });
   } catch (e) {}
+  // BLINDAGEM: o scroll nunca pode ficar travado sem um modal VISIVEL na tela.
+  // (se um .modal-bg ficar escondido no DOM, o observer de childList nao dispara e o body.modal-open travaria o scroll pra sempre)
+  setInterval(function () {
+    try {
+      var vis = false;
+      modalRoot.querySelectorAll(".modal-bg").forEach(function (x) { if (x.offsetParent !== null && getComputedStyle(x).display !== "none" && getComputedStyle(x).visibility !== "hidden") vis = true; });
+      if (!vis && document.body.classList.contains("modal-open")) { document.body.classList.remove("modal-open"); detachVV(); }
+    } catch (e) {}
+  }, 1200);
   /* chat em tela cheia no celular: ancora no visualViewport pra o teclado do iOS nao cobrir o composer */
   // --- teclado do iOS: dimensiona QUALQUER modal aberto pela area visivel (gate de login, chat, etc) ---
   var _vvFit = null, _vvBg = null, _vvTarget = null, _vvFocusIn = null, _vvTimers = [];
