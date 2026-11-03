@@ -5,106 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Checkout seguro · Vezclub</title>
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#0a0a0f">
+<meta name="theme-color" content="#ffffff">
 <style>
-  :root{--bg:#0a0a0f;--fg:#f5f3f7;--muted:#a7a3b4;--accent:#ff4d8d;--accent2:#ff8a3c;--line:rgba(255,255,255,.1);--card:#15151f;--ok:#2ecc71}
+  :root{
+    --bg:#f3f4fb; --fg:#16161f; --muted:#6b6b7c; --soft:#8a8a99;
+    --accent:#e5106a; --accent2:#ff7a1a; --ok:#15a34a;
+    --card:#ffffff; --line:#e8e8f0; --tint:#fff0f6;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5;overscroll-behavior:none}
-  .wrap{max-width:440px;margin:0 auto;padding:16px 16px 56px}
-  .brand{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 0 6px;font-weight:800;letter-spacing:-.01em}
-  .brand .lock{font-size:.95rem}
-  .secure{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:.74rem;margin-bottom:12px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
-  h1{font-size:1.1rem;margin:0 0 2px}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.5;overscroll-behavior-x:none;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:460px;margin:0 auto;padding:14px 16px 56px}
+  .brand{display:flex;align-items:center;justify-content:center;gap:7px;padding:8px 0 4px;font-weight:800;color:#2a2a38}
+  .secure{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--ok);font-size:.76rem;font-weight:700;margin-bottom:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(20,20,40,.04)}
+  .hero{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;text-align:center;box-shadow:0 12px 30px -12px rgba(229,16,106,.6)}
+  .hero h1{font-size:1.28rem;margin:0 0 3px;font-weight:800}
+  .hero p{margin:0;font-size:.9rem;opacity:.96}
+  h2{font-size:1.02rem;margin:0 0 8px}
   .sub{color:var(--muted);font-size:.84rem;margin:0 0 10px}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
-  .row:last-child{border-bottom:0}
-  .row .nm{font-weight:600}
-  .row .ds{color:var(--muted);font-size:.78rem}
-  .row .pr{font-weight:800;white-space:nowrap}
-  .bump{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:12px;margin-top:8px;cursor:pointer;transition:border-color .15s,background .15s}
-  .bump.on{border-color:var(--accent);background:rgba(255,77,141,.08)}
-  .bump input{margin-top:3px;width:18px;height:18px;accent-color:var(--accent)}
-  .bump .t{font-weight:700}
+  .li{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .li:last-child{border-bottom:0}
+  .li .nm{font-weight:700;font-size:.95rem}
+  .li .ds{color:var(--muted);font-size:.78rem}
+  .li .pr{text-align:right;white-space:nowrap}
+  .li .was{color:var(--soft);text-decoration:line-through;font-size:.76rem;display:block}
+  .li .now{font-weight:800}
+  .bump{display:flex;gap:11px;align-items:flex-start;padding:11px;border:1.5px solid var(--line);border-radius:13px;margin-top:9px;cursor:pointer;transition:all .15s;background:#fff}
+  .bump.on{border-color:var(--accent);background:var(--tint)}
+  .bump input{margin-top:3px;width:19px;height:19px;accent-color:var(--accent);flex:0 0 auto}
+  .bump .t{font-weight:800}
   .bump .d{color:var(--muted);font-size:.78rem}
-  .bump .p{margin-left:auto;font-weight:800;white-space:nowrap}
-  .tot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:1.15rem;font-weight:800}
-  .btn{display:block;width:100%;border:0;border-radius:14px;padding:1rem;font-size:1.05rem;font-weight:800;color:#fff;background:linear-gradient(100deg,var(--accent),#ff2d6f);cursor:pointer;margin-top:14px}
+  .bump .p{margin-left:auto;text-align:right;white-space:nowrap}
+  .bump .p .was{color:var(--soft);text-decoration:line-through;font-size:.74rem;display:block}
+  .bump .p .now{font-weight:800;color:var(--accent)}
+  .bumptag{display:inline-block;background:var(--accent2);color:#fff;font-size:.66rem;font-weight:800;padding:1px 7px;border-radius:999px;margin-bottom:3px;letter-spacing:.03em}
+  .totbox{background:var(--tint);border:1px solid #f6d0e2;border-radius:13px;padding:12px 14px}
+  .totrow{display:flex;justify-content:space-between;align-items:center}
+  .totrow .k{color:var(--muted);font-size:.86rem}
+  .totrow.save .v{color:var(--ok);font-weight:800}
+  .totrow.big{margin-top:4px}
+  .totrow.big .k{font-size:1.05rem;font-weight:800;color:var(--fg)}
+  .totrow.big .v{font-size:1.5rem;font-weight:800}
+  .scar{display:flex;align-items:center;justify-content:center;gap:8px;background:#fff6e9;border:1px solid #ffd79c;border-radius:12px;padding:10px;color:#9a5a00;font-size:.84rem;font-weight:700;margin-bottom:12px}
+  .scar b{font-variant-numeric:tabular-nums;background:#9a3412;color:#fff;border-radius:7px;padding:1px 8px}
+  .guar{display:flex;gap:11px;align-items:center;background:#effcf2;border:1px solid #bfe9cc;border-radius:13px;padding:12px 14px;margin-bottom:12px}
+  .guar .ic{font-size:1.6rem;line-height:1}
+  .guar .t{font-weight:800;font-size:.92rem;color:#14733a}
+  .guar .d{font-size:.78rem;color:#2f7d4f}
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:1.05rem;font-size:1.08rem;font-weight:800;color:#fff;background:linear-gradient(100deg,var(--accent),#ff2d6f);cursor:pointer;box-shadow:0 10px 24px -10px rgba(229,16,106,.7)}
+  .btn:active{transform:scale(.99)}
   .btn:disabled{opacity:.6}
-  .btn.sec{background:#1f8f4d}
-  .muted{color:var(--muted);font-size:.78rem}
-  .trust{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:12px 0 0;color:var(--muted);font-size:.72rem}
+  .btn.sec{background:#15a34a;box-shadow:0 10px 24px -10px rgba(21,163,74,.6)}
+  .btn.block2{margin-top:9px}
+  .trust{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:12px 0 0;color:var(--muted);font-size:.74rem}
   .trust span{display:inline-flex;align-items:center;gap:5px}
-  #qrbox{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:12px;margin:0 auto 12px;width:max-content}
-  .pix-code{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;word-break:break-all;background:#0f0f17;border:1px solid var(--line);border-radius:10px;padding:10px;user-select:all;-webkit-user-select:all;color:#d8d5e2}
-  .hide{display:none!important}
   .center{text-align:center}
-  .big{font-size:2rem;font-weight:800;margin:6px 0}
-  .pulse{width:54px;height:54px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:sp 1s linear infinite;margin:10px auto}
+  .hide{display:none!important}
+  #qrbox{display:flex;justify-content:center;padding:12px;background:#fff;border:1px solid var(--line);border-radius:14px;margin:0 auto 12px;width:max-content}
+  .big{font-size:2rem;font-weight:800;margin:4px 0}
+  .pix-code{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;word-break:break-all;background:#f6f6fb;border:1px solid var(--line);border-radius:10px;padding:10px;user-select:all;-webkit-user-select:all;color:#3a3a4a}
+  .note{background:var(--tint);border:1px solid #f6d0e2;border-radius:11px;padding:11px;font-size:.82rem;margin-top:11px;color:#8a1048}
+  .okcirc{width:74px;height:74px;border-radius:50%;background:var(--ok);display:flex;align-items:center;justify-content:center;margin:6px auto 10px;font-size:2.3rem;color:#fff}
+  .pulse{width:50px;height:50px;border-radius:50%;border:3px solid rgba(229,16,106,.18);border-top-color:var(--accent);animation:sp 1s linear infinite;margin:10px auto}
   @keyframes sp{to{transform:rotate(360deg)}}
-  .okwrap{text-align:center;padding:10px}
-  .okcirc{width:72px;height:72px;border-radius:50%;background:var(--ok);display:flex;align-items:center;justify-content:center;margin:6px auto 10px;font-size:2.2rem}
-  .note{background:rgba(255,138,60,.1);border:1px solid rgba(255,138,60,.3);border-radius:10px;padding:10px;font-size:.8rem;margin-top:10px}
+  .foot{color:var(--soft);font-size:.74rem;text-align:center;margin-top:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><span class="lock">🔒</span> Vezclub · Pagamento</div>
-  <div class="secure">🔐 Conexão segura e criptografada · Pix</div>
+  <div class="brand"><span>🔒</span> Vezclub</div>
+  <div class="secure">🔐 Pagamento seguro e criptografado · Pix</div>
 
-  <!-- etapa 1: resumo + bumps -->
+  <!-- etapa 1 -->
   <div id="step-cart">
+    <div class="card hero">
+      <h1>Falta 1 passo 🔥</h1>
+      <p id="hero-sub">Libera agora o que ela guarda só pra quem desbloqueia.</p>
+    </div>
+
+    <div class="scar">⏳ Essa condição de lançamento expira em <b id="timer">10:00</b></div>
+
     <div class="card">
-      <h1>Seu pedido</h1>
-      <p class="sub" id="pack-sub">Carregando…</p>
-      <div class="row"><div><div class="nm" id="pack-name">—</div><div class="ds" id="pack-desc"></div></div><div class="pr" id="pack-price">—</div></div>
+      <h2>Seu pedido</h2>
+      <div id="order-lines"><p class="sub">Carregando…</p></div>
     </div>
 
     <div class="card" id="bumps-card">
-      <h1>Leve junto 🔥</h1>
-      <p class="sub">Só agora, no mesmo Pix — acesso liberado na hora.</p>
-      <div id="bumps-list"><p class="muted" id="bumps-empty">—</p></div>
+      <h2>Leve junto agora 🔥</h2>
+      <p class="sub">Só nesta tela, no mesmo Pix — tudo liberado na hora.</p>
+      <div id="bumps-list"><p class="sub" id="bumps-empty">—</p></div>
     </div>
 
     <div class="card">
-      <div class="tot"><span>Total</span><span id="total">—</span></div>
-      <button class="btn" id="gen">Gerar Pix e pagar</button>
-      <div class="trust">
-        <span>🔒 Pagamento seguro</span><span>⚡ Liberação na hora</span><span>🇧🇷 Pix</span>
+      <div class="totbox">
+        <div class="totrow"><span class="k">Valor total</span><span class="v" id="t-was" style="text-decoration:line-through;color:var(--soft)">—</span></div>
+        <div class="totrow save"><span class="k">Você economiza</span><span class="v" id="t-save">—</span></div>
+        <div class="totrow big"><span class="k">Hoje você paga</span><span class="v" id="t-now">—</span></div>
       </div>
+      <button class="btn block2" id="gen" style="margin-top:12px">🔓 Quero liberar agora</button>
+      <div class="trust"><span>🔒 Pix seguro</span><span>⚡ Na hora</span><span>🛡️ 7 dias de garantia</span></div>
+    </div>
+
+    <div class="guar">
+      <div class="ic">🛡️</div>
+      <div><div class="t">Garantia de 7 dias — risco zero</div><div class="d">Não curtiu? Devolve 100% do seu dinheiro. Sem pergunta, sem burocracia.</div></div>
     </div>
   </div>
 
   <!-- etapa 2: pix -->
   <div id="step-pix" class="hide">
+    <div class="scar">⏳ Pague em até <b id="timer2">10:00</b> pra garantir o preço</div>
     <div class="card center">
-      <h1>Falta só pagar 💜</h1>
-      <p class="sub">Escaneie o QR no app do seu banco, ou copie o código.</p>
+      <h2>Falta só pagar 💜</h2>
+      <p class="sub">Escaneie o QR no app do banco, ou copie o código Pix.</p>
       <div id="qrbox"></div>
       <div class="big" id="pix-amount">—</div>
       <div class="pix-code" id="pix-code">—</div>
-      <button class="btn" id="copy">📋 Copiar código Pix</button>
-      <button class="btn sec" id="openbank">📲 Abrir meu banco</button>
-      <div class="note">Assim que o Pix cair, seu acesso é <b>liberado na hora</b> e você volta pra conversa automaticamente. Pode pagar tranquilo. 💜</div>
-      <div class="trust"><span>🔒 Criptografado</span><span>⚡ Confirmação automática</span></div>
+      <button class="btn block2" id="copy">📋 Copiar código Pix</button>
+      <button class="btn sec block2" id="openbank">📲 Abrir meu banco</button>
+      <div class="note">Assim que o Pix cair, seu acesso é <b>liberado na hora</b> e você volta pra conversa automaticamente. 🛡️ E lembra: <b>7 dias de garantia</b> — não curtiu, devolvemos. Pode pagar tranquilo. 💜</div>
     </div>
     <div class="card center">
       <div class="pulse"></div>
-      <p class="muted" id="poll-msg">Aguardando seu pagamento…</p>
+      <p class="sub" id="poll-msg" style="margin:0">Aguardando seu pagamento… confirma sozinho aqui.</p>
     </div>
   </div>
 
   <!-- etapa 3: sucesso -->
   <div id="step-ok" class="hide">
-    <div class="card okwrap">
+    <div class="card center">
       <div class="okcirc">✓</div>
-      <h1>Pagamento confirmado!</h1>
+      <h2>Pagamento confirmado!</h2>
       <p class="sub">Seu acesso foi liberado. Te levando de volta pra conversa…</p>
       <div class="pulse"></div>
     </div>
   </div>
 
-  <p class="muted center" style="margin-top:14px">Vezclub · conteúdo adulto +18 · pagamento processado com segurança</p>
+  <div class="foot">Vezclub · conteúdo +18 · pagamento processado com segurança · garantia de 7 dias</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -119,15 +157,32 @@
   var packCode=q.get("pack")||"br_start";
   var addId=q.get("add")||"";
   var backChat=q.get("cb")||"";
-  // token da sessão do usuário (passado pelo app via #t=) — garante creditar a conta certa
-  var hash=new URLSearchParams((location.hash||"").replace(/^#/,""));
-  var TOKEN=hash.get("t")||"";
-  function authHeaders(){ return TOKEN ? { Authorization: "Bearer "+TOKEN } : {}; }
-  function money(c){ return "R$ "+(c/100).toFixed(2).replace(".",","); }
+  var TOKEN=new URLSearchParams((location.hash||"").replace(/^#/,"")).get("t")||"";
+  function authHeaders(){ return TOKEN ? { Authorization:"Bearer "+TOKEN } : {}; }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function brl(c){ return "R$ "+((c||0)/100).toFixed(2).replace(".",","); }
+  function anchor(c){ return Math.round((c||0)*2); } // valor cheio ancorado (2x) — hoje sai pela metade
   var pack=null, bumps=[], selected={}, identifier=null, poll=null;
 
-  function total(){ var t=pack?pack.price_cents:0; bumps.forEach(function(b){ if(selected[b.id]) t+=b.price_cents; }); return t; }
-  function renderTotal(){ document.getElementById("total").textContent=money(total()); }
+  function lines(){
+    var out=[];
+    if(pack){ var coins=(pack.coins||0)+(pack.bonus_coins||0); out.push({nm:coins+" coins",ds:"liberam suas mensagens no chat",was:anchor(pack.price_cents),now:pack.price_cents}); }
+    bumps.forEach(function(b){ if(selected[b.id]) out.push({nm:(b.kind==="video"?"🎥 ":"🔥 ")+b.title,ds:b.preview_text||"",was:anchor(b.price_cents),now:b.price_cents}); });
+    return out;
+  }
+  function nowTotal(){ var t=pack?pack.price_cents:0; bumps.forEach(function(b){ if(selected[b.id]) t+=b.price_cents; }); return t; }
+  function wasTotal(){ var t=pack?anchor(pack.price_cents):0; bumps.forEach(function(b){ if(selected[b.id]) t+=anchor(b.price_cents); }); return t; }
+  function renderOrder(){
+    var host=document.getElementById("order-lines");
+    host.innerHTML=lines().map(function(l){
+      return '<div class="li"><div><div class="nm">'+esc(l.nm)+'</div>'+(l.ds?'<div class="ds">'+esc(l.ds)+'</div>':'')+'</div>'+
+        '<div class="pr"><span class="was">'+brl(l.was)+'</span><span class="now">'+brl(l.now)+'</span></div></div>';
+    }).join("");
+    var w=wasTotal(), n=nowTotal(), s=w-n;
+    document.getElementById("t-was").textContent=brl(w);
+    document.getElementById("t-save").textContent=brl(s)+(w>0?" ("+Math.round(s/w*100)+"%)":"");
+    document.getElementById("t-now").textContent=brl(n);
+  }
 
   // carrega pack + bumps
   Promise.all([
@@ -135,67 +190,73 @@
     sb.functions.invoke("packs_list",{body:{}})
   ]).then(function(res){
     pack=res[0].data||{code:packCode,price_cents:990,coins:100,bonus_coins:0};
-    var coins=(pack.coins||0)+(pack.bonus_coins||0);
-    document.getElementById("pack-sub").textContent="Créditos pra conversar com as modelos";
-    document.getElementById("pack-name").textContent=coins+" coins";
-    document.getElementById("pack-desc").textContent="liberam suas mensagens no chat";
-    document.getElementById("pack-price").textContent=money(pack.price_cents);
-    bumps=((res[1].data&&res[1].data.packs)||[]).filter(function(b){return b.active;});
+    bumps=(((res[1].data&&res[1].data.packs)||[]).filter(function(b){return b.active;}));
     var host=document.getElementById("bumps-list");
     if(!bumps.length){ document.getElementById("bumps-card").classList.add("hide"); }
     else{
       host.innerHTML="";
       bumps.forEach(function(b){
-        var lab=document.createElement("label"); lab.className="bump"; lab.setAttribute("data-id",b.id);
-        lab.innerHTML='<input type="checkbox"><div><div class="t">'+(b.kind==="video"?"🎥 ":"📸 ")+esc(b.title)+'</div><div class="d">'+esc(b.preview_text||"")+'</div></div><div class="p">'+money(b.price_cents)+'</div>';
+        var lab=document.createElement("label"); lab.className="bump";
+        lab.innerHTML='<input type="checkbox"><div style="flex:1;min-width:0"><span class="bumptag">50% OFF</span><div class="t">'+(b.kind==="video"?"🎥 ":"🔥 ")+esc(b.title)+'</div><div class="d">'+esc(b.preview_text||"")+'</div></div>'+
+          '<div class="p"><span class="was">'+brl(anchor(b.price_cents))+'</span><span class="now">'+brl(b.price_cents)+'</span></div>';
         var cb=lab.querySelector("input");
-        cb.addEventListener("change",function(){ selected[b.id]=cb.checked; lab.classList.toggle("on",cb.checked); renderTotal(); });
+        cb.addEventListener("change",function(){ selected[b.id]=cb.checked; lab.classList.toggle("on",cb.checked); renderOrder(); });
         if(b.id===addId){ cb.checked=true; selected[b.id]=true; lab.classList.add("on"); }
         host.appendChild(lab);
       });
     }
-    renderTotal();
+    renderOrder();
   });
-  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+  // contador de escassez (persiste na sessao pra nao resetar a cada clique)
+  (function(){
+    var KEY="vez_ck_deadline";
+    var dl; try{ dl=parseInt(sessionStorage.getItem(KEY),10); }catch(e){}
+    if(!dl||dl<Date.now()){ dl=Date.now()+10*60*1000; try{ sessionStorage.setItem(KEY,String(dl)); }catch(e){} }
+    function tick(){
+      var left=Math.max(0,Math.floor((dl-Date.now())/1000));
+      var m=Math.floor(left/60), s=left%60; var t=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+      var a=document.getElementById("timer"), b=document.getElementById("timer2");
+      if(a) a.textContent=t; if(b) b.textContent=t;
+    }
+    tick(); setInterval(tick,1000);
+  })();
 
   // gerar pix
   document.getElementById("gen").addEventListener("click",function(){
-    var btn=this; btn.disabled=true; btn.textContent="Gerando Pix…";
+    var btn=this; btn.disabled=true; btn.textContent="Gerando seu Pix…";
     var ids=bumps.filter(function(b){return selected[b.id];}).map(function(b){return b.id;});
     sb.functions.invoke("checkout_pix",{ body:{ pack_code:packCode, bump_ids:ids }, headers:authHeaders() }).then(function(r){
       var d=r.data;
-      if(!d||!d.pix_code){ btn.disabled=false; btn.textContent="Gerar Pix e pagar"; alert("Não consegui gerar o Pix agora. Tenta de novo."); return; }
-      identifier=d.identifier;
-      showPix(d.pix_code, d.amount_cents||total());
-    }).catch(function(){ btn.disabled=false; btn.textContent="Gerar Pix e pagar"; alert("Falha de conexão. Tenta de novo."); });
+      if(!d||!d.pix_code){ btn.disabled=false; btn.textContent="🔓 Quero liberar agora"; alert("Não consegui gerar o Pix agora. Tenta de novo."); return; }
+      identifier=d.identifier; showPix(d.pix_code, d.amount_cents||nowTotal());
+    }).catch(function(){ btn.disabled=false; btn.textContent="🔓 Quero liberar agora"; alert("Falha de conexão. Tenta de novo."); });
   });
 
   function showPix(code, cents){
     document.getElementById("step-cart").classList.add("hide");
     document.getElementById("step-pix").classList.remove("hide");
-    document.getElementById("pix-amount").textContent=money(cents);
+    document.getElementById("pix-amount").textContent=brl(cents);
     document.getElementById("pix-code").textContent=code;
-    try{ new QRCode(document.getElementById("qrbox"),{ text:code, width:200, height:200, correctLevel:QRCode.CorrectLevel.M }); }catch(e){}
+    try{ new QRCode(document.getElementById("qrbox"),{ text:code, width:196, height:196, correctLevel:QRCode.CorrectLevel.M }); }catch(e){}
     document.getElementById("copy").addEventListener("click",function(){
       var ok=false;
       try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code); ok=true; } }catch(e){}
       if(!ok){ try{ var el=document.getElementById("pix-code"); var rg=document.createRange(); rg.selectNodeContents(el); var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); document.execCommand("copy"); ok=true; }catch(e){} }
       this.textContent=ok?"✓ Código copiado!":"Selecione o código acima e copie";
     });
-    document.getElementById("openbank").addEventListener("click",function(){ try{ location.href="pix://"+code; }catch(e){} setTimeout(function(){ try{ location.href="bancodobrasil://"; }catch(e){} },300); });
+    document.getElementById("openbank").addEventListener("click",function(){ try{ location.href="pix://"+code; }catch(e){} });
     startPoll();
   }
 
   function startPoll(){
-    if(poll) return;
-    var tries=0;
+    if(poll) return; var tries=0;
     poll=setInterval(function(){
       tries++;
       sb.functions.invoke("coins_status",{ body:{ identifier:identifier }, headers:authHeaders() }).then(function(r){
-        var d=r.data||{};
-        if(d.status==="completed"){ clearInterval(poll); poll=null; success(); }
+        var d=r.data||{}; if(d.status==="completed"){ clearInterval(poll); poll=null; success(); }
       }).catch(function(){});
-      if(tries>240){ clearInterval(poll); poll=null; document.getElementById("poll-msg").textContent="Se já pagou e não liberou, volte pro app — libera sozinho em instantes."; }
+      if(tries>240){ clearInterval(poll); poll=null; var pm=document.getElementById("poll-msg"); if(pm) pm.textContent="Se já pagou e não liberou, volte pro app — libera sozinho em instantes."; }
     },4000);
   }
 
