@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b119"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b120"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -1225,10 +1225,10 @@ fbq('track', 'PageView');
   var PACKS = [];
   function loadPacks(cb) {
     if (!sb) { if (cb) cb(); return; }
-    sb.from("content_items").select("id,title,kind,preview_text,price_cents,bump_sort,active").eq("sellable_bump", true).order("bump_sort", { ascending: true }).then(function (r) {
-      PACKS = (!r.error && r.data) ? r.data : [];
+    sb.functions.invoke("packs_list", { body: {} }).then(function (r) {
+      PACKS = (r && r.data && Array.isArray(r.data.packs)) ? r.data.packs : [];
       if (cb) cb();
-    }).catch(function () { if (cb) cb(); });
+    }, function () { PACKS = []; if (cb) cb(); });
   }
   function loadFreeTeasers(cb) {
     if (!sb) { if (cb) cb(); return; }

@@ -131,7 +131,7 @@
   // carrega pack + bumps
   Promise.all([
     sb.from("coin_packs").select("code,price_cents,coins,bonus_coins").eq("code",packCode).maybeSingle(),
-    sb.from("content_items").select("id,title,kind,preview_text,price_cents,bump_sort").eq("sellable_bump",true).eq("active",true).order("bump_sort",{ascending:true})
+    sb.functions.invoke("packs_list",{body:{}})
   ]).then(function(res){
     pack=res[0].data||{code:packCode,price_cents:990,coins:100,bonus_coins:0};
     var coins=(pack.coins||0)+(pack.bonus_coins||0);
@@ -139,7 +139,7 @@
     document.getElementById("pack-name").textContent=coins+" coins";
     document.getElementById("pack-desc").textContent="liberam suas mensagens no chat";
     document.getElementById("pack-price").textContent=money(pack.price_cents);
-    bumps=res[1].data||[];
+    bumps=((res[1].data&&res[1].data.packs)||[]).filter(function(b){return b.active;});
     var host=document.getElementById("bumps-list");
     if(!bumps.length){ document.getElementById("bumps-card").classList.add("hide"); }
     else{
