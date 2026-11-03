@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b128"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b129"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -1996,7 +1996,7 @@ fbq('track', 'PageView');
       var ico = p.kind === "video" ? "🎥" : "🔥";
       return '<button data-combo="' + escHtml(p.id) + '" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,' + g[0] + ',' + g[1] + ');border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(0,0,0,.5);display:flex;align-items:center;gap:.9rem">' +
         '<span style="font-size:1.8rem;line-height:1">' + ico + '</span>' +
-        '<span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:1.08rem">' + escHtml(p.title) + '</span><span style="display:block;font-size:.84rem;opacity:.95">' + escHtml(p.preview_text || "") + '</span></span>' +
+        '<span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:1.08rem">' + escHtml(p.title) + (p.vol ? ' <span style="font-size:.66rem;background:rgba(255,255,255,.25);border-radius:6px;padding:1px 6px;vertical-align:middle;letter-spacing:.03em">VOL. ' + p.vol + '</span>' : '') + '</span><span style="display:block;font-size:.84rem;opacity:.95">' + escHtml(p.preview_text || "") + '</span></span>' +
         '<span style="font-weight:800;white-space:nowrap">' + money(p.price_cents, "brl") + '</span></button>';
     }).join("");
     return '<div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem">' +
@@ -3050,7 +3050,7 @@ fbq('track', 'PageView');
     var galLbl = isReveal ? "Fotos SEM ROUPA (bloqueadas, revela ao desbloquear)" : isVideoPack ? "Vídeos do pack" : isPack ? "Fotos do pack" : "Fotos do álbum";
     return '<div class="ac-item" data-ac-id="' + it.id + '" data-kind="' + it.kind + '" style="border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:.9rem">' +
       '<div style="font-weight:700;margin-bottom:.3rem">' + kindLbl + '</div>' +
-      (isPack ? '<div style="font-size:.84rem;background:rgba(255,77,141,.08);border:1px solid rgba(255,77,141,.25);border-radius:10px;padding:.55rem .65rem;margin-bottom:.55rem">💰 <b>R$ ' + (((it.price_cents || 0) / 100).toFixed(2).replace(".", ",")) + '</b> &nbsp;·&nbsp; meta <b>' + (it.item_count || 0) + '+</b> ' + (isVideoPack ? "vídeos" : "fotos") + ' &nbsp;·&nbsp; já no pack: <b id="ac-cnt-' + it.id + '">' + ((it.media_paths && it.media_paths.length) || 0) + '</b></div>' : '') +
+      (isPack ? '<div style="font-size:.84rem;background:rgba(255,77,141,.08);border:1px solid rgba(255,77,141,.25);border-radius:10px;padding:.55rem .65rem;margin-bottom:.55rem">💰 <b>R$ ' + (((it.price_cents || 0) / 100).toFixed(2).replace(".", ",")) + '</b> &nbsp;·&nbsp; <b>Vol. ' + (it.vol || 1) + '</b> &nbsp;·&nbsp; meta <b>' + (it.item_count || 0) + '+</b> ' + (isVideoPack ? "vídeos" : "fotos") + ' &nbsp;·&nbsp; já no pack: <b id="ac-cnt-' + it.id + '">' + ((it.media_paths && it.media_paths.length) || 0) + '</b></div>' : '') +
       acField("Título (PT)", "title", it.title) +
       acField("Chamada / teaser (PT)", "teaser", it.teaser) +
       (isStory ? '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">Texto do conto (PT — traduz sozinho pra EN/ES ao salvar)</label><textarea data-f="story_text" rows="5" style="width:100%;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">' + escHtml(it.story_text || "") + '</textarea>' : '') +

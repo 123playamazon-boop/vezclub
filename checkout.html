@@ -168,7 +168,7 @@
   function lines(){
     var out=[];
     if(pack){ var coins=(pack.coins||0)+(pack.bonus_coins||0); out.push({nm:coins+" coins",ds:"liberam suas mensagens no chat",was:anchor(pack.price_cents),now:pack.price_cents}); }
-    bumps.forEach(function(b){ if(selected[b.id]) out.push({nm:(b.kind==="video"?"🎥 ":"🔥 ")+b.title,ds:b.preview_text||"",was:anchor(b.price_cents),now:b.price_cents}); });
+    bumps.forEach(function(b){ if(selected[b.id]) out.push({nm:(b.kind==="video"?"🎥 ":"🔥 ")+b.title+(b.vol?" · Vol. "+b.vol:""),ds:b.preview_text||"",was:anchor(b.price_cents),now:b.price_cents}); });
     return out;
   }
   function nowTotal(){ var t=pack?pack.price_cents:0; bumps.forEach(function(b){ if(selected[b.id]) t+=b.price_cents; }); return t; }
@@ -198,7 +198,7 @@
       host.innerHTML="";
       bumps.forEach(function(b){
         var lab=document.createElement("label"); lab.className="bump";
-        lab.innerHTML='<input type="checkbox"><div style="flex:1;min-width:0"><span class="bumptag">50% OFF</span><div class="t">'+(b.kind==="video"?"🎥 ":"🔥 ")+esc(b.title)+'</div><div class="d">'+esc(b.preview_text||"")+'</div></div>'+
+        lab.innerHTML='<input type="checkbox"><div style="flex:1;min-width:0"><span class="bumptag">50% OFF</span>'+(b.vol?'<span class="bumptag" style="background:#6b21a8">VOL. '+b.vol+'</span>':'')+'<div class="t">'+(b.kind==="video"?"🎥 ":"🔥 ")+esc(b.title)+'</div><div class="d">'+esc(b.preview_text||"")+'</div></div>'+
           '<div class="p"><span class="was">'+brl(anchor(b.price_cents))+'</span><span class="now">'+brl(b.price_cents)+'</span></div>';
         var cb=lab.querySelector("input");
         cb.addEventListener("change",function(){ selected[b.id]=cb.checked; lab.classList.toggle("on",cb.checked); renderOrder(); });
