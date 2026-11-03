@@ -1,6 +1,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Vezclub</title>
 <!-- Meta Pixel Code -->
 <script>
@@ -962,7 +965,21 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b120"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b121"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
+  (function () {
+    try {
+      fetch("ver.json?cb=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (j) {
+        var remote = j && j.build;
+        if (remote && remote !== BUILD) {
+          var u = new URL(location.href);
+          if (u.searchParams.get("v") === remote) return; // ja recarregamos nesta versao — evita loop
+          u.searchParams.set("v", remote);
+          location.replace(u.toString());
+        }
+      }).catch(function () {});
+    } catch (e) {}
+  })();
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
