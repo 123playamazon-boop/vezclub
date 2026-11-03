@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b114"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b115"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -6661,6 +6661,13 @@ fbq('track', 'PageView');
   function checkPaidReturn() {
     try {
       var q = new URLSearchParams(location.search);
+      // deep-link de entrada: vezclub.com/?c=<creator_key> cai DIRETO no chat da modelo (usado nas landings de 1 modelo)
+      var cOpen = q.get("c") || q.get("chat") || "";
+      if (cOpen) {
+        try { history.replaceState(null, "", location.pathname + (location.hash || "")); } catch (e) {}
+        if (CREATORS.some(function (x) { return x.id === cOpen; })) { setTimeout(function () { try { openAiChat(cOpen); } catch (e) {} }, 300); }
+        return;
+      }
       if (q.get("sub_paid") === "1") {
         var ssid = q.get("session_id") || "";
         try { history.replaceState(null, "", location.pathname); } catch (e) {}
