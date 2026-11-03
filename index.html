@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b133"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b134"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6575,18 +6575,42 @@ fbq('track', 'PageView');
       tick(); var iv = setInterval(function () { if (!document.getElementById("vck-bg")) { clearInterval(iv); return; } tick(); }, 1000);
     })();
 
+    // garante token fresco antes de gerar (mobile/in-app expira a sessao -> 401). force=true renova de verdade.
+    function ensureTok(force, cb) {
+      try {
+        if (!sb || !sb.auth) { cb(); return; }
+        if (force && typeof sb.auth.refreshSession === "function") { sb.auth.refreshSession().then(function () { cb(); }, function () { cb(); }); return; }
+        sb.auth.getSession().then(function (g) {
+          var s = g && g.data && g.data.session;
+          if (s && s.user) { cb(); return; }
+          if (typeof sb.auth.signInAnonymously === "function") { sb.auth.signInAnonymously().then(function () { cb(); }, function () { cb(); }); }
+          else { cb(); }
+        }, function () { cb(); });
+      } catch (e) { cb(); }
+    }
     // gerar pix
     q("#vck-gen").addEventListener("click", function () {
       var btn = this; btn.disabled = true; btn.textContent = "Gerando seu Pix…";
       var ids = bumps.filter(function (b) { return selected[b.id]; }).map(function (b) { return b.id; });
-      sb.functions.invoke("checkout_pix", { body: { pack_code: packCode, bump_ids: ids } }).then(function (r) {
-        var d = r && r.data;
-        if ((r && r.error) || !d || !d.pix_code) { btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏")); return; }
-        identifier = d.identifier;
-        try { if (window.fbq) fbq("track", "InitiateCheckout", { value: (d.amount_cents ? d.amount_cents / 100 : nowTotal() / 100), currency: "BRL", content_name: packCode, content_type: "checkout_pix" }); } catch (e) {}
-        try { if (window.clarity) window.clarity("event", "pix_generated"); } catch (e) {}
-        showPix(d.pix_code, d.amount_cents || nowTotal());
-      }).catch(function () { btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏")); });
+      var tried = 0;
+      function attempt() {
+        tried++;
+        sb.functions.invoke("checkout_pix", { body: { pack_code: packCode, bump_ids: ids } }).then(function (r) {
+          var d = r && r.data;
+          if ((r && r.error) || !d || !d.pix_code) {
+            if (tried < 2) { ensureTok(true, attempt); return; } // provavel 401 por sessao expirada -> renova e tenta 1x
+            btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Não consegui gerar o Pix. Recarregue a página e tente de novo 🙏", "Couldn't generate Pix. Reload the page and try again 🙏", "No pude generar el Pix. Recarga la página 🙏")); return;
+          }
+          identifier = d.identifier;
+          try { if (window.fbq) fbq("track", "InitiateCheckout", { value: (d.amount_cents ? d.amount_cents / 100 : nowTotal() / 100), currency: "BRL", content_name: packCode, content_type: "checkout_pix" }); } catch (e) {}
+          try { if (window.clarity) window.clarity("event", "pix_generated"); } catch (e) {}
+          showPix(d.pix_code, d.amount_cents || nowTotal());
+        }).catch(function () {
+          if (tried < 2) { ensureTok(true, attempt); return; }
+          btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏"));
+        });
+      }
+      ensureTok(false, attempt); // garante sessao fresca antes da 1a tentativa
     });
 
     function showPix(codeStr, cents) {
