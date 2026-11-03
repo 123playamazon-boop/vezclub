@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b135"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b136"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -5346,6 +5346,7 @@ fbq('track', 'PageView');
       '<span id="ch-time" style="margin-left:6px;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
       '<button class="icon-btn" id="ch-shop" title="' + L("Loja dela", "Her shop", "Su tienda") + '" style="width:auto;padding:0 .35rem;font-size:1.05rem;margin-left:4px">🛍</button>' +
       '<button class="ch-x" data-close>' + XICON + '</button></div>' +
+      '<div id="ch-packbar"></div>' +
       '<div class="chat-body" id="chat-body"></div>' +
       '<div class="chat-input"><input id="chat-text" placeholder="' + escHtml(L("Escreve pra ", "Message ", "Escribe a ") + first) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
       '</div></div>';
@@ -5353,6 +5354,23 @@ fbq('track', 'PageView');
     var body = document.getElementById("chat-body");
     var timeEl = document.getElementById("ch-time");
     (function () { var shopB = document.getElementById("ch-shop"); if (shopB) shopB.onclick = function () { openProductStore(cid); }; })();
+    // faixa fixa do pack logo abaixo do nome dela (reforço de venda rápida -> checkout). Só BR (Pix).
+    function buildChatPackBar() {
+      var bar = document.getElementById("ch-packbar"); if (!bar) return;
+      if (coinMarket() !== "br") { bar.innerHTML = ""; return; }
+      var p = (typeof gatewayPack === "function") ? gatewayPack() : null;
+      if (!p) { if (!PACKS || !PACKS.length) { loadPacks(function () { buildChatPackBar(); }); } return; }
+      var price = "R$ " + ((p.price_cents || 0) / 100).toFixed(2).replace(".", ",");
+      bar.innerHTML = '<button id="ch-packbtn" style="display:flex;align-items:center;gap:.5rem;width:100%;border:0;cursor:pointer;text-align:left;padding:.5rem .9rem;background:linear-gradient(100deg,#7c3aed,#db2777);color:#fff;border-bottom:1px solid rgba(0,0,0,.08)">' +
+        '<span style="font-size:1.05rem;flex:0 0 auto">🔥</span>' +
+        '<span style="flex:1;min-width:0;line-height:1.15;overflow:hidden"><span style="font-weight:800;font-size:.85rem">' + escHtml(p.title) + '</span><span style="display:block;opacity:.92;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(p.preview_text || "") + '</span></span>' +
+        '<span style="flex:0 0 auto;font-weight:800;font-size:.84rem;white-space:nowrap">' + price + '</span>' +
+        '<span style="flex:0 0 auto;background:rgba(255,255,255,.24);border-radius:999px;padding:3px 10px;font-weight:800;font-size:.75rem;white-space:nowrap">' + L("levar ›", "get it ›", "llevar ›") + '</span>' +
+        '</button>';
+      var b = document.getElementById("ch-packbtn");
+      if (b) b.onclick = function () { try { if (window.clarity) window.clarity("event", "chat_packbar_click"); } catch (e) {} openCheckout("br_start", p.id, cid); };
+    }
+    buildChatPackBar();
     fbt("ViewContent", { content_name: cid, content_category: "chat" }); // abriu uma conversa
     clar("event", "chat_open"); clar("set", "funnel_stage", "chat_open"); clar("set", "modelo", cid);
     function setBal(n) { bal = Math.max(0, n | 0); timeEl.textContent = "🪙 " + bal; } // agora mostra COINS, não tempo
