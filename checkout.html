@@ -118,6 +118,7 @@
   var q=new URLSearchParams(location.search);
   var packCode=q.get("pack")||"br_start";
   var addId=q.get("add")||"";
+  var backChat=q.get("cb")||"";
   // token da sessão do usuário (passado pelo app via #t=) — garante creditar a conta certa
   var hash=new URLSearchParams((location.hash||"").replace(/^#/,""));
   var TOKEN=hash.get("t")||"";
@@ -201,7 +202,7 @@
   function success(){
     document.getElementById("step-pix").classList.add("hide");
     document.getElementById("step-ok").classList.remove("hide");
-    setTimeout(function(){ location.href="https://vezclub.com/?coins_paid=1"; }, 2200);
+    setTimeout(function(){ location.href="https://vezclub.com/?coins_paid=1"+(backChat?("&reopen="+encodeURIComponent(backChat)):""); }, 2200);
   }
 })();
 </script>

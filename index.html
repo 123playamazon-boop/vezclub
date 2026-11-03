@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b124"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b125"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -5497,7 +5497,7 @@ fbq('track', 'PageView');
       body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L("você tá me deixando com vontade… 🔥 tem coisa que eu não mostro aqui — eu guardo num cantinho só meu. quer ver meu lado mais quente?", "you're getting me in the mood… 🔥 there's stuff I don't show in here — I keep it somewhere just mine. wanna see my hottest side?", "me estás poniendo… 🔥 hay cosas que no muestro aquí — las guardo en un rincón solo mío. ¿quieres ver mi lado más caliente?")) + '</div>');
       body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🔓 ' + L("Quero ver", "Show me", "Quiero ver") + '</button></div>');
       body.scrollTop = body.scrollHeight;
-      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { openHerPacks(); };
+      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { try { if (window.clarity) window.clarity("event", "tease_unlock_click"); } catch (e) {} if (coinMarket() === "br") { openCheckout("br_start", null, cid); } else { openHerPacks(); } };
     }
     var sending = false;
     function doSend() {
@@ -5519,7 +5519,7 @@ fbq('track', 'PageView');
             setTimeout(function () {
               body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .6rem;display:flex;flex-direction:column;gap:.4rem"><button class="btn btn-primary btn-sm" id="ns-unlock">🔓 ' + L("Quero desbloquear agora", "Unlock now", "Quiero desbloquear ahora") + '</button><button class="btn btn-ghost btn-sm" id="ns-signup" style="opacity:.72;font-size:.8rem">' + L("ou criar conta pra continuar o papo", "or create an account to keep chatting", "o crear cuenta para seguir el chat") + '</button></div>');
               body.scrollTop = body.scrollHeight;
-              var ub = document.getElementById("ns-unlock"); if (ub) ub.onclick = function () { try { if (window.clarity) window.clarity("event", "freewall_unlock_click"); } catch (e) {} openHerPacks(); };
+              var ub = document.getElementById("ns-unlock"); if (ub) ub.onclick = function () { try { if (window.clarity) window.clarity("event", "freewall_unlock_click"); } catch (e) {} if (coinMarket() === "br") { openCheckout("br_start", null, cid); } else { openHerPacks(); } };
               var sgb = document.getElementById("ns-signup"); if (sgb) sgb.onclick = function () { showAuthGate("signup", "buyer"); };
             }, 700);
             return;
@@ -6347,9 +6347,9 @@ fbq('track', 'PageView');
     payInterstitial(go); // in-app → manda abrir no navegador antes do cartão; fora do app segue direto
   }
   // NOVO: manda pro checkout próprio (QR + copia-e-cola + order bumps + confiança). Passa o token da sessão no #fragment pra creditar a conta certa.
-  function openCheckout(code, addId) {
+  function openCheckout(code, addId, backChat) {
     try { if (window.clarity) window.clarity("event", "open_checkout"); } catch (e) {}
-    function go(tok) { var url = "checkout.html?pack=" + encodeURIComponent(code) + (addId ? ("&add=" + encodeURIComponent(addId)) : "") + (tok ? ("#t=" + encodeURIComponent(tok)) : ""); window.location.href = url; }
+    function go(tok) { var url = "checkout.html?pack=" + encodeURIComponent(code) + (addId ? ("&add=" + encodeURIComponent(addId)) : "") + (backChat ? ("&cb=" + encodeURIComponent(backChat)) : "") + (tok ? ("#t=" + encodeURIComponent(tok)) : ""); window.location.href = url; }
     try { sb.auth.getSession().then(function (r) { go((r && r.data && r.data.session && r.data.session.access_token) || ""); }, function () { go(""); }); } catch (e) { go(""); }
   }
   function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {
@@ -6749,17 +6749,23 @@ fbq('track', 'PageView');
       }
       if (q.get("coins_paid") === "1") {
         var csid = q.get("session_id") || "";
+        var reopen = q.get("reopen") || "";
         try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        function afterCoins() {
+          renderWalletChip();
+          toast(L("Pagamento confirmado! Liberado 💜", "Payment confirmed! Unlocked 💜", "¡Pago confirmado! Liberado 💜"));
+          try { if (window.clarity) { window.clarity("event", "purchase"); window.clarity("set", "funnel_stage", "paid"); } } catch (e) {}
+          try { if (window.fbq) fbq("track", "Purchase", { content_type: "coins", content_name: reopen || "" }); } catch (e) {}
+          if (reopen) setTimeout(function () { try { openAiChat(reopen); } catch (e) {} }, 400);
+        }
         if (csid && sb) {
           ensureSessionThen(function () {
             sb.functions.invoke("coins_stripe_confirm", { body: { session_id: csid } }).then(function (r) {
-              var d = r && r.data;
-              if (d && typeof d.balance === "number") setCoinBal(d.balance);
-              renderWalletChip();
-              toast(L("Coins creditados! 💜", "Coins credited! 💜", "¡Coins acreditados! 💜"));
-            }).catch(function () {});
+              var d = r && r.data; if (d && typeof d.balance === "number") setCoinBal(d.balance);
+              afterCoins();
+            }).catch(afterCoins);
           });
-        }
+        } else { ensureSessionThen(afterCoins); }
         return;
       }
       if (q.get("paid") === "1") {
