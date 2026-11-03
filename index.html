@@ -1,9 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>Vezclub</title>
 <!-- Meta Pixel Code -->
 <script>
@@ -965,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b122"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b123"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -1180,7 +1177,11 @@ fbq('track', 'PageView');
   function mediaUrl(path) { try { var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return null; } }
   // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed)
   // serve a imagem crua (webp ja otimizada no upload) — sem transformacao on-the-fly do Supabase (evita estourar a cota "Storage Image Transformations" e garante que a foto sempre carrega)
-  function imgUrl(path, w, q) { return mediaUrl(path); }
+  function imgUrl(path, w, q) {
+    // redimensiona no proprio Supabase (render/image) — serve miniatura leve em vez da imagem cheia (ate ~6x menor no mobile)
+    var u = mediaUrl(path); if (!u) return u;
+    try { u = u.replace("/object/public/", "/render/image/public/"); var sep = u.indexOf("?") < 0 ? "?" : "&"; return u + sep + "width=" + (w || 320) + "&quality=" + (q || 70); } catch (e) { return mediaUrl(path); }
+  }
   function avThumb(c, w) { return c.avatarPath ? imgUrl(c.avatarPath, w || 160, 76) : (c.avatarUrl || null); }
   function seedRand(str, salt) { var h = 2166136261 >>> 0; var s = (str || "") + "|" + (salt || ""); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
   function vanityStats(key) {
