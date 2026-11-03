@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b127"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b128"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -3050,6 +3050,7 @@ fbq('track', 'PageView');
     var galLbl = isReveal ? "Fotos SEM ROUPA (bloqueadas, revela ao desbloquear)" : isVideoPack ? "Vídeos do pack" : isPack ? "Fotos do pack" : "Fotos do álbum";
     return '<div class="ac-item" data-ac-id="' + it.id + '" data-kind="' + it.kind + '" style="border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:.9rem">' +
       '<div style="font-weight:700;margin-bottom:.3rem">' + kindLbl + '</div>' +
+      (isPack ? '<div style="font-size:.84rem;background:rgba(255,77,141,.08);border:1px solid rgba(255,77,141,.25);border-radius:10px;padding:.55rem .65rem;margin-bottom:.55rem">💰 <b>R$ ' + (((it.price_cents || 0) / 100).toFixed(2).replace(".", ",")) + '</b> &nbsp;·&nbsp; meta <b>' + (it.item_count || 0) + '+</b> ' + (isVideoPack ? "vídeos" : "fotos") + ' &nbsp;·&nbsp; já no pack: <b id="ac-cnt-' + it.id + '">' + ((it.media_paths && it.media_paths.length) || 0) + '</b></div>' : '') +
       acField("Título (PT)", "title", it.title) +
       acField("Chamada / teaser (PT)", "teaser", it.teaser) +
       (isStory ? '<label style="font-size:.76rem;color:var(--muted);display:block;margin-top:.4rem">Texto do conto (PT — traduz sozinho pra EN/ES ao salvar)</label><textarea data-f="story_text" rows="5" style="width:100%;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit">' + escHtml(it.story_text || "") + '</textarea>' : '') +
@@ -3065,6 +3066,7 @@ fbq('track', 'PageView');
   }
   function acLoadPhotos(id, host) {
     var it = acItemsById[id]; var paths = (it && Array.isArray(it.media_paths)) ? it.media_paths.slice() : [];
+    var cntEl = document.getElementById("ac-cnt-" + id); if (cntEl) cntEl.textContent = paths.length; // contador do pack (atualiza ao subir/remover)
     if (!paths.length) { host.innerHTML = '<span class="muted-note" style="font-size:.76rem">sem fotos ainda</span>'; return; }
     function persist(newPaths) {
       if (acItemsById[id]) acItemsById[id].media_paths = newPaths;
