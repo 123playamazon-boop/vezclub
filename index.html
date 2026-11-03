@@ -150,7 +150,7 @@ fbq('track', 'PageView');
     margin: 0;
     overflow-x: hidden;
     max-width: 100%;
-    overscroll-behavior-x: none;
+    overscroll-behavior: none; /* bloqueia o "puxar pra recarregar" (pull-to-refresh) no mobile, que recarregava a pagina sozinha ao ver fotos/videos free */
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; margin: 0; line-height: 1.2; text-wrap: balance; letter-spacing: -0.01em; }
@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b113"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b114"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // detector de idioma (global) — pra legenda da foto seguir o idioma da CONVERSA, nao o do app
   function gLang(txt) {
     var t = (txt || "").toLowerCase().trim(); if (!t) return null;
@@ -5058,7 +5058,7 @@ fbq('track', 'PageView');
     srcs = (srcs || []).filter(Boolean); if (!srcs.length) return;
     idx = Math.max(0, Math.min(idx || 0, srcs.length - 1));
     var ov = document.createElement("div");
-    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:100001;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:pan-y";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:100001;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;overscroll-behavior:contain";
     var img = document.createElement("img");
     img.style.cssText = "max-width:94vw;max-height:84vh;border-radius:12px;box-shadow:0 10px 50px rgba(0,0,0,.7);-webkit-user-drag:none;user-select:none";
     var close = document.createElement("button");
