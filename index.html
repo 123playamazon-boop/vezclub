@@ -962,7 +962,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b136"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b137"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -5358,17 +5358,22 @@ fbq('track', 'PageView');
     function buildChatPackBar() {
       var bar = document.getElementById("ch-packbar"); if (!bar) return;
       if (coinMarket() !== "br") { bar.innerHTML = ""; return; }
-      var p = (typeof gatewayPack === "function") ? gatewayPack() : null;
-      if (!p) { if (!PACKS || !PACKS.length) { loadPacks(function () { buildChatPackBar(); }); } return; }
-      var price = "R$ " + ((p.price_cents || 0) / 100).toFixed(2).replace(".", ",");
-      bar.innerHTML = '<button id="ch-packbtn" style="display:flex;align-items:center;gap:.5rem;width:100%;border:0;cursor:pointer;text-align:left;padding:.5rem .9rem;background:linear-gradient(100deg,#7c3aed,#db2777);color:#fff;border-bottom:1px solid rgba(0,0,0,.08)">' +
-        '<span style="font-size:1.05rem;flex:0 0 auto">🔥</span>' +
-        '<span style="flex:1;min-width:0;line-height:1.15;overflow:hidden"><span style="font-weight:800;font-size:.85rem">' + escHtml(p.title) + '</span><span style="display:block;opacity:.92;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(p.preview_text || "") + '</span></span>' +
-        '<span style="flex:0 0 auto;font-weight:800;font-size:.84rem;white-space:nowrap">' + price + '</span>' +
-        '<span style="flex:0 0 auto;background:rgba(255,255,255,.24);border-radius:999px;padding:3px 10px;font-weight:800;font-size:.75rem;white-space:nowrap">' + L("levar ›", "get it ›", "llevar ›") + '</span>' +
-        '</button>';
-      var b = document.getElementById("ch-packbtn");
-      if (b) b.onclick = function () { try { if (window.clarity) window.clarity("event", "chat_packbar_click"); } catch (e) {} openCheckout("br_start", p.id, cid); };
+      var photos = (PACKS || []).filter(function (p) { return p.active && p.price_cents && p.kind !== "video"; });
+      if (!photos.length) { if (!PACKS || !PACKS.length) { loadPacks(function () { buildChatPackBar(); }); } return; }
+      photos.sort(function (a, b) { return a.price_cents - b.price_cents; });
+      var picks = photos.slice(0, 3); // 100 / 200 / 300 fotos
+      function cnt(p) { var n = p.item_count || parseInt(String(p.preview_text || "").replace(/[^0-9].*$/, ""), 10); return (n && !isNaN(n)) ? n : null; }
+      var chips = picks.map(function (p, i) {
+        var price = "R$ " + ((p.price_cents || 0) / 100).toFixed(2).replace(".", ",");
+        var n = cnt(p); var lab = n ? (n + " " + L("fotos", "photos", "fotos")) : escHtml(p.title);
+        return '<button class="chpk" data-pid="' + escHtml(p.id) + '" style="flex:1;min-width:0;border:0;cursor:pointer;color:#fff;background:linear-gradient(100deg,#7c3aed,#db2777);padding:.38rem .2rem;line-height:1.12;' + (i > 0 ? 'border-left:1px solid rgba(255,255,255,.18);' : '') + '">' +
+          '<div style="font-weight:800;font-size:.8rem;white-space:nowrap">🔥 ' + lab + '</div>' +
+          '<div style="font-size:.71rem;opacity:.95;white-space:nowrap">' + price + '</div></button>';
+      }).join("");
+      bar.innerHTML = '<div style="display:flex;width:100%;border-bottom:1px solid rgba(0,0,0,.08)">' + chips + '</div>';
+      bar.querySelectorAll(".chpk").forEach(function (b) {
+        b.onclick = function () { var pid = b.getAttribute("data-pid"); try { if (window.clarity) window.clarity("event", "chat_packbar_click"); } catch (e) {} openCheckout("br_start", pid, cid); };
+      });
     }
     buildChatPackBar();
     fbt("ViewContent", { content_name: cid, content_category: "chat" }); // abriu uma conversa
@@ -5590,9 +5595,9 @@ fbq('track', 'PageView');
     function productTease() {
       if (pdOffered) return; pdOffered = true;
       body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L(
-        "deixa eu te contar um segredinho 🙈 eu e minhas amigas a gente tem um cantinho que quase ninguém vê — um pack nosso, daquelas fotos que a gente não posta em lugar nenhum. você não precisa pagar nada pra continuar falando comigo, viu? isso aqui é só se você quiser se divertir um pouquinho mais comigo 👇",
-        "let me tell you a little secret 🙈 me and my girls have a little corner almost nobody gets to see — a pack of ours, the kind of photos we don't post anywhere. you don't have to pay anything to keep talking to me, ok? this is just if you wanna have a little more fun with me 👇",
-        "te cuento un secretito 🙈 mis amigas y yo tenemos un rincón que casi nadie ve — un pack nuestro, de esas fotos que no publicamos en ningún lado. no tienes que pagar nada para seguir hablando conmigo, ¿eh? esto es solo si quieres divertirte un poquito más conmigo 👇"
+        "tenho um cantinho que quase ninguém vê 🙈 um pack meu e das minhas amigas, daquelas fotos que a gente não posta em lugar nenhum. dá uma espiada 👇 ou, se não quiser agora, é só me responder que a gente continua 💜",
+        "I've got a little corner almost nobody sees 🙈 a pack of mine and my girls', the kind of photos we don't post anywhere. take a peek 👇 or, if not now, just reply and we keep going 💜",
+        "tengo un rincón que casi nadie ve 🙈 un pack mío y de mis amigas, de esas fotos que no publicamos en ningún lado. écha un ojo 👇 o, si no ahora, solo respóndeme y seguimos 💜"
       )) + '</div>');
       body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">👀 ' + L("quero dar uma espiada", "lemme take a peek", "quiero espiar") + '</button></div>');
       body.scrollTop = body.scrollHeight;
