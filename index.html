@@ -932,11 +932,36 @@ fbq('track', 'PageView');
 </header>
 
 <style>@keyframes vzspin{to{transform:rotate(360deg)}}</style>
-<main id="app" class="wrap"><div style="min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif">
-  <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(140deg,#7c3aed,#db2777);display:grid;place-items:center;color:#fff;font-weight:800;font-size:24px">V</div>
-  <div style="font-weight:800;font-size:22px;letter-spacing:-.01em;background:linear-gradient(135deg,#7c3aed,#db2777);-webkit-background-clip:text;background-clip:text;color:transparent">Vezclub</div>
-  <div style="width:30px;height:30px;border:3px solid rgba(124,58,237,.22);border-top-color:#7c3aed;border-radius:50%;animation:vzspin .8s linear infinite"></div>
-</div></main>
+<main id="app" class="wrap"><!-- HERO ESTATICO: pinta na hora (LCP), antes do JS/dados. O render() substitui quando os dados chegam. -->
+  <div class="page-head" id="boot-hero">
+    <div class="eyebrow">Ao vivo agora</div>
+    <h1>Uma mulher safada online agora — e ela quer a sua atenção.</h1>
+    <p>Escolhe a que te deixar mais no clima e cai num chat privado — ela responde na hora, sem rodeio, te provoca e manda foto que você não acha em nenhum outro lugar. 1º minuto grátis, sem cartão.</p>
+  </div>
+  <div class="free-ban" data-trial="1" style="cursor:pointer">
+    <div class="fb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.6-.8L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg><span class="fb-dot"></span></div>
+    <div class="fb-txt"><h2>1º minuto <span class="fb-free">grátis</span></h2><p>Sem cartão · sem cadastro · é só escolher uma modelo e começar a conversar</p></div>
+  </div>
+  <div id="boot-sk" style="display:flex;flex-direction:column;gap:.55rem;margin-top:1rem" aria-hidden="true">
+    <div style="height:62px;border-radius:16px;background:var(--surface-2,#eef2f9)"></div>
+    <div style="height:62px;border-radius:16px;background:var(--surface-2,#eef2f9)"></div>
+    <div style="height:62px;border-radius:16px;background:var(--surface-2,#eef2f9)"></div>
+  </div>
+</main>
+<script>
+/* ajusta o hero estatico pro idioma certo (EN/ES) antes do script pesado — PT fica como esta */
+(function(){try{
+  var q=new URLSearchParams(location.search).get("lang");
+  var l=q||localStorage.getItem("aura_lang")||localStorage.getItem("vez_geo_lang")||((navigator.language||navigator.userLanguage||"").toLowerCase().slice(0,2));
+  if(l!=="en"&&l!=="es")return;
+  var T={en:{e:"Live now",h:"A naughty girl online right now — and she wants your attention.",p:"Pick the one that gets you going and drop into a private chat — she answers instantly, no games, teases you and sends photos you won't find anywhere else. First minute's free, no card.",fh:"First minute ",ff:"free",fp:"No card · no signup · just pick a model and start chatting"},es:{e:"En vivo ahora",h:"Una chica atrevida en línea ahora — y quiere tu atención.",p:"Elige a la que más te prenda y entra en un chat privado — responde al instante, sin rodeos, te provoca y manda fotos que no encuentras en ningún otro lado. 1er minuto gratis, sin tarjeta.",fh:"1er minuto ",ff:"gratis",fp:"Sin tarjeta · sin registro · solo elige una modelo y empieza a hablar"}}[l];
+  if(!T)return;
+  var he=document.getElementById("boot-hero");
+  if(he){he.querySelector(".eyebrow").textContent=T.e;he.querySelector("h1").textContent=T.h;he.querySelector("p").textContent=T.p;}
+  var ft=document.querySelector(".free-ban .fb-txt");
+  if(ft){ft.querySelector("h2").innerHTML=T.fh+'<span class="fb-free">'+T.ff+'</span>';ft.querySelector("p").textContent=T.fp;}
+}catch(e){}})();
+</script>
 
 <div id="modal-root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -962,7 +987,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b137"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b138"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
