@@ -987,7 +987,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b140"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b141"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6559,7 +6559,7 @@ fbq('track', 'PageView');
   function openCheckoutModal(code, addId, backChat) {
     injectCkStyle();
     var packCode = code || "br_start";
-    var pack = null, bumps = [], selected = {}, identifier = null, poll = null;
+    var pack = null, bumps = [], selected = {}, identifier = null, poll = null, coinsSel = false;
     function esc(s) { return escHtml(String(s == null ? "" : s)); }
     function brl(c) { return "R$ " + ((c || 0) / 100).toFixed(2).replace(".", ","); }
     function anchor(c) { return Math.round((c || 0) * 2); }
@@ -6574,7 +6574,7 @@ fbq('track', 'PageView');
       + '<div class="vck-card vck-hero"><h1>Falta 1 passo 🔥</h1><p>Libera agora o que ela guarda só pra quem desbloqueia.</p></div>'
       + '<div class="vck-scar">⏳ Essa condição de lançamento expira em <b id="vck-timer">10:00</b></div>'
       + '<div class="vck-card"><div class="vck-h2">Seu pedido</div><div id="vck-order"><p class="vck-sub">Carregando…</p></div></div>'
-      + '<div class="vck-card" id="vck-bumps-card"><div class="vck-h2">Leve junto agora 🔥</div><p class="vck-sub">Cada pack é <b>100% diferente</b> — as fotos de um <b>não se repetem</b> no outro. Quem leva mais, monta o acervo completo. Tudo no mesmo Pix, liberado na hora.</p><div id="vck-bumps"><p class="vck-sub">—</p></div><div style="display:flex;align-items:center;gap:8px;background:#eef7ff;border:1px solid #c9e4ff;border-radius:11px;padding:10px 12px;margin-top:10px;font-size:.82rem;color:#0b5aa6;font-weight:600">✓ Conteúdo exclusivo em cada pack — nada repetido. Pode levar todos.</div></div>'
+      + '<div class="vck-card" id="vck-bumps-card"><div class="vck-h2">Monte o seu agora 🔥</div><p class="vck-sub">Marque tudo que você quer levar. Cada pack é <b>100% diferente</b> — as fotos de um <b>não se repetem</b> no outro. Quem leva mais, monta o acervo completo. Tudo no mesmo Pix, liberado na hora.</p><div id="vck-bumps"><p class="vck-sub">—</p></div><div style="display:flex;align-items:center;gap:8px;background:#eef7ff;border:1px solid #c9e4ff;border-radius:11px;padding:10px 12px;margin-top:10px;font-size:.82rem;color:#0b5aa6;font-weight:600">✓ Conteúdo exclusivo em cada pack — nada repetido. Pode levar todos.</div></div>'
       + '<div class="vck-card"><div class="vck-totbox"><div class="vck-totrow"><span class="k">Valor total</span><span class="v" id="vck-was" style="text-decoration:line-through;color:#8a8a99">—</span></div><div class="vck-totrow save"><span class="k">Você economiza</span><span class="v" id="vck-save">—</span></div><div class="vck-totrow big"><span class="k">Hoje você paga</span><span class="v" id="vck-now">—</span></div></div>'
       + '<button class="vck-btn block2" id="vck-gen" style="margin-top:12px">🔓 Quero liberar agora</button>'
       + '<div class="vck-trust"><span>🔒 Pix seguro</span><span>⚡ Na hora</span><span>🛡️ 7 dias de garantia</span></div></div>'
@@ -6604,21 +6604,29 @@ fbq('track', 'PageView');
 
     function lines() {
       var out = [];
-      if (pack) { var coins = (pack.coins || 0) + (pack.bonus_coins || 0); out.push({ nm: coins + " coins", ds: "liberam suas mensagens no chat", was: anchor(pack.price_cents), now: pack.price_cents }); }
+      if (coinsSel && pack) { var coins = (pack.coins || 0) + (pack.bonus_coins || 0); out.push({ nm: "💬 " + coins + " coins (chat)", ds: "continuar conversando com ela", was: anchor(pack.price_cents), now: pack.price_cents }); }
       bumps.forEach(function (b) { if (selected[b.id]) out.push({ nm: (b.kind === "video" ? "🎥 " : "🔥 ") + b.title + (b.vol ? " · Vol. " + b.vol : ""), ds: b.preview_text || "", was: anchor(b.price_cents), now: b.price_cents }); });
       return out;
     }
-    function nowTotal() { var t = pack ? pack.price_cents : 0; bumps.forEach(function (b) { if (selected[b.id]) t += b.price_cents; }); return t; }
-    function wasTotal() { var t = pack ? anchor(pack.price_cents) : 0; bumps.forEach(function (b) { if (selected[b.id]) t += anchor(b.price_cents); }); return t; }
+    function nowTotal() { var t = (coinsSel && pack) ? pack.price_cents : 0; bumps.forEach(function (b) { if (selected[b.id]) t += b.price_cents; }); return t; }
+    function wasTotal() { var t = (coinsSel && pack) ? anchor(pack.price_cents) : 0; bumps.forEach(function (b) { if (selected[b.id]) t += anchor(b.price_cents); }); return t; }
+    function anySelected() { return (coinsSel && pack) || bumps.some(function (b) { return selected[b.id]; }); }
+    function syncCta() {
+      var g = q("#vck-gen"); if (!g) return;
+      if (anySelected()) { g.disabled = false; g.style.opacity = ""; g.textContent = "🔓 " + L("Quero liberar agora", "Unlock now", "Quiero liberar ahora"); }
+      else { g.disabled = true; g.style.opacity = ".5"; g.textContent = "👆 " + L("Escolhe o que você quer levar", "Pick what you want", "Elige lo que quieres"); }
+    }
     function renderOrder() {
       var host = q("#vck-order"); if (!host) return;
-      host.innerHTML = lines().map(function (l) {
+      var ls = lines();
+      host.innerHTML = ls.length ? ls.map(function (l) {
         return '<div class="vck-li"><div><div class="nm">' + esc(l.nm) + '</div>' + (l.ds ? '<div class="ds">' + esc(l.ds) + '</div>' : '') + '</div><div class="pr"><span class="was">' + brl(l.was) + '</span><span class="now">' + brl(l.now) + '</span></div></div>';
-      }).join("");
+      }).join("") : '<p class="vck-sub" style="margin:0">' + L("Marque abaixo o que você quer levar 👇", "Pick below what you want 👇", "Marca abajo lo que quieres 👇") + '</p>';
       var w = wasTotal(), n = nowTotal(), s = w - n;
       q("#vck-was").textContent = brl(w);
       q("#vck-save").textContent = brl(s) + (w > 0 ? " (" + Math.round(s / w * 100) + "%)" : "");
       q("#vck-now").textContent = brl(n);
+      syncCta();
     }
 
     Promise.all([
@@ -6627,10 +6635,24 @@ fbq('track', 'PageView');
     ]).then(function (res) {
       pack = (res[0] && res[0].data) || { code: packCode, price_cents: 990, coins: 100, bonus_coins: 0 };
       bumps = (((res[1] && res[1].data && res[1].data.packs) || []).filter(function (b) { return b.active; }));
+      // sem pack clicado? pré-marca o pack de FOTO mais barato — NÃO ancora a pessoa nos coins (R$9,90)
+      if (!addId && bumps.length) {
+        var photos = bumps.filter(function (b) { return b.kind !== "video" && b.price_cents; });
+        var pool = photos.length ? photos.slice() : bumps.slice();
+        pool.sort(function (a, b) { return a.price_cents - b.price_cents; });
+        if (pool[0]) addId = pool[0].id;
+      }
       var host = q("#vck-bumps");
-      if (!bumps.length) { var bc = q("#vck-bumps-card"); if (bc) bc.classList.add("vck-hide"); }
-      else if (host) {
+      if (host) {
         host.innerHTML = "";
+        // ITEM 1 — os coins viram ESCOLHA (desmarcado). Copy Amanda/Hormozi: desejo de continuar + valor.
+        var cCoins = (pack.coins || 0) + (pack.bonus_coins || 0);
+        var clab = document.createElement("label"); clab.className = "vck-bump";
+        clab.innerHTML = '<input type="checkbox"><div style="flex:1;min-width:0"><span class="vck-tag" style="background:#2563eb">💬 CHAT</span><div class="t">' + L("Continuar o papo com ela", "Keep the chat going", "Seguir el chat con ella") + '</div><div class="d">' + esc(L(cCoins + " coins pra vocês não pararem agora — ela te responde na hora 😏", cCoins + " coins so you two don't stop — she replies instantly 😏", cCoins + " coins para no parar — responde al instante 😏")) + '</div></div><div class="p"><span class="was">' + brl(anchor(pack.price_cents)) + '</span><span class="now">' + brl(pack.price_cents) + '</span></div>';
+        var ccb = clab.querySelector("input");
+        ccb.addEventListener("change", function () { coinsSel = ccb.checked; clab.classList.toggle("on", ccb.checked); renderOrder(); });
+        host.appendChild(clab);
+        // packs de conteúdo
         bumps.forEach(function (b) {
           var lab = document.createElement("label"); lab.className = "vck-bump";
           lab.innerHTML = '<input type="checkbox"><div style="flex:1;min-width:0"><span class="vck-tag">50% OFF</span>' + (b.vol ? '<span class="vck-tag" style="background:#6b21a8">VOL. ' + b.vol + '</span>' : '') + '<div class="t">' + (b.kind === "video" ? "🎥 " : "🔥 ") + esc(b.title) + '</div><div class="d">' + esc(b.preview_text || "") + '</div></div><div class="p"><span class="was">' + brl(anchor(b.price_cents)) + '</span><span class="now">' + brl(b.price_cents) + '</span></div>';
@@ -6677,7 +6699,7 @@ fbq('track', 'PageView');
       var tried = 0;
       function attempt() {
         tried++;
-        sb.functions.invoke("checkout_pix", { body: { pack_code: packCode, bump_ids: ids } }).then(function (r) {
+        sb.functions.invoke("checkout_pix", { body: { pack_code: (coinsSel ? packCode : "br_zero"), bump_ids: ids } }).then(function (r) {
           var d = r && r.data;
           if ((r && r.error) || !d || !d.pix_code) {
             if (tried < 2) { ensureTok(true, attempt); return; } // provavel 401 por sessao expirada -> renova e tenta 1x
