@@ -987,7 +987,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b139"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b140"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2016,23 +2016,22 @@ fbq('track', 'PageView');
 
   function combosBanners() {
     if (!PACKS || !PACKS.length) return "";
-    var active = PACKS.filter(function (p) { return p.active; }); if (!active.length) active = PACKS;
     // identidade própria por card: foto = tons joia frios, vídeo = tons quentes. Lado esquerdo (texto) mais escuro p/ leitura.
     var PAL = {
       photo: [["#be185d", "#ec4899"], ["#7c3aed", "#a855f7"], ["#4338ca", "#6366f1"]],
       video: [["#c2410c", "#f59e0b"], ["#be123c", "#f43f5e"], ["#9f1239", "#e11d48"]]
     };
     function cnt(p) { var n = p.item_count || parseInt(String(p.preview_text || "").replace(/[^0-9].*$/, ""), 10); return (n && !isNaN(n)) ? n : 0; }
-    // melhor valor (menor preço por item) de cada tipo — fato, não invenção
+    // melhor valor: só entre packs ATIVOS e só quando há 2+ do mesmo tipo pra comparar (senão vira selo vazio)
+    var actByKind = { photo: [], video: [] };
+    PACKS.forEach(function (p) { if (p.active && cnt(p) > 0) actByKind[(p.kind === "video") ? "video" : "photo"].push(p); });
     var best = {};
     ["photo", "video"].forEach(function (k) {
-      active.forEach(function (p) {
-        var kk = (p.kind === "video") ? "video" : "photo"; if (kk !== k) return; var n = cnt(p); if (!n) return;
-        var ppi = p.price_cents / n; if (best[k] == null || ppi < best[k].ppi) best[k] = { id: p.id, ppi: ppi };
-      });
+      if (actByKind[k].length < 2) return;
+      actByKind[k].forEach(function (p) { var ppi = p.price_cents / cnt(p); if (best[k] == null || ppi < best[k].ppi) best[k] = { id: p.id, ppi: ppi }; });
     });
     var idx = { photo: 0, video: 0 };
-    var rows = active.map(function (p) {
+    var rows = PACKS.map(function (p) {
       var k = (p.kind === "video") ? "video" : "photo";
       var pal = PAL[k][idx[k] % PAL[k].length]; idx[k]++;
       var ico = p.kind === "video" ? "🎬" : "🔥";
