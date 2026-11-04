@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b144"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b145"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6634,7 +6634,15 @@ fbq('track', 'PageView');
       + '<div class="vck-card vck-center"><div class="vck-pulse"></div><p class="vck-sub" id="vck-pollmsg" style="margin:0">Aguardando seu pagamento… confirma sozinho aqui.</p></div>'
       + '</div>'
       // etapa 3: sucesso
-      + '<div id="vck-ok" class="vck-hide"><div class="vck-card vck-center"><div class="vck-okc">✓</div><div class="vck-h2">Pagamento confirmado!</div><p class="vck-sub">Seu acesso foi liberado. Te levando de volta pra conversa…</p><div class="vck-pulse"></div></div></div>'
+      + '<div id="vck-ok" class="vck-hide"><div class="vck-card vck-center">'
+      + '<div class="vck-okc">✓</div>'
+      + '<div class="vck-h2">Pagamento confirmado! Acesso liberado 💜</div>'
+      + '<p class="vck-sub" style="margin:.25rem 0 .9rem">Quer ser a primeira a saber quando entrar <b>pack novo</b> e <b>promoção só pra cliente</b>? Deixa seu contato que eu te chamo 😏</p>'
+      + '<input id="vck-lead-input" type="text" autocomplete="tel" placeholder="Seu WhatsApp ou e-mail" style="width:100%;box-sizing:border-box;padding:.8rem .9rem;border:1px solid var(--line,#d9d9e3);border-radius:12px;font-size:1rem;margin-bottom:.5rem;text-align:center;background:#fff;color:#111">'
+      + '<button class="vck-btn block2" id="vck-lead-save">🔥 Quero receber promoções</button>'
+      + '<button class="vck-btn ghost block2" id="vck-lead-skip" style="margin-top:.4rem">agora não, ir pro conteúdo</button>'
+      + '<p class="vck-sub" id="vck-lead-done" style="display:none;margin:.7rem 0 0;color:#16a34a;font-weight:700">Prontinho! 💜 Te levando pro conteúdo…</p>'
+      + '</div></div>'
       + '<div class="vck-foot">Vezclub · conteúdo +18 · pagamento processado com segurança · garantia de 7 dias</div>'
       + '</div></div></div>';
     document.body.classList.add("modal-open");
@@ -6794,11 +6802,34 @@ fbq('track', 'PageView');
       try { renderWalletChip(); } catch (e) {}
       try { if (window.clarity) { window.clarity("event", "purchase"); window.clarity("set", "funnel_stage", "paid"); } } catch (e) {}
       try { if (window.fbq) fbq("track", "Purchase", { content_type: "coins", content_name: backChat || packCode, currency: "BRL" }); } catch (e) {}
-      setTimeout(function () {
+      // CAPTURA DE CONTATO pos-compra (opcional): pega WhatsApp/e-mail pra remarketing. Nunca bloqueia a entrega.
+      var done = false;
+      function finishBack() {
+        if (done) return; done = true;
         try { closeModal(); } catch (e) {}
         try { toast(L("Pagamento confirmado! Liberado 💜", "Payment confirmed! Unlocked 💜", "¡Pago confirmado! Liberado 💜")); } catch (e) {}
         if (backChat) { setTimeout(function () { try { openAiChat(backChat); } catch (e) {} }, 300); }
-      }, 2000);
+      }
+      try {
+        var inp = q("#vck-lead-input"), sv = q("#vck-lead-save"), sk = q("#vck-lead-skip"), dn = q("#vck-lead-done");
+        if (sk) sk.onclick = function () { finishBack(); };
+        if (sv) sv.onclick = function () {
+          var v = (inp && inp.value || "").trim();
+          if (v.length < 5) { if (inp) { inp.focus(); inp.style.borderColor = "#e11d48"; } return; }
+          sv.disabled = true; sv.textContent = "Salvando…";
+          var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+          try { if (window.clarity) window.clarity("event", "lead_captured"); } catch (e) {}
+          try {
+            sb.functions.invoke("lead", { body: { contact: v, ref: _ref, identifier: identifier } }).then(function () {}, function () {});
+          } catch (e) {}
+          if (sk) sk.style.display = "none";
+          if (dn) dn.style.display = "block";
+          setTimeout(finishBack, 1400);
+        };
+        if (inp) inp.addEventListener("keydown", function (e) { if (e.key === "Enter" && sv) sv.click(); });
+      } catch (e) {}
+      // trava de seguranca: se a pessoa nao interagir, volta sozinho pro conteudo depois de um tempo
+      setTimeout(finishBack, 60000);
     }
   }
   function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {
