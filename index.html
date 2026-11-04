@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b146"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b147"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6622,9 +6622,15 @@ fbq('track', 'PageView');
       + '<div class="vck-scar">⏳ Pague em até <b id="vck-timer2">10:00</b> pra garantir o preço</div>'
       + '<div class="vck-card vck-center"><div class="vck-h2">Falta só pagar 💜</div>'
       + '<div class="vck-big" id="vck-amount">—</div>'
-      + '<div id="vck-warn" class="vck-warn vck-hide">⚠️ Você está no navegador do Facebook/Instagram. Se o botão copiar não funcionar, <b>segure no código abaixo</b> pra copiar — ou toque em <b>⋯</b> e <b>Abrir no navegador</b>.</div>'
+      + '<div id="vck-warn" class="vck-warn vck-hide" style="text-align:left">'
+      + '<div style="font-weight:800;margin-bottom:.25rem">📲 Você está no Instagram/Facebook</div>'
+      + 'Aqui o copiar às vezes falha. Jeito certo: <b>copie o código abaixo</b>, abra o <b>app do seu banco</b> e cole no Pix. Seu acesso <b>libera sozinho</b> quando você voltar — pode pagar tranquilo. 💜'
+      + '<button class="vck-btn ghost block2" id="vck-openbrowser" style="margin-top:.5rem;font-size:.86rem">🌐 ou abrir no navegador (mais estável)</button>'
+      + '<div id="vck-linkcopied" style="display:none;font-size:.8rem;color:#16a34a;font-weight:700;margin-top:.35rem">Link copiado! Cole no Chrome/Safari e finalize por lá 💜</div>'
+      + '</div>'
       + '<div style="font-size:.82rem;line-height:1.6;margin:.2rem 0 .7rem;text-align:left"><b>1.</b> Toque em <b>Copiar código Pix</b><br><b>2.</b> Abra o app do seu banco → <b>Pix</b><br><b>3.</b> Escolha <b>Pix Copia e Cola</b> e cole<br><b>4.</b> Confirme — seu acesso cai sozinho aqui 💜</div>'
       + '<button class="vck-btn block2" id="vck-copy">📋 Copiar código Pix</button>'
+      + '<div id="vck-copyhint" style="display:none;font-size:.82rem;color:#16a34a;font-weight:700;text-align:center;margin:.45rem 0 .1rem;line-height:1.4">✓ Copiado! Agora abra seu <b>banco</b> → <b>Pix</b> → <b>Copia e Cola</b> → cole → confirme 💜</div>'
       + '<div style="font-size:.7rem;color:#6b6b7c;text-align:center;margin:.5rem 0 .15rem">ou copie o código na mão (segure e selecione tudo):</div>'
       + '<div class="vck-code" id="vck-code">—</div>'
       + '<button class="vck-btn sec block2" id="vck-openbank">📲 Abrir meu banco</button>'
@@ -6776,13 +6782,41 @@ fbq('track', 'PageView');
       q("#vck-code").textContent = codeStr;
       if (isInApp()) { var w = q("#vck-warn"); if (w) w.classList.remove("vck-hide"); }
       q("#vck-copy").addEventListener("click", function () {
-        var ok = false;
-        try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(codeStr); ok = true; } } catch (e) {}
-        if (!ok) { try { var el = q("#vck-code"); var rg = document.createRange(); rg.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); document.execCommand("copy"); ok = true; } catch (e) {} }
-        this.textContent = ok ? "✓ Código copiado!" : "Selecione o código acima e copie";
-        try { if (window.clarity) window.clarity("event", "pix_code_copied"); } catch (e) {}
+        var self = this, ok = false;
+        function done(okk) {
+          self.textContent = okk ? "✓ Código copiado!" : "Segure no código abaixo e copie";
+          var h = q("#vck-copyhint"); if (h) h.style.display = okk ? "block" : "none";
+          if (!okk) { try { var el2 = q("#vck-code"); var rg2 = document.createRange(); rg2.selectNodeContents(el2); var sel2 = window.getSelection(); sel2.removeAllRanges(); sel2.addRange(rg2); } catch (e) {} }
+          try { if (window.clarity) window.clarity("event", okk ? "pix_code_copied" : "pix_copy_failed"); } catch (e) {}
+        }
+        // 1) clipboard API (pode falhar/retornar promise no webview)
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            var p = navigator.clipboard.writeText(codeStr);
+            if (p && p.then) { p.then(function () { done(true); }, function () { fallback(); }); return; }
+            ok = true;
+          }
+        } catch (e) {}
+        if (ok) { done(true); return; }
+        fallback();
+        function fallback() {
+          var ok2 = false;
+          try { var el = q("#vck-code"); var rg = document.createRange(); rg.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); ok2 = document.execCommand("copy"); } catch (e) {}
+          done(ok2);
+        }
       });
       q("#vck-openbank").addEventListener("click", function () { try { location.href = "pix://" + codeStr; } catch (e) {} });
+      // ABRIR NO NAVEGADOR (webview Insta/FB): copia o link e tenta deep-link pro Chrome (Android)
+      var ob = q("#vck-openbrowser");
+      if (ob) ob.addEventListener("click", function () {
+        var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+        var url = location.origin + "/?lang=pt" + (_ref ? "&ref=" + encodeURIComponent(_ref) : "");
+        try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url); } catch (e) {}
+        var lc = q("#vck-linkcopied"); if (lc) lc.style.display = "block";
+        try { if (window.clarity) window.clarity("event", "open_in_browser_click"); } catch (e) {}
+        var isAndroid = /Android/i.test(navigator.userAgent || "");
+        if (isAndroid) { try { location.href = "intent://" + location.host + "/?lang=pt#Intent;scheme=https;end"; } catch (e) {} }
+      });
       q("#vck-qr-t").addEventListener("click", function () {
         var box = q("#vck-qr"); if (!box) return;
         if (box.classList.contains("vck-hide")) { box.innerHTML = '<img alt="QR Pix" src="https://api.qrserver.com/v1/create-qr-code/?size=196x196&margin=0&data=' + encodeURIComponent(codeStr) + '">'; box.classList.remove("vck-hide"); this.textContent = "ocultar QR Code"; }
