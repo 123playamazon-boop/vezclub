@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b147"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b148"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6590,6 +6590,7 @@ fbq('track', 'PageView');
       + '.vck-pulse{width:46px;height:46px;border-radius:50%;border:3px solid rgba(229,16,106,.18);border-top-color:#e5106a;animation:vcksp 1s linear infinite;margin:10px auto}'
       + '@keyframes vcksp{to{transform:rotate(360deg)}}'
       + '.vck-foot{color:#8a8a99;font-size:.74rem;text-align:center;margin-top:12px}'
+      + '.vck-stickybar{position:sticky;bottom:0;left:0;right:0;background:#f3f4fb;padding:10px 0 7px;margin-top:4px;box-shadow:0 -10px 24px -10px rgba(0,0,0,.2);z-index:6}'
       + '#vck-qr{display:flex;justify-content:center;padding:10px;background:#fff;border:1px solid #e8e8f0;border-radius:14px;margin:4px auto 10px;width:max-content}#vck-qr img{display:block;width:196px;height:196px}';
     document.head.appendChild(st);
   }
@@ -6616,6 +6617,7 @@ fbq('track', 'PageView');
       + '<button class="vck-btn block2" id="vck-gen" style="margin-top:12px">🔓 Quero liberar agora</button>'
       + '<div class="vck-trust"><span>🔒 Pix seguro</span><span>⚡ Na hora</span><span>🛡️ 7 dias de garantia</span></div></div>'
       + '<div class="vck-guar"><div class="ic">🛡️</div><div><div class="t">Garantia de 7 dias — risco zero</div><div class="d">Não curtiu? Devolve 100% do seu dinheiro. Sem pergunta, sem burocracia.</div></div></div>'
+      + '<div class="vck-stickybar" id="vck-stickybar"><button class="vck-btn" id="vck-gen2">🔓 Quero liberar agora</button></div>'
       + '</div>'
       // etapa 2: pix
       + '<div id="vck-pix" class="vck-hide">'
@@ -6669,9 +6671,17 @@ fbq('track', 'PageView');
     function wasTotal() { var t = (coinsSel && pack) ? anchor(pack.price_cents) : 0; bumps.forEach(function (b) { if (selected[b.id]) t += anchor(b.price_cents); }); return t; }
     function anySelected() { return (coinsSel && pack) || bumps.some(function (b) { return selected[b.id]; }); }
     function syncCta() {
-      var g = q("#vck-gen"); if (!g) return;
-      if (anySelected()) { g.disabled = false; g.style.opacity = ""; g.textContent = "🔓 " + L("Quero liberar agora", "Unlock now", "Quiero liberar ahora"); }
-      else { g.disabled = true; g.style.opacity = ".5"; g.textContent = "👆 " + L("Escolhe o que você quer levar", "Pick what you want", "Elige lo que quieres"); }
+      var sel = anySelected(), n = nowTotal();
+      [q("#vck-gen"), q("#vck-gen2")].forEach(function (g, i) {
+        if (!g) return;
+        if (sel) {
+          g.disabled = false; g.style.opacity = "";
+          g.innerHTML = "🔓 " + L("Quero liberar agora", "Unlock now", "Quiero liberar ahora") + (i === 1 ? ' · <b>' + brl(n) + '</b>' : '');
+        } else {
+          g.disabled = true; g.style.opacity = ".5";
+          g.textContent = "👆 " + L("Escolhe o que você quer levar", "Pick what you want", "Elige lo que quieres");
+        }
+      });
     }
     function renderOrder() {
       var host = q("#vck-order"); if (!host) return;
@@ -6749,6 +6759,8 @@ fbq('track', 'PageView');
         }, function () { cb(); });
       } catch (e) { cb(); }
     }
+    // barra fixa dispara o mesmo fluxo do botao principal
+    var g2 = q("#vck-gen2"); if (g2) g2.addEventListener("click", function () { var g = q("#vck-gen"); if (g && !g.disabled) g.click(); });
     // gerar pix
     q("#vck-gen").addEventListener("click", function () {
       var btn = this; btn.disabled = true; btn.textContent = "Gerando seu Pix…";
