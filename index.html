@@ -987,7 +987,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b138"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b139"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2016,16 +2016,44 @@ fbq('track', 'PageView');
 
   function combosBanners() {
     if (!PACKS || !PACKS.length) return "";
-    var G = { photo: ["#8b5cf6", "#d946ef"], video: ["#db2777", "#f59e0b"] };
-    var rows = PACKS.map(function (p) {
-      var g = G[p.kind] || ["#4f46e5", "#9333ea"];
-      var ico = p.kind === "video" ? "🎥" : "🔥";
-      return '<button data-combo="' + escHtml(p.id) + '" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,' + g[0] + ',' + g[1] + ');border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(0,0,0,.5);display:flex;align-items:center;gap:.9rem">' +
-        '<span style="font-size:1.8rem;line-height:1">' + ico + '</span>' +
-        '<span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:1.08rem">' + escHtml(p.title) + (p.vol ? ' <span style="font-size:.66rem;background:rgba(255,255,255,.25);border-radius:6px;padding:1px 6px;vertical-align:middle;letter-spacing:.03em">VOL. ' + p.vol + '</span>' : '') + '</span><span style="display:block;font-size:.84rem;opacity:.95">' + escHtml(p.preview_text || "") + '</span></span>' +
-        '<span style="font-weight:800;white-space:nowrap">' + money(p.price_cents, "brl") + '</span></button>';
+    var active = PACKS.filter(function (p) { return p.active; }); if (!active.length) active = PACKS;
+    // identidade própria por card: foto = tons joia frios, vídeo = tons quentes. Lado esquerdo (texto) mais escuro p/ leitura.
+    var PAL = {
+      photo: [["#be185d", "#ec4899"], ["#7c3aed", "#a855f7"], ["#4338ca", "#6366f1"]],
+      video: [["#c2410c", "#f59e0b"], ["#be123c", "#f43f5e"], ["#9f1239", "#e11d48"]]
+    };
+    function cnt(p) { var n = p.item_count || parseInt(String(p.preview_text || "").replace(/[^0-9].*$/, ""), 10); return (n && !isNaN(n)) ? n : 0; }
+    // melhor valor (menor preço por item) de cada tipo — fato, não invenção
+    var best = {};
+    ["photo", "video"].forEach(function (k) {
+      active.forEach(function (p) {
+        var kk = (p.kind === "video") ? "video" : "photo"; if (kk !== k) return; var n = cnt(p); if (!n) return;
+        var ppi = p.price_cents / n; if (best[k] == null || ppi < best[k].ppi) best[k] = { id: p.id, ppi: ppi };
+      });
+    });
+    var idx = { photo: 0, video: 0 };
+    var rows = active.map(function (p) {
+      var k = (p.kind === "video") ? "video" : "photo";
+      var pal = PAL[k][idx[k] % PAL[k].length]; idx[k]++;
+      var ico = p.kind === "video" ? "🎬" : "🔥";
+      var n = cnt(p);
+      var unit = n > 0 ? ("R$ " + (p.price_cents / 100 / n).toFixed(2).replace(".", ",") + "/" + (p.kind === "video" ? L("vídeo", "video", "video") : L("foto", "photo", "foto"))) : "";
+      var wasC = Math.round(p.price_cents * 2);
+      var isBest = best[k] && best[k].id === p.id;
+      var badge = isBest ? '<span style="position:absolute;top:-9px;left:16px;background:linear-gradient(90deg,#fde68a,#fbbf24);color:#7c2d12;font-size:.62rem;font-weight:800;padding:2px 9px;border-radius:999px;box-shadow:0 3px 8px rgba(0,0,0,.3);letter-spacing:.04em;z-index:1">🏆 ' + L("MELHOR VALOR", "BEST VALUE", "MEJOR VALOR") + '</span>' : '';
+      return '<button data-combo="' + escHtml(p.id) + '" style="position:relative;border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(120deg,' + pal[0] + ',' + pal[1] + ');border-radius:18px;padding:1.05rem 1.05rem;box-shadow:0 12px 26px -14px rgba(0,0,0,.65);display:flex;align-items:center;gap:.85rem;overflow:visible' + (isBest ? ';outline:2px solid rgba(251,191,36,.9);outline-offset:1px' : '') + '">' + badge +
+        '<span style="font-size:1.65rem;line-height:1;flex:0 0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))">' + ico + '</span>' +
+        '<span style="flex:1;min-width:0">' +
+          '<span style="display:block;font-weight:800;font-size:1.1rem;text-shadow:0 1px 3px rgba(0,0,0,.4)">' + escHtml(p.title) + (p.vol ? ' <span style="font-size:.62rem;background:rgba(0,0,0,.26);border-radius:6px;padding:1px 6px;vertical-align:middle;letter-spacing:.04em">VOL. ' + p.vol + '</span>' : '') + '</span>' +
+          '<span style="display:block;font-size:.82rem;color:rgba(255,255,255,.97);text-shadow:0 1px 2px rgba(0,0,0,.4);margin-top:1px">' + escHtml(p.preview_text || "") + '</span>' +
+        '</span>' +
+        '<span style="text-align:right;white-space:nowrap;flex:0 0 auto">' +
+          '<span style="display:block;font-size:.66rem;color:rgba(255,255,255,.72);text-decoration:line-through">' + money(wasC, "brl") + '</span>' +
+          '<span style="display:block;font-weight:900;font-size:1.14rem;text-shadow:0 1px 3px rgba(0,0,0,.45)">' + money(p.price_cents, "brl") + '</span>' +
+          (unit ? '<span style="display:block;font-size:.62rem;color:rgba(255,255,255,.85)">' + unit + '</span>' : '') +
+        '</span></button>';
     }).join("");
-    return '<div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem">' +
+    return '<div style="display:flex;flex-direction:column;gap:.7rem;margin-bottom:1rem">' +
       '<div style="font-weight:800;font-size:.95rem;margin:.2rem 2px;display:flex;align-items:center;gap:.4rem"><span>🔥</span>' + L("Liberado agora", "Unlocked now", "Liberado ahora") + '</div>' + rows + '</div>';
   }
   function renderFeed() {
