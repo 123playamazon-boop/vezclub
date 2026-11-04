@@ -987,7 +987,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b141"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b142"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4198,13 +4198,32 @@ fbq('track', 'PageView');
       if (r.error) { body.innerHTML = '<p class="muted-note">Erro: ' + escHtml(r.error.message) + '</p>'; return; }
       var rows = r.data || [];
       if (!rows.length) { body.innerHTML = '<p class="muted-note">Sem mensagens.</p>'; return; }
-      var curCreator = null, h = "";
-      rows.forEach(function (m) {
+      var curCreator = null, h = "", mediaJobs = [];
+      rows.forEach(function (m, i) {
         if (m.creator_key !== curCreator) { curCreator = m.creator_key; h += '<div style="text-align:center;font-size:.7rem;color:var(--mut,#999);margin:.4rem 0 .2rem">— ' + escHtml(curCreator || "") + ' —</div>'; }
         var mine = m.role === "user";
-        h += '<div style="align-self:' + (mine ? "flex-end" : "flex-start") + ';max-width:80%;background:' + (mine ? "#6d28d9" : "rgba(127,127,127,.15)") + ';color:' + (mine ? "#fff" : "inherit") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word">' + escHtml(m.content || "") + '</div>';
+        var mm = /^\[\[media:(img|vid|aud)\]\]([\s\S]+)$/.exec(m.content || "");
+        if (mm) {
+          var mid = "crmm" + i; mediaJobs.push({ id: mid, kind: mm[1], src: mm[2] });
+          h += '<div style="align-self:' + (mine ? "flex-end" : "flex-start") + ';max-width:80%"><div id="' + mid + '" style="background:rgba(127,127,127,.12);border-radius:12px;padding:.5rem .7rem;font-size:.78rem;color:var(--mut,#999)">📷 carregando…</div></div>';
+        } else {
+          h += '<div style="align-self:' + (mine ? "flex-end" : "flex-start") + ';max-width:80%;background:' + (mine ? "#6d28d9" : "rgba(127,127,127,.15)") + ';color:' + (mine ? "#fff" : "inherit") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word">' + escHtml(m.content || "") + '</div>';
+        }
       });
       body.innerHTML = h; body.scrollTop = body.scrollHeight;
+      // monta a mídia: URL pública (presentes) direto; caminho de bucket privado é assinado
+      mediaJobs.forEach(function (j) {
+        function paint(url) {
+          var el = document.getElementById(j.id); if (!el) return;
+          if (!url) { el.textContent = "(mídia indisponível)"; return; }
+          el.style.padding = "3px"; el.style.background = "transparent";
+          el.innerHTML = j.kind === "vid" ? '<video src="' + escHtml(url) + '" controls playsinline style="max-width:210px;border-radius:10px;display:block"></video>'
+            : j.kind === "aud" ? '<audio src="' + escHtml(url) + '" controls style="height:34px"></audio>'
+            : '<img src="' + escHtml(url) + '" alt="" loading="lazy" style="max-width:210px;border-radius:10px;display:block" onerror="this.parentNode.textContent=\'(mídia indisponível)\'">';
+        }
+        if (/^https?:\/\//.test(j.src)) { paint(j.src); }
+        else { sb.functions.invoke("media_url", { body: { path: j.src } }).then(function (r) { paint(r && r.data && r.data.url); }, function () { paint(null); }); }
+      });
     });
   }
 
