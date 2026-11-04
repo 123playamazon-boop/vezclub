@@ -969,6 +969,7 @@ fbq('track', 'PageView');
 (function(){try{
   var ref=(new URLSearchParams(location.search).get("ref")||"").trim().slice(0,60);
   if(!ref)return;
+  try{localStorage.setItem("vez_ref",ref);}catch(e){} // persiste o ref ate a compra (atribuicao de venda)
   var k="vez_ref_"+ref;
   if(sessionStorage.getItem(k))return;
   sessionStorage.setItem(k,"1");
@@ -1004,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b143"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b144"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6735,7 +6736,8 @@ fbq('track', 'PageView');
       var tried = 0;
       function attempt() {
         tried++;
-        sb.functions.invoke("checkout_pix", { body: { pack_code: (coinsSel ? packCode : "br_zero"), bump_ids: ids } }).then(function (r) {
+        var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+        sb.functions.invoke("checkout_pix", { body: { pack_code: (coinsSel ? packCode : "br_zero"), bump_ids: ids, ref: _ref } }).then(function (r) {
           var d = r && r.data;
           if ((r && r.error) || !d || !d.pix_code) {
             if (tried < 2) { ensureTok(true, attempt); return; } // provavel 401 por sessao expirada -> renova e tenta 1x
