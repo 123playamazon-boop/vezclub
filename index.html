@@ -963,6 +963,23 @@ fbq('track', 'PageView');
 }catch(e){}})();
 </script>
 
+<script>
+/* LINK DE INDICACAO: se a URL tem ?ref=<nome>, registra 1 clique (1x por sessao, nao conta refresh).
+   Dispara ANTES do supabase-js/auto-update pra nao perder o ref se a URL for reescrita. Fire-and-forget. */
+(function(){try{
+  var ref=(new URLSearchParams(location.search).get("ref")||"").trim().slice(0,60);
+  if(!ref)return;
+  var k="vez_ref_"+ref;
+  if(sessionStorage.getItem(k))return;
+  sessionStorage.setItem(k,"1");
+  fetch("https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/hit",{
+    method:"POST",keepalive:true,
+    headers:{"Content-Type":"application/json","apikey":"sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj"},
+    body:JSON.stringify({ref:ref,path:location.pathname,referrer:document.referrer})
+  }).catch(function(){});
+}catch(e){}})();
+</script>
+
 <div id="modal-root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -987,7 +1004,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b142"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b143"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
