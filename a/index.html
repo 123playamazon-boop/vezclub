@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Mia 💜</title>
+<style>
+:root{--bg:#0b0b0f;--card:#15131b;--muted:#9a93a8;--accent:#c026d3;--accent2:#7c3aed;--text:#f4f1f8}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:780px;margin:0 auto;padding:0 14px 90px}
+header{padding:28px 4px 14px;text-align:center}
+header h1{margin:0;font-size:27px;letter-spacing:.3px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{margin:7px 0 0;color:var(--muted);font-size:14px}
+.badge{display:inline-block;margin-top:12px;padding:6px 14px;border-radius:999px;background:rgba(192,38,211,.14);color:#e9a5f5;font-size:13px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:18px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr)}}
+.grid a{display:block;border-radius:12px;overflow:hidden;background:var(--card);aspect-ratio:3/4;position:relative}
+.grid img{width:100%;height:100%;object-fit:cover;display:block}
+.state{text-align:center;padding:80px 20px;color:var(--muted)}
+.state h1{color:var(--text);font-size:22px;margin:0 0 8px}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);margin:0 auto 18px;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.foot{position:fixed;left:0;right:0;bottom:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,11,15,0),rgba(11,11,15,.96) 32%)}
+.foot a{display:block;max-width:760px;margin:0 auto;text-align:center;padding:15px;border-radius:14px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 8px 30px rgba(124,58,237,.4)}
+.note{text-align:center;color:var(--muted);font-size:12px;margin-top:22px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app" class="wrap">
+  <div class="state"><div class="spin"></div><p>carregando seu álbum…</p></div>
+</div>
+<script>
+(function(){
+  var SUPA = "https://mfxyavlpbofcdiylnnjm.supabase.co";
+  var app = document.getElementById("app");
+  function tokenFromUrl(){
+    try{
+      var u = new URL(window.location.href);
+      var t = u.searchParams.get("t");
+      if(t) return t.trim();
+      var h = (window.location.hash||"").replace(/^#/,"");
+      if(h.indexOf("t=")===0) return decodeURIComponent(h.slice(2));
+      if(h) return decodeURIComponent(h);
+    }catch(e){}
+    return "";
+  }
+  function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c];});}
+  function invalid(){
+    app.innerHTML = '<div class="state"><h1>Link inválido</h1><p>Esse link expirou ou não foi encontrado.<br>Volta no WhatsApp da Mia 💜</p></div>';
+  }
+  var t = tokenFromUrl();
+  if(!t){ invalid(); return; }
+  fetch(SUPA+"/functions/v1/mia-album?format=json&t="+encodeURIComponent(t),{cache:"no-store"})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d || !d.ok || !d.photos || !d.photos.length){ invalid(); return; }
+      var tiles = d.photos.map(function(u,i){
+        return '<a href="'+esc(u)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+esc(u)+'" alt="Mia '+(i+1)+'"></a>';
+      }).join("");
+      var cross = d.cross || "https://vezclub.com/?lang=pt&ref=mia_wa";
+      app.innerHTML =
+        '<header><h1>Seu álbum da Mia 💜</h1><p>Obrigada amor, agora é tudo seu 😏</p>'+
+        '<div class="badge">'+d.total+' fotos sem censura</div></header>'+
+        '<div class="grid">'+tiles+'</div>'+
+        '<p class="note">Conteúdo exclusivo · não compartilhe seu link.<br>Toque numa foto pra abrir em tela cheia.</p>'+
+        '<div class="foot"><a href="'+esc(cross)+'">💄 Ver minhas amigas na plataforma →</a></div>';
+    })
+    .catch(function(){ invalid(); });
+})();
+</script>
+</body>
+</html>
