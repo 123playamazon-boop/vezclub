@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b148"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b149"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6633,7 +6633,7 @@ fbq('track', 'PageView');
       + '<div style="font-size:.82rem;line-height:1.6;margin:.2rem 0 .7rem;text-align:left"><b>1.</b> Toque em <b>Copiar código Pix</b><br><b>2.</b> Abra o app do seu banco → <b>Pix</b><br><b>3.</b> Escolha <b>Pix Copia e Cola</b> e cole<br><b>4.</b> Confirme — seu acesso cai sozinho aqui 💜</div>'
       + '<button class="vck-btn block2" id="vck-copy">📋 Copiar código Pix</button>'
       + '<div id="vck-copyhint" style="display:none;font-size:.82rem;color:#16a34a;font-weight:700;text-align:center;margin:.45rem 0 .1rem;line-height:1.4">✓ Copiado! Agora abra seu <b>banco</b> → <b>Pix</b> → <b>Copia e Cola</b> → cole → confirme 💜</div>'
-      + '<div style="font-size:.7rem;color:#6b6b7c;text-align:center;margin:.5rem 0 .15rem">ou copie o código na mão (segure e selecione tudo):</div>'
+      + '<div style="font-size:.7rem;color:#6b6b7c;text-align:center;margin:.5rem 0 .15rem">ou toque no código abaixo pra copiar (ou segure e selecione tudo):</div>'
       + '<div class="vck-code" id="vck-code">—</div>'
       + '<button class="vck-btn sec block2" id="vck-openbank">📲 Abrir meu banco</button>'
       + '<button class="vck-btn ghost block2" id="vck-qr-t">ou pagar escaneando o QR Code</button>'
@@ -6793,30 +6793,43 @@ fbq('track', 'PageView');
       q("#vck-amount").textContent = brl(cents);
       q("#vck-code").textContent = codeStr;
       if (isInApp()) { var w = q("#vck-warn"); if (w) w.classList.remove("vck-hide"); }
-      q("#vck-copy").addEventListener("click", function () {
-        var self = this, ok = false;
-        function done(okk) {
-          self.textContent = okk ? "✓ Código copiado!" : "Segure no código abaixo e copie";
-          var h = q("#vck-copyhint"); if (h) h.style.display = okk ? "block" : "none";
-          if (!okk) { try { var el2 = q("#vck-code"); var rg2 = document.createRange(); rg2.selectNodeContents(el2); var sel2 = window.getSelection(); sel2.removeAllRanges(); sel2.addRange(rg2); } catch (e) {} }
-          try { if (window.clarity) window.clarity("event", okk ? "pix_code_copied" : "pix_copy_failed"); } catch (e) {}
+      function pixDone(okk) {
+        var cp = q("#vck-copy"); if (cp) cp.textContent = okk ? "✓ Código copiado!" : "Segure no código abaixo e copie";
+        var h = q("#vck-copyhint"); if (h) h.style.display = okk ? "block" : "none";
+        if (!okk) { try { var el2 = q("#vck-code"); var rg2 = document.createRange(); rg2.selectNodeContents(el2); var sel2 = window.getSelection(); sel2.removeAllRanges(); sel2.addRange(rg2); } catch (e) {} }
+        try { if (window.clarity) window.clarity("event", okk ? "pix_code_copied" : "pix_copy_failed"); } catch (e) {}
+      }
+      function copyPix() {
+        // metodo mais confiavel no webview iOS (Insta/FB): textarea temporaria + execCommand
+        function viaTextarea() {
+          var ok = false;
+          try {
+            var ta = document.createElement("textarea");
+            ta.value = codeStr; ta.setAttribute("readonly", "");
+            ta.style.position = "fixed"; ta.style.top = "0"; ta.style.left = "0"; ta.style.opacity = "0"; ta.style.fontSize = "16px";
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            try { ta.setSelectionRange(0, codeStr.length); } catch (e) {}
+            ok = document.execCommand("copy");
+            document.body.removeChild(ta);
+          } catch (e) { ok = false; }
+          if (!ok) { try { var el = q("#vck-code"); var rg = document.createRange(); rg.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); } catch (e) {} }
+          pixDone(ok);
         }
-        // 1) clipboard API (pode falhar/retornar promise no webview)
+        // 1) clipboard API moderna (quando disponivel); senao cai na textarea
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
             var p = navigator.clipboard.writeText(codeStr);
-            if (p && p.then) { p.then(function () { done(true); }, function () { fallback(); }); return; }
-            ok = true;
+            if (p && p.then) { p.then(function () { pixDone(true); }, viaTextarea); return; }
+            pixDone(true); return;
           }
         } catch (e) {}
-        if (ok) { done(true); return; }
-        fallback();
-        function fallback() {
-          var ok2 = false;
-          try { var el = q("#vck-code"); var rg = document.createRange(); rg.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); ok2 = document.execCommand("copy"); } catch (e) {}
-          done(ok2);
-        }
-      });
+        viaTextarea();
+      }
+      q("#vck-copy").addEventListener("click", copyPix);
+      // tocar no proprio codigo tambem copia (redundancia pro webview)
+      var codeEl = q("#vck-code");
+      if (codeEl) { codeEl.style.cursor = "pointer"; try { codeEl.title = "toque pra copiar"; } catch (e) {} codeEl.addEventListener("click", copyPix); }
       q("#vck-openbank").addEventListener("click", function () { try { location.href = "pix://" + codeStr; } catch (e) {} });
       // ABRIR NO NAVEGADOR (webview Insta/FB): copia o link e tenta deep-link pro Chrome (Android)
       var ob = q("#vck-openbrowser");
