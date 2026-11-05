@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b149"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b150"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -5607,11 +5607,41 @@ fbq('track', 'PageView');
       logPaywall();
       var prev = document.getElementById("buy-panel"); if (prev) prev.remove();
       var h = '<div id="buy-panel" style="margin:.7rem 0 .2rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-2,rgba(127,127,127,.06));text-align:center">' +
+        // OFERTA PRINCIPAL (gratis): +15 min pelo WhatsApp -> captura o lead e segura a pessoa
+        '<div style="border:1px solid rgba(37,211,102,.5);background:rgba(37,211,102,.08);border-radius:12px;padding:.8rem;margin-bottom:.85rem;text-align:center">' +
+          '<div style="font-weight:800;font-size:1.02rem;margin-bottom:.2rem">' + L("Quer +15 min comigo, de graça? 😏", "Want +15 min with me, free? 😏", "¿Quieres +15 min conmigo, gratis? 😏") + '</div>' +
+          '<div style="font-size:.84rem;color:var(--muted);margin-bottom:.55rem">' + L("deixa teu WhatsApp que eu te libero na hora 💜", "drop your WhatsApp and I unlock it now 💜", "deja tu WhatsApp y te lo libero ya 💜") + '</div>' +
+          '<input id="buy-wa-input" type="tel" inputmode="numeric" autocomplete="tel" placeholder="' + L("Teu WhatsApp (com DDD)", "Your WhatsApp", "Tu WhatsApp (con código)") + '" style="width:100%;box-sizing:border-box;padding:.72rem;border:1px solid var(--line);border-radius:10px;font-size:1rem;margin-bottom:.45rem;text-align:center;background:#fff;color:#111">' +
+          '<button class="btn btn-block" id="buy-wa-save" style="background:#25d366;color:#fff;font-weight:800">' + L("Quero meus +15 min 💜", "Give me my +15 min 💜", "Quiero mis +15 min 💜") + '</button>' +
+        '</div>' +
+        '<div style="font-size:.76rem;opacity:.6;margin-bottom:.6rem">' + L("ou, se preferir…", "or, if you prefer…", "o, si prefieres…") + '</div>' +
         '<div style="font-weight:800;margin-bottom:.5rem;font-size:1.02rem">' + L("Acabaram nossos coins… e eu tava gostando 😏", "We ran out of coins… and I was into it 😏", "Se acabaron los coins… y me estabas gustando 😏") + '</div>' +
         '<div id="buy-sub" style="margin-bottom:.7rem"></div>' +
         '<div style="font-size:.78rem;opacity:.65;margin-bottom:.5rem">' + L("ou só uns coins avulsos", "or just a few coins", "o solo unos coins sueltos") + '</div>' +
         '<button class="btn btn-ghost btn-block" id="buy-coins-cta">🪙 ' + L("Comprar coins", "Buy coins", "Comprar coins") + '</button></div>';
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
+      // wire do +15 min pelo WhatsApp
+      (function () {
+        var waBtn = document.getElementById("buy-wa-save"), waInp = document.getElementById("buy-wa-input");
+        if (!waBtn || !waInp) return;
+        var waGo = function () {
+          var digits = (waInp.value || "").replace(/\D/g, "");
+          if (digits.length < 10) { waInp.focus(); waInp.style.borderColor = "#e11d48"; return; }
+          waBtn.disabled = true; waBtn.textContent = L("Liberando…", "Unlocking…", "Liberando…");
+          var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+          try { if (window.clarity) window.clarity("event", "wa_bonus_claim"); } catch (e) {}
+          sb.functions.invoke("lead", { body: { contact: digits, grant_chat: true, ref: _ref, creator_key: cid } }).then(function (r) {
+            var d = (r && r.data) || {};
+            if (typeof d.balance === "number") setBal(d.balance);
+            var bp = document.getElementById("buy-panel"); if (bp) bp.remove();
+            if (d.already && !(d.balance > 0)) { note(L("Você já pegou seus +15 min 💜 agora é só uns coins pra continuar 😏", "You already claimed your +15 min 💜 grab a few coins to keep going 😏", "Ya reclamaste tus +15 min 💜 toma unos coins para seguir 😏")); openCoinStore(); return; }
+            note(L("Pronto, +15 min liberados 💜 fala comigo 😏", "Done, +15 min unlocked 💜 talk to me 😏", "Listo, +15 min 💜 háblame 😏"));
+            try { document.getElementById("chat-text").focus(); } catch (e) {}
+          }, function () { waBtn.disabled = false; waBtn.textContent = L("Quero meus +15 min 💜", "Give me my +15 min 💜", "Quiero mis +15 min 💜"); note(L("Não consegui agora, tenta de novo 🙏", "Couldn't do it now 🙏", "No pude ahora 🙏")); });
+        };
+        waBtn.addEventListener("click", waGo);
+        waInp.addEventListener("keydown", function (e) { if (e.key === "Enter") waGo(); });
+      })();
       try { if (sb) sb.rpc("track_ux", { p_event: "recharge_view", p_creator_key: cid, p_meta: { market: vezMarket() } }).then(function () {}, function () {}); } catch (e) {}
       var subHost = document.getElementById("buy-sub");
       if (subHost) {
