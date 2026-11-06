@@ -240,13 +240,38 @@
     document.getElementById("pix-amount").textContent=brl(cents);
     document.getElementById("pix-code").textContent=code;
     try{ new QRCode(document.getElementById("qrbox"),{ text:code, width:196, height:196, correctLevel:QRCode.CorrectLevel.M }); }catch(e){}
-    document.getElementById("copy").addEventListener("click",function(){
-      var ok=false;
-      try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code); ok=true; } }catch(e){}
-      if(!ok){ try{ var el=document.getElementById("pix-code"); var rg=document.createRange(); rg.selectNodeContents(el); var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); document.execCommand("copy"); ok=true; }catch(e){} }
-      this.textContent=ok?"✓ Código copiado!":"Selecione o código acima e copie";
-    });
-    document.getElementById("openbank").addEventListener("click",function(){ try{ location.href="pix://"+code; }catch(e){} });
+    var copyBtn=document.getElementById("copy");
+    function markCopied(ok){
+      if(!ok){ try{ var el=document.getElementById("pix-code"); var rg=document.createRange(); rg.selectNodeContents(el); var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(rg); }catch(e){} }
+      copyBtn.textContent=ok?"✓ Código copiado! Cole no seu banco":"Segure no código acima e copie";
+    }
+    function doCopy(){
+      function viaTextarea(){
+        var ok=false;
+        try{
+          var ta=document.createElement("textarea");
+          ta.value=code; ta.setAttribute("readonly","");
+          ta.style.position="fixed"; ta.style.top="0"; ta.style.left="0"; ta.style.opacity="0"; ta.style.fontSize="16px";
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          try{ ta.setSelectionRange(0,code.length); }catch(e){}
+          ok=document.execCommand("copy");
+          document.body.removeChild(ta);
+        }catch(e){ ok=false; }
+        markCopied(ok);
+      }
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          var p=navigator.clipboard.writeText(code);
+          if(p&&p.then){ p.then(function(){ markCopied(true); },viaTextarea); return; }
+          markCopied(true); return;
+        }
+      }catch(e){}
+      viaTextarea();
+    }
+    copyBtn.addEventListener("click",doCopy);
+    var pixCodeEl=document.getElementById("pix-code");
+    if(pixCodeEl){ pixCodeEl.style.cursor="pointer"; pixCodeEl.addEventListener("click",doCopy); }
+    document.getElementById("openbank").addEventListener("click",doCopy);
     startPoll();
   }
 

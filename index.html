@@ -6860,7 +6860,7 @@ fbq('track', 'PageView');
       // tocar no proprio codigo tambem copia (redundancia pro webview)
       var codeEl = q("#vck-code");
       if (codeEl) { codeEl.style.cursor = "pointer"; try { codeEl.title = "toque pra copiar"; } catch (e) {} codeEl.addEventListener("click", copyPix); }
-      q("#vck-openbank").addEventListener("click", function () { try { location.href = "pix://" + codeStr; } catch (e) {} });
+      q("#vck-openbank").addEventListener("click", function () { try { copyPix(); } catch (e) {} });
       // ABRIR NO NAVEGADOR (webview Insta/FB): copia o link e tenta deep-link pro Chrome (Android)
       var ob = q("#vck-openbrowser");
       if (ob) ob.addEventListener("click", function () {
@@ -6971,19 +6971,39 @@ fbq('track', 'PageView');
       '<button id="cpix-qr-t" class="btn btn-ghost btn-sm btn-block" style="margin-top:.5rem;opacity:.8">' + L("ou pagar escaneando o QR Code", "or pay by scanning the QR", "o pagar escaneando el QR") + '</button>' +
       '<div id="cpix-qr" style="display:none;text-align:center;margin-top:.5rem"><div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.innerHTML=\'<div style=\\\'font-size:.76rem;color:#888;padding:1rem\\\'>' + L("Use o código acima 💜", "Use the code above 💜", "Usa el código 💜") + '</div>\'"></div></div>' +
       '<div id="cpix-status" style="font-size:.86rem;font-weight:700;color:var(--muted);text-align:center;margin-top:.7rem">⏳ ' + L("Esperando seu pagamento… confirma sozinho aqui", "Waiting for your payment… auto-confirms here", "Esperando tu pago… confirma solo aquí") + '</div></div>';
+    function markCopied(ok) {
+      if (!ok) { try { var el = document.getElementById("cpix-code"); var range = document.createRange(); range.selectNodeContents(el); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); } catch (e) {} }
+      var cp = document.getElementById("cpix-copy");
+      if (cp) { cp.textContent = ok ? ("✓ " + L("Código copiado — cole no seu banco", "Code copied — paste in your bank", "Código copiado — pega en tu banco")) : L("Segure no código abaixo e copie", "Press & hold the code below to copy", "Mantén pulsado el código abajo"); if (ok) setTimeout(function () { cp.innerHTML = "📋 " + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix"); }, 2500); }
+      try { if (window.clarity) window.clarity("event", ok ? "pix_code_copied" : "pix_copy_failed"); } catch (e) {}
+    }
     function doCopy() {
-      var ok = false;
-      try { navigator.clipboard.writeText(code); ok = true; } catch (e) {}
-      if (!ok) { try {
-        var el = document.getElementById("cpix-code");
-        var range = document.createRange(); range.selectNodeContents(el);
-        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-        ok = document.execCommand("copy"); // se falhar, o texto fica SELECIONADO pro usuário copiar na mão
-      } catch (e) {} }
-      return ok;
+      function viaTextarea() {
+        var ok = false;
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = code; ta.setAttribute("readonly", "");
+          ta.style.position = "fixed"; ta.style.top = "0"; ta.style.left = "0"; ta.style.opacity = "0"; ta.style.fontSize = "16px";
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          try { ta.setSelectionRange(0, code.length); } catch (e) {}
+          ok = document.execCommand("copy");
+          document.body.removeChild(ta);
+        } catch (e) { ok = false; }
+        markCopied(ok);
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          var p = navigator.clipboard.writeText(code);
+          if (p && p.then) { p.then(function () { markCopied(true); }, viaTextarea); return; }
+          markCopied(true); return;
+        }
+      } catch (e) {}
+      viaTextarea();
     }
     var cp = document.getElementById("cpix-copy");
-    if (cp) cp.onclick = function () { doCopy(); cp.textContent = "✓ " + L("Código copiado — cole no seu banco", "Code copied — paste in your bank", "Código copiado — pega en tu banco"); try { if (window.clarity) window.clarity("event", "pix_code_copied"); } catch (e) {} setTimeout(function () { cp.innerHTML = "📋 " + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix"); }, 2500); };
+    if (cp) cp.onclick = function () { doCopy(); };
+    var cpCode = document.getElementById("cpix-code");
+    if (cpCode) { cpCode.style.cursor = "pointer"; cpCode.addEventListener("click", doCopy); }
     var qt = document.getElementById("cpix-qr-t");
     if (qt) qt.onclick = function () { var q = document.getElementById("cpix-qr"); if (q) q.style.display = q.style.display === "none" ? "block" : "none"; };
     var tries = 0, pp = setInterval(function () {
