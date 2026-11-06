@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b153"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b154"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6645,6 +6645,11 @@ fbq('track', 'PageView');
       + '<div class="vck-card" id="vck-bumps-card"><div class="vck-h2">Escolhe o quanto você quer ver dela 🔥</div><p class="vck-sub">Marca tudo que você quer destravar agora. Cada pack é <b>100% diferente</b> — o que tem num <b>não se repete</b> no outro. Quanto mais você leva, mais fundo entra no privado dela 😈 Tudo no mesmo Pix, caindo na hora.</p><div id="vck-bumps"><p class="vck-sub">—</p></div><div style="display:flex;align-items:center;gap:8px;background:#eef7ff;border:1px solid #c9e4ff;border-radius:11px;padding:10px 12px;margin-top:10px;font-size:.82rem;color:#0b5aa6;font-weight:600">✓ Conteúdo exclusivo em cada pack — nada repetido. Pode levar todos.</div></div>'
       + '<div class="vck-card"><div class="vck-totbox"><div class="vck-totrow"><span class="k">Valor total</span><span class="v" id="vck-was" style="text-decoration:line-through;color:#8a8a99">—</span></div><div class="vck-totrow save"><span class="k">Você economiza</span><span class="v" id="vck-save">—</span></div><div class="vck-totrow big"><span class="k">Hoje você paga</span><span class="v" id="vck-now">—</span></div></div>'
       + '<button class="vck-btn block2" id="vck-gen" style="margin-top:12px">🔓 Quero liberar agora</button>'
+      + '<div id="vck-wa-gate" class="vck-hide" style="margin-top:11px;background:#fff0f6;border:1px solid #f6d0e2;border-radius:12px;padding:12px;text-align:left">'
+      + '<div style="font-weight:800;font-size:.95rem;margin-bottom:.2rem">📱 Pra onde eu te mando o Pix?</div>'
+      + '<div style="font-size:.8rem;color:#8a1048;margin-bottom:.55rem">Deixa teu WhatsApp — te mando o código na hora e, se você esquecer, eu te lembro 💜</div>'
+      + '<input id="vck-wa-gate-input" type="tel" inputmode="numeric" autocomplete="tel" placeholder="Teu WhatsApp com DDD" style="width:100%;box-sizing:border-box;padding:.85rem;border:1px solid #f6d0e2;border-radius:12px;font-size:1rem;text-align:center;margin-bottom:.5rem;background:#fff;color:#111">'
+      + '<button class="vck-btn" id="vck-wa-gate-go">Gerar meu Pix 🔥</button></div>'
       + '<div class="vck-trust"><span>🔒 Pix seguro</span><span>⚡ Na hora</span><span>🛡️ 7 dias de garantia</span></div></div>'
       + '<div class="vck-guar"><div class="ic">🛡️</div><div><div class="t">7 dias de garantia — o risco é todo meu</div><div class="d">Abre e vê tudo. Se não for o conteúdo mais quente que você já viu, devolvo <b>100%</b> — sem você precisar explicar nada.</div></div></div>'
       + '<div class="vck-stickybar" id="vck-stickybar"><button class="vck-btn" id="vck-gen2">🔓 Quero liberar agora</button></div>'
@@ -6792,9 +6797,11 @@ fbq('track', 'PageView');
     }
     // barra fixa dispara o mesmo fluxo do botao principal
     var g2 = q("#vck-gen2"); if (g2) g2.addEventListener("click", function () { var g = q("#vck-gen"); if (g && !g.disabled) g.click(); });
-    // gerar pix
-    q("#vck-gen").addEventListener("click", function () {
-      var btn = this; btn.disabled = true; btn.textContent = "Gerando seu Pix…";
+    // gerar pix — captura o WhatsApp ANTES de gerar (pra recuperação de carrinho de quem gera e não paga)
+    var waContact = "";
+    function doGenerate(btn) {
+      btn = btn || q("#vck-gen");
+      try { btn.disabled = true; btn.textContent = "Gerando seu Pix…"; } catch (e) {}
       var ids = bumps.filter(function (b) { return selected[b.id]; }).map(function (b) { return b.id; });
       var tried = 0;
       function attempt() {
@@ -6804,19 +6811,42 @@ fbq('track', 'PageView');
           var d = r && r.data;
           if ((r && r.error) || !d || !d.pix_code) {
             if (tried < 2) { ensureTok(true, attempt); return; } // provavel 401 por sessao expirada -> renova e tenta 1x
-            btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Não consegui gerar o Pix. Recarregue a página e tente de novo 🙏", "Couldn't generate Pix. Reload the page and try again 🙏", "No pude generar el Pix. Recarga la página 🙏")); return;
+            try { btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; } catch (e) {}
+            toast(L("Não consegui gerar o Pix. Recarregue a página e tente de novo 🙏", "Couldn't generate Pix. Reload the page and try again 🙏", "No pude generar el Pix. Recarga la página 🙏")); return;
           }
           identifier = d.identifier;
+          // vincula o WhatsApp ao Pix (pra recuperar quem gerar e não pagar)
+          try { if (waContact) sb.functions.invoke("lead", { body: { contact: waContact, ref: _ref, identifier: d.identifier } }).then(function () {}, function () {}); } catch (e) {}
           try { if (window.fbq) fbq("track", "InitiateCheckout", { value: (d.amount_cents ? d.amount_cents / 100 : nowTotal() / 100), currency: "BRL", content_name: packCode, content_type: "checkout_pix" }); } catch (e) {}
           try { if (window.clarity) window.clarity("event", "pix_generated"); } catch (e) {}
           showPix(d.pix_code, d.amount_cents || nowTotal());
         }).catch(function () {
           if (tried < 2) { ensureTok(true, attempt); return; }
-          btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; toast(L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏"));
+          try { btn.disabled = false; btn.textContent = "🔓 Quero liberar agora"; } catch (e) {}
+          toast(L("Falha de conexão. Tenta de novo 🙏", "Connection error. Try again 🙏", "Error de conexión 🙏"));
         });
       }
       ensureTok(false, attempt); // garante sessao fresca antes da 1a tentativa
-    });
+    }
+    function openWaGate() {
+      var gate = q("#vck-wa-gate"); if (gate) { gate.classList.remove("vck-hide"); try { gate.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} }
+      [q("#vck-gen"), q("#vck-gen2")].forEach(function (g) { if (g) { g.disabled = true; g.style.opacity = ".5"; } });
+      var inp = q("#vck-wa-gate-input"); if (inp) { try { inp.focus(); } catch (e) {} }
+    }
+    function submitWaGate() {
+      var inp = q("#vck-wa-gate-input"); if (!inp) return;
+      var digits = (inp.value || "").replace(/\D/g, "");
+      if (digits.length < 10) { try { inp.focus(); inp.style.borderColor = "#e11d48"; } catch (e) {} return; }
+      waContact = digits;
+      try { if (window.clarity) window.clarity("event", "wa_captured_precheckout"); } catch (e) {}
+      // salva já (captura garantida mesmo se o Pix falhar); re-salva com identifier ao gerar
+      try { var _r = localStorage.getItem("vez_ref") || ""; sb.functions.invoke("lead", { body: { contact: digits, ref: _r } }).then(function () {}, function () {}); } catch (e) {}
+      var gate = q("#vck-wa-gate"); if (gate) gate.classList.add("vck-hide");
+      doGenerate(q("#vck-gen"));
+    }
+    q("#vck-gen").addEventListener("click", function () { if (waContact) { doGenerate(this); } else { openWaGate(); } });
+    var wgGo = q("#vck-wa-gate-go"); if (wgGo) wgGo.addEventListener("click", submitWaGate);
+    var wgInp = q("#vck-wa-gate-input"); if (wgInp) wgInp.addEventListener("keydown", function (e) { if (e.key === "Enter") submitWaGate(); });
 
     function showPix(codeStr, cents) {
       q("#vck-cart").classList.add("vck-hide");
