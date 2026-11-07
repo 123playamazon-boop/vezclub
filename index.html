@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b154"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b155"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6975,13 +6975,38 @@ fbq('track', 'PageView');
       setTimeout(finishBack, 60000);
     }
   }
+  var coinsWa = ""; // WhatsApp capturado p/ o fluxo de coins/saída (recuperação de carrinho)
   function buyCoinsPix(code, priceCents, coins, mount, btn, bump) {
     if (!mount) return;
+    // captura WhatsApp ANTES de gerar (igual ao checkout principal)
+    if (!coinsWa) {
+      try { btn.disabled = false; } catch (e) {}
+      mount.innerHTML = '<div style="margin-top:.6rem;background:#fff0f6;border:1px solid #f6d0e2;border-radius:12px;padding:12px;text-align:left">'
+        + '<div style="font-weight:800;font-size:.95rem;margin-bottom:.2rem">📱 ' + L("Pra onde eu te mando o Pix?", "Where should I send your Pix?", "¿A dónde te mando el Pix?") + '</div>'
+        + '<div style="font-size:.8rem;color:#8a1048;margin-bottom:.55rem">' + L("Deixa teu WhatsApp — te mando o código na hora e, se esquecer, te lembro 💜", "Drop your WhatsApp — I send the code now and remind you 💜", "Déjame tu WhatsApp — te mando el código y te recuerdo 💜") + '</div>'
+        + '<input id="coins-wa-input" type="tel" inputmode="numeric" autocomplete="tel" placeholder="' + L("Teu WhatsApp com DDD", "Your WhatsApp / phone", "Tu WhatsApp con DDD") + '" style="width:100%;box-sizing:border-box;padding:.85rem;border:1px solid #f6d0e2;border-radius:12px;font-size:1rem;text-align:center;margin-bottom:.5rem;background:#fff;color:#111">'
+        + '<button id="coins-wa-go" class="btn btn-primary btn-block" style="font-weight:800">' + L("Gerar meu Pix 🔥", "Generate my Pix 🔥", "Generar mi Pix 🔥") + '</button></div>';
+      var inpG = mount.querySelector("#coins-wa-input"), goG = mount.querySelector("#coins-wa-go");
+      if (inpG) { try { inpG.focus(); } catch (e) {} }
+      var submitG = function () {
+        var digits = ((inpG && inpG.value) || "").replace(/\D/g, "");
+        if (digits.length < 10) { if (inpG) { inpG.focus(); inpG.style.borderColor = "#e11d48"; } return; }
+        coinsWa = digits;
+        try { if (window.clarity) window.clarity("event", "wa_captured_precheckout"); } catch (e) {}
+        try { var _r = localStorage.getItem("vez_ref") || ""; sb.functions.invoke("lead", { body: { contact: digits, ref: _r } }).then(function () {}, function () {}); } catch (e) {}
+        buyCoinsPix(code, priceCents, coins, mount, btn, bump);
+      };
+      if (goG) goG.onclick = submitG;
+      if (inpG) inpG.addEventListener("keydown", function (e) { if (e.key === "Enter") submitG(); });
+      return;
+    }
     try { btn.disabled = true; } catch (e) {}
     mount.innerHTML = '<div style="margin-top:.6rem;padding:1rem;border:1px solid var(--line);border-radius:14px;text-align:center"><div class="muted-note">' + L("Gerando seu Pix…", "Generating your Pix…", "Generando tu Pix…") + '</div></div>';
     sb.functions.invoke("coins_pix", { body: { pack_code: code, bump: !!bump } }).then(function (res) {
       var d = res && res.data;
       if ((res && res.error) || !d || !d.pix_code) { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} return; }
+      // vincula o WhatsApp ao Pix (recuperação de quem gerar e não pagar)
+      try { if (coinsWa) sb.functions.invoke("lead", { body: { contact: coinsWa, ref: (localStorage.getItem("vez_ref") || ""), identifier: d.identifier } }).then(function () {}, function () {}); } catch (e) {}
       // Pix gerado = chegou no checkout: avisa o pixel pra Meta poder otimizar pra quem realmente chega aqui (e parar de trazer lixo)
       try { if (window.fbq) fbq("track", "InitiateCheckout", { value: (d.amount || priceCents / 100), currency: "BRL", content_name: code, content_type: "coins_pix" }); } catch (e) {}
       try { if (window.clarity) window.clarity("event", "pix_generated"); } catch (e) {}
