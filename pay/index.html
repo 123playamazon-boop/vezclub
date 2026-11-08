@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Pagamento · Mia 💜</title>
+<meta name="theme-color" content="#0d0b12">
+<style>
+  :root{--bg:#0d0b12;--card:#17131f;--line:#2b2436;--fg:#f2eef8;--muted:#9a92ab;--soft:#6f6782;--accent:#e5106a;--accent2:#a855f7;--ok:#22c55e;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:440px;margin:0 auto;padding:18px 16px 56px}
+  .brand{text-align:center;font-weight:800;font-size:1.05rem;padding:6px 0 2px}
+  .sec{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--ok);font-size:.78rem;font-weight:700;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:center}
+  h1{font-size:1.25rem;margin:0 0 2px;font-weight:800}
+  .amount{font-size:2.1rem;font-weight:800;margin:6px 0 2px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .steps{font-size:.84rem;line-height:1.65;text-align:left;color:var(--muted);margin:12px 0 14px;background:rgba(168,85,247,.08);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .steps b{color:var(--fg)}
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:1.05rem;font-size:1.06rem;font-weight:800;color:#fff;background:linear-gradient(100deg,var(--accent),#ff2d6f);cursor:pointer;margin-top:10px}
+  .btn:active{transform:scale(.99)}
+  .btn.sec{background:#1f1a29;border:1px solid var(--line);color:var(--fg);font-size:.92rem;font-weight:700}
+  .code{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;word-break:break-all;background:#0d0b12;border:1px solid var(--line);border-radius:10px;padding:11px;color:#c9c2d8;user-select:all;-webkit-user-select:all;cursor:pointer;margin-top:12px;text-align:left}
+  .hint{font-size:.8rem;color:var(--ok);font-weight:700;margin-top:10px;display:none}
+  #qr{background:#fff;border-radius:14px;padding:10px;display:none;width:max-content;margin:12px auto 0}
+  #qr img{display:block;width:200px;height:200px}
+  .poll{display:flex;align-items:center;justify-content:center;gap:9px;color:var(--muted);font-size:.84rem;margin-top:16px}
+  .spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:s 1s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .okwrap{text-align:center;padding:20px 6px}
+  .okc{width:72px;height:72px;border-radius:50%;background:var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:2.2rem;color:#fff}
+  .note{text-align:center;color:var(--soft);font-size:.74rem;margin-top:16px;line-height:1.5}
+  .state{text-align:center;padding:60px 20px;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="state"><div class="spin" style="margin:0 auto 14px"></div>carregando seu pagamento…</div>
+</div>
+<script>
+(function(){
+  var FN="https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/mia-pay-info";
+  var app=document.getElementById("app");
+  function qs(k){try{return new URL(location.href).searchParams.get(k)||"";}catch(e){return "";}}
+  var id=qs("i");
+  function brl(c){return "R$ "+((c||0)/100).toFixed(2).replace(".",",");}
+  var poll=null, code="";
+  function invalid(){app.innerHTML='<div class="state"><h1>Link inválido</h1><p>Esse pagamento não foi encontrado.<br>Volta no WhatsApp da Mia 💜</p></div>';}
+
+  function success(){
+    if(poll){clearInterval(poll);poll=null;}
+    app.innerHTML='<div class="brand">🔒 Vezclub</div><div class="card"><div class="okwrap"><div class="okc">✓</div><h1>Pagamento confirmado!</h1><p style="color:var(--muted);margin:.4rem 0 0">Pronto amor 😏 volta pro WhatsApp que a Mia já tá te mandando tudo 💜</p></div></div>';
+  }
+
+  function copyCode(){
+    function mark(ok){var b=document.getElementById("cpbtn"); if(b) b.textContent=ok?"✓ Código copiado! Cola no teu banco":"Segura no código abaixo e copia"; var h=document.getElementById("cphint"); if(h) h.style.display=ok?"block":"none"; if(!ok){try{var el=document.getElementById("code");var r=document.createRange();r.selectNodeContents(el);var s=window.getSelection();s.removeAllRanges();s.addRange(r);}catch(e){}}}
+    function viaTa(){var ok=false;try{var ta=document.createElement("textarea");ta.value=code;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.top="0";ta.style.opacity="0";ta.style.fontSize="16px";document.body.appendChild(ta);ta.focus();ta.select();try{ta.setSelectionRange(0,code.length);}catch(e){}ok=document.execCommand("copy");document.body.removeChild(ta);}catch(e){ok=false;}mark(ok);}
+    try{if(navigator.clipboard&&navigator.clipboard.writeText){var p=navigator.clipboard.writeText(code);if(p&&p.then){p.then(function(){mark(true);},viaTa);return;}mark(true);return;}}catch(e){}
+    viaTa();
+  }
+
+  function render(d){
+    code=d.pix_code;
+    app.innerHTML=
+      '<div class="brand">🔒 Vezclub</div><div class="sec">🔐 Pagamento seguro · Pix</div>'+
+      '<div class="card">'+
+      '<h1>Falta só pagar 💜</h1>'+
+      '<div class="amount">'+brl(d.amount_cents)+'</div>'+
+      '<div style="font-size:.78rem;color:var(--ok);font-weight:700">⚡ libera na hora no teu WhatsApp</div>'+
+      '<div class="steps"><b>1.</b> Toque em <b>Copiar código Pix</b><br><b>2.</b> Abra o app do seu banco → <b>Pix</b><br><b>3.</b> Escolha <b>Pix Copia e Cola</b> e cole<br><b>4.</b> Confirme — a Mia te manda tudo na hora 💜</div>'+
+      '<button class="btn" id="cpbtn">📋 Copiar código Pix</button>'+
+      '<div class="hint" id="cphint">✓ Copiado! Agora abre teu banco → Pix → Copia e Cola → cola → confirma 💜</div>'+
+      '<div style="font-size:.7rem;color:var(--soft);margin-top:12px">ou toque no código pra copiar:</div>'+
+      '<div class="code" id="code">'+code.replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];})+'</div>'+
+      '<button class="btn sec" id="qrbtn">ou pagar escaneando o QR Code</button>'+
+      '<div id="qr"></div>'+
+      '</div>'+
+      '<div class="poll"><div class="spin"></div><span>Esperando o pagamento… confirma sozinho aqui</span></div>'+
+      '<p class="note">Vezclub · conteúdo +18 · pagamento processado com segurança</p>';
+    document.getElementById("cpbtn").addEventListener("click",copyCode);
+    document.getElementById("code").addEventListener("click",copyCode);
+    document.getElementById("qrbtn").addEventListener("click",function(){var q=document.getElementById("qr");if(q.style.display==="none"||!q.style.display){q.innerHTML='<img alt="QR Pix" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data='+encodeURIComponent(code)+'">';q.style.display="block";this.textContent="ocultar QR Code";}else{q.style.display="none";this.textContent="ou pagar escaneando o QR Code";}});
+    startPoll();
+  }
+
+  function check(first){
+    fetch(FN+"?i="+encodeURIComponent(id),{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){
+      if(!d||d.error){ if(first) invalid(); return; }
+      if(d.paid){ success(); return; }
+      if(first) render(d);
+    }).catch(function(){ if(first) invalid(); });
+  }
+  function startPoll(){ if(poll) return; poll=setInterval(function(){ check(false); },4000); }
+
+  if(!id){ invalid(); } else { check(true); }
+})();
+</script>
+</body>
+</html>
