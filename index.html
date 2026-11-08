@@ -1005,7 +1005,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b155"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b156"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2080,7 +2080,7 @@ fbq('track', 'PageView');
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
     html += '<div class="page-head"><div class="eyebrow">' + L("Ao vivo agora", "Live now", "En vivo ahora") + '</div><h1>' + L("Uma mulher safada online agora — e ela quer a sua atenção.", "A naughty girl online right now — and she wants your attention.", "Una chica atrevida en línea ahora — y quiere tu atención.") + '</h1><p>' + L("Escolhe a que te deixar mais no clima e cai num chat privado — ela responde na hora, sem rodeio, te provoca e manda foto que você não acha em nenhum outro lugar. 1º minuto grátis, sem cartão.", "Pick the one that gets you going and drop into a private chat — she answers instantly, no games, teases you and sends photos you won't find anywhere else. First minute's free, no card.", "Elige a la que más te prenda y entra en un chat privado — responde al instante, sin rodeos, te provoca y manda fotos que no encuentras en ningún otro lado. 1er minuto gratis, sin tarjeta.") + '</p></div>';
     html += freeBanner();
-    html += combosBanners(); // NOVIDADE no topo: os packs/combos ativos
+    // combosBanners() DESCIDO pro final (preco no topo nao converte) — anexado depois do grid de modelos
     // seções próprias (DESCIDAS pro final — não converteram no topo): guardadas e anexadas depois do grid
     var sectionBanners = '<div style="display:flex;flex-direction:column;gap:.6rem;margin:1.4rem 0 1rem">' +
       '<div style="font-weight:800;font-size:.9rem;opacity:.85;margin:.2rem 2px">' + L("Mais opções", "More options", "Más opciones") + '</div>' +
@@ -2141,6 +2141,7 @@ fbq('track', 'PageView');
         '</div></div>';
     });
     html += '</div>';
+    html += combosBanners(); // packs pagos (R$): descidos pro final — primeira tela fica só grátis + modelos
     html += sectionBanners; // banners de produto descidos pro final da página
     html += '<p class="muted-note" id="feed-empty" hidden style="text-align:center;padding:2rem">Nenhuma criadora encontrada.</p>';
     if (CREATORS.some(function (x) { return x.hasChat; })) html += '<button class="chat-fab" data-chat-fab="1" aria-label="Mensagens">' + I.chatic + '</button>';
