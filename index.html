@@ -967,16 +967,19 @@ fbq('track', 'PageView');
 /* LINK DE INDICACAO: se a URL tem ?ref=<nome>, registra 1 clique (1x por sessao, nao conta refresh).
    Dispara ANTES do supabase-js/auto-update pra nao perder o ref se a URL for reescrita. Fire-and-forget. */
 (function(){try{
-  var ref=(new URLSearchParams(location.search).get("ref")||"").trim().slice(0,60);
-  if(!ref)return;
-  try{localStorage.setItem("vez_ref",ref);}catch(e){} // persiste o ref ate a compra (atribuicao de venda)
-  var k="vez_ref_"+ref;
+  var qp=new URLSearchParams(location.search);
+  var ref=(qp.get("ref")||"").trim().slice(0,60);
+  var u=(qp.get("u")||"").trim().slice(0,64); // token do visitante vindo do robo (nao e o numero, so um id)
+  try{if(ref)localStorage.setItem("vez_ref",ref);}catch(e){} // persiste o ref ate a compra (atribuicao de venda)
+  try{if(u)localStorage.setItem("vez_u",u);}catch(e){}       // persiste o token ate a compra (atribuicao ao WhatsApp de origem)
+  if(!ref&&!u)return;
+  var k="vez_hit_"+(ref||"")+"_"+(u||"");
   if(sessionStorage.getItem(k))return;
   sessionStorage.setItem(k,"1");
   fetch("https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/hit",{
     method:"POST",keepalive:true,
     headers:{"Content-Type":"application/json","apikey":"sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj"},
-    body:JSON.stringify({ref:ref,path:location.pathname,referrer:document.referrer})
+    body:JSON.stringify({ref:ref,token:u,path:location.pathname,referrer:document.referrer})
   }).catch(function(){});
 }catch(e){}})();
 </script>
@@ -1005,7 +1008,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b156"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b157"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6841,7 +6844,7 @@ fbq('track', 'PageView');
       waContact = digits;
       try { if (window.clarity) window.clarity("event", "wa_captured_precheckout"); } catch (e) {}
       // salva já (captura garantida mesmo se o Pix falhar); re-salva com identifier ao gerar
-      try { var _r = localStorage.getItem("vez_ref") || ""; sb.functions.invoke("lead", { body: { contact: digits, ref: _r } }).then(function () {}, function () {}); } catch (e) {}
+      try { var _r = localStorage.getItem("vez_ref") || ""; var _u = localStorage.getItem("vez_u") || ""; sb.functions.invoke("lead", { body: { contact: digits, ref: _r, u: _u } }).then(function () {}, function () {}); } catch (e) {}
       var gate = q("#vck-wa-gate"); if (gate) gate.classList.add("vck-hide");
       doGenerate(q("#vck-gen"));
     }
@@ -6994,7 +6997,7 @@ fbq('track', 'PageView');
         if (digits.length < 10) { if (inpG) { inpG.focus(); inpG.style.borderColor = "#e11d48"; } return; }
         coinsWa = digits;
         try { if (window.clarity) window.clarity("event", "wa_captured_precheckout"); } catch (e) {}
-        try { var _r = localStorage.getItem("vez_ref") || ""; sb.functions.invoke("lead", { body: { contact: digits, ref: _r } }).then(function () {}, function () {}); } catch (e) {}
+        try { var _r = localStorage.getItem("vez_ref") || ""; var _u = localStorage.getItem("vez_u") || ""; sb.functions.invoke("lead", { body: { contact: digits, ref: _r, u: _u } }).then(function () {}, function () {}); } catch (e) {}
         buyCoinsPix(code, priceCents, coins, mount, btn, bump);
       };
       if (goG) goG.onclick = submitG;
@@ -7007,7 +7010,7 @@ fbq('track', 'PageView');
       var d = res && res.data;
       if ((res && res.error) || !d || !d.pix_code) { mount.innerHTML = '<div class="muted-note" style="text-align:center;margin-top:.6rem">' + L("Não consegui gerar o Pix. Tenta de novo 🙏", "Couldn't generate Pix. Try again 🙏", "No pude generar el Pix 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} return; }
       // vincula o WhatsApp ao Pix (recuperação de quem gerar e não pagar)
-      try { if (coinsWa) sb.functions.invoke("lead", { body: { contact: coinsWa, ref: (localStorage.getItem("vez_ref") || ""), identifier: d.identifier } }).then(function () {}, function () {}); } catch (e) {}
+      try { if (coinsWa) sb.functions.invoke("lead", { body: { contact: coinsWa, ref: (localStorage.getItem("vez_ref") || ""), u: (localStorage.getItem("vez_u") || ""), identifier: d.identifier } }).then(function () {}, function () {}); } catch (e) {}
       // Pix gerado = chegou no checkout: avisa o pixel pra Meta poder otimizar pra quem realmente chega aqui (e parar de trazer lixo)
       try { if (window.fbq) fbq("track", "InitiateCheckout", { value: (d.amount || priceCents / 100), currency: "BRL", content_name: code, content_type: "coins_pix" }); } catch (e) {}
       try { if (window.clarity) window.clarity("event", "pix_generated"); } catch (e) {}
