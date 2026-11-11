@@ -133,6 +133,18 @@
   </div>
 </div>
 
+<div id="brk" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(8,6,12,.975);color:#fff;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;font-family:inherit">
+  <div style="font-size:44px;margin-bottom:4px">✈️🔥</div>
+  <div style="font-size:21px;font-weight:800;line-height:1.3;max-width:330px">o Instagram tá te prendendo aqui dentro 😤</div>
+  <div style="color:#d9cfe8;margin:12px 0 18px;max-width:320px;font-size:15px;line-height:1.5">pra eu te chamar no Telegram, abre no teu navegador — é 2 toques:</div>
+  <div style="text-align:left;max-width:290px;font-size:15px;line-height:2;color:#f0e9f7">
+    1. toca nos <b>⋯</b> (três pontinhos) lá em cima<br>
+    2. toca em <b>“Abrir no navegador”</b>
+  </div>
+  <a id="brkgo" href="#" style="display:block;margin-top:22px;padding:15px 22px;border-radius:14px;background:linear-gradient(90deg,#c026d3,#7c3aed);color:#fff;text-decoration:none;font-weight:800;font-size:16px">tentar abrir o Telegram de novo</a>
+  <div style="color:#8b8398;font-size:12px;margin-top:14px">te espero do outro lado 😏</div>
+</div>
+
 <script>
 (function(){
   var BOT="mia_privadinho_bot";
@@ -160,14 +172,37 @@
     }
   }catch(e){}
 
-  // ao clicar tenta abrir o app; o href https (universal link) assume em paralelo
-  document.addEventListener("click",function(ev){
-    var a=ev.target.closest("#go1,#go2,#go3"); if(!a) return;
+  // --- handoff pro Telegram, furando o navegador interno do Insta/Face ---
+  var UA=navigator.userAgent||"";
+  var inApp=/Instagram|FBAN|FBAV|FB_IAB|Messenger|Line\/|Twitter|TikTok|musical_ly/i.test(UA);
+  var isAndroid=/Android/i.test(UA);
+  var intentUrl="intent://resolve?domain="+BOT+"&start="+encodeURIComponent(ref)+"#Intent;scheme=tg;package=org.telegram.messenger;S.browser_fallback_url="+encodeURIComponent(deep)+";end";
+
+  function tap(){ // mede o toque no botão (toque -> start)
+    try{ fetch("https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/hit",{method:"POST",keepalive:true,
+      headers:{"Content-Type":"application/json","apikey":"sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj"},
+      body:JSON.stringify({ref:"tgtap_"+ref,path:"/tg/tap",token:ref})}).catch(function(){}); }catch(e){}
+  }
+  function openTelegram(){
+    tap();
+    if(isAndroid){ try{ location.href=intentUrl; return; }catch(e){} } // intent fura o webview e abre o app
     try{ var t="tg://resolve?domain="+BOT+"&start="+encodeURIComponent(ref);
       var ifr=document.createElement("iframe"); ifr.style.display="none"; ifr.src=t; document.body.appendChild(ifr);
       setTimeout(function(){ try{document.body.removeChild(ifr);}catch(e){} },1200);
     }catch(e){}
+    try{ window.location.href=deep; }catch(e){}
+  }
+
+  document.addEventListener("click",function(ev){
+    var a=ev.target.closest("#go1,#go2,#go3"); if(!a) return;
+    ev.preventDefault();
+    openTelegram();
+    // navegador interno: se não saiu da página, mostra o "abrir no navegador"
+    if(inApp){ setTimeout(function(){ if(!document.hidden){ var o=document.getElementById("brk"); if(o)o.style.display="flex"; } }, isAndroid?1600:800); }
   });
+
+  var bg=document.getElementById("brkgo");
+  if(bg)bg.addEventListener("click",function(ev){ ev.preventDefault(); openTelegram(); });
 })();
 </script>
 </body>
