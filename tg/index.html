@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Mia · ao vivo agora</title>
+<meta name="theme-color" content="#0b0b0f">
+<meta property="og:title" content="Mia — ao vivo agora 🔥">
+<meta property="og:description" content="Tô online agora. Vem conversar comigo — o 1º minuto é grátis.">
+<style>
+  :root{--bg:#0b0b0f;--card:#15131b;--line:#2a2535;--fg:#f4f1f8;--muted:#9a93a8;--accent:#e5106a;--accent2:#a855f7;--tg:#229ed9;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  .hero{position:relative;height:60vh;min-height:360px;overflow:hidden;border-bottom:1px solid var(--line)}
+  .hero .bg{position:absolute;inset:0;background-image:url('https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/ai_nsfw/gift-1793704590171-xt37.webp');background-size:cover;background-position:center;filter:blur(30px) brightness(.7) saturate(1.1);transform:scale(1.25)}
+  .hero .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,15,.15),rgba(11,11,15,.85) 78%,var(--bg))}
+  .hero .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:0 20px}
+  .lock{width:74px;height:74px;border-radius:50%;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:2rem;backdrop-filter:blur(2px)}
+  .live{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(229,16,106,.9);padding:5px 12px;border-radius:999px}
+  .live .d{width:8px;height:8px;border-radius:50%;background:#fff;animation:p 1.2s infinite}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
+  .info{position:relative;padding:18px 18px 26px;text-align:center}
+  .info h1{margin:0;font-size:1.5rem;font-weight:800}
+  .info .sub{color:var(--muted);font-size:.9rem;margin-top:3px}
+  .info .on{color:#58d989;font-weight:700;font-size:.82rem;margin-top:6px;display:inline-flex;align-items:center;gap:6px}
+  .info .on .d{width:8px;height:8px;border-radius:50%;background:#58d989}
+  .pitch{color:#d9d3e4;font-size:1rem;line-height:1.5;margin:16px 4px 0}
+  .pitch b{color:#fff}
+  .cta{display:block;margin:20px 0 10px;background:linear-gradient(100deg,#2aabee,#229ed9);color:#fff;text-decoration:none;text-align:center;padding:1.15rem;border-radius:16px;font-size:1.12rem;font-weight:800;box-shadow:0 12px 30px -10px rgba(34,158,217,.7)}
+  .cta:active{transform:scale(.99)}
+  .cta .tgi{vertical-align:-2px;margin-right:6px}
+  .hint{color:var(--muted);font-size:.82rem;margin-top:4px}
+  .benes{display:flex;justify-content:center;gap:16px;margin-top:18px;flex-wrap:wrap}
+  .benes span{font-size:.78rem;color:var(--muted)}
+  .benes b{color:#fff}
+  .note{color:#6f6782;font-size:.72rem;text-align:center;margin:26px 14px;line-height:1.5}
+  .spacer{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="bg"></div>
+    <div class="veil"></div>
+    <div class="mid">
+      <span class="live"><span class="d"></span>Ao vivo agora</span>
+      <div class="lock">🔞</div>
+    </div>
+  </div>
+  <div class="info">
+    <h1>Mia 🔥</h1>
+    <div class="sub">21 anos · São Paulo</div>
+    <div class="on"><span class="d"></span>online agora · te respondo na hora</div>
+    <p class="pitch">tô ao vivo agora no meu <b>Telegram</b> 😏 vem conversar comigo, te mando foto e a gente se diverte. <b>o 1º minuto é grátis</b> — sem cadastro, sem cartão.</p>
+    <a class="cta" id="go" href="#"><span class="tgi">✈️</span>Falar com a Mia no Telegram</a>
+    <div class="hint">é só tocar — abre no app do Telegram 💜</div>
+    <div class="benes">
+      <span>🔥 <b>fotos sem censura</b></span>
+      <span>⚡ <b>resposta na hora</b></span>
+      <span>🔒 <b>100% sigiloso</b></span>
+    </div>
+    <p class="note">Conteúdo +18. Ao continuar você confirma ter 18 anos ou mais.<br>Esta página não é afiliada ao Telegram.</p>
+  </div>
+  <div class="spacer"></div>
+</div>
+<script>
+(function(){
+  var BOT="mia_privadinho_bot";
+  function qs(k){try{return new URL(location.href).searchParams.get(k)||"";}catch(e){return"";}}
+  var ref=(qs("ref")||qs("utm_campaign")||"tg").trim().slice(0,60).replace(/[^a-zA-Z0-9_\-]/g,"")||"tg";
+  // monta o deep-link do bot com o ref como token de origem
+  var deep="https://t.me/"+BOT+"?start="+encodeURIComponent(ref);
+  var a=document.getElementById("go"); a.href=deep;
+  // registra a visita (mesma tabela link_hits, pra medir clique->chegada)
+  try{
+    var k="vez_tg_"+ref;
+    if(!sessionStorage.getItem(k)){
+      sessionStorage.setItem(k,"1");
+      fetch("https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/hit",{method:"POST",keepalive:true,
+        headers:{"Content-Type":"application/json","apikey":"sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj"},
+        body:JSON.stringify({ref:"tg_"+ref,path:"/tg",token:ref,referrer:document.referrer})}).catch(function(){});
+    }
+  }catch(e){}
+  // ao clicar, tenta abrir o app; fallback pro https já é o href
+  a.addEventListener("click",function(ev){
+    try{ var t="tg://resolve?domain="+BOT+"&start="+encodeURIComponent(ref); var now=Date.now();
+      // tenta o esquema do app; se nao abrir rapido, o href https assume
+      var ifr=document.createElement("iframe"); ifr.style.display="none"; ifr.src=t; document.body.appendChild(ifr);
+      setTimeout(function(){ try{document.body.removeChild(ifr);}catch(e){} },1200);
+    }catch(e){}
+    // nao previne o default: o href https://t.me abre em paralelo (universal link)
+  });
+})();
+</script>
+</body>
+</html>
