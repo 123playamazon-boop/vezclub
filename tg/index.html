@@ -7,40 +7,66 @@
 <title>Mia · ao vivo agora</title>
 <meta name="theme-color" content="#0b0b0f">
 <meta property="og:title" content="Mia — ao vivo agora 🔥">
-<meta property="og:description" content="Tô online agora. Vem conversar comigo — o 1º minuto é grátis.">
+<meta property="og:description" content="Tô online agora. O 1º minuto comigo é grátis — vem.">
 <style>
-  :root{--bg:#0b0b0f;--card:#15131b;--line:#2a2535;--fg:#f4f1f8;--muted:#9a93a8;--accent:#e5106a;--accent2:#a855f7;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  :root{--bg:#0b0b0f;--card:#15131b;--card2:#1b1824;--line:#2a2535;--fg:#f4f1f8;--muted:#9a93a8;--soft:#6f6782;--accent:#e5106a;--accent2:#a855f7;--ok:#58d989;--tg1:#2aabee;--tg2:#229ed9;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);-webkit-font-smoothing:antialiased}
-  .wrap{max-width:440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-  .hero{position:relative;width:100%;aspect-ratio:3/4;max-height:72vh;overflow:hidden;background:#000;border-bottom:1px solid var(--line)}
+  .wrap{max-width:440px;margin:0 auto;min-height:100vh;padding-bottom:88px}
+  /* hero */
+  .hero{position:relative;width:100%;aspect-ratio:3/4;max-height:66vh;overflow:hidden;background:#000;border-bottom:1px solid var(--line)}
   .slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
   .slide.on{opacity:1}
   .slide img{width:100%;height:100%;object-fit:cover;display:block}
-  .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,15,.28),rgba(11,11,15,0) 26%,rgba(11,11,15,0) 60%,rgba(11,11,15,.92));pointer-events:none}
-  .live{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(229,16,106,.92);padding:6px 12px;border-radius:999px;z-index:2}
+  .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,15,.3),rgba(11,11,15,0) 24%,rgba(11,11,15,0) 58%,rgba(11,11,15,.94));pointer-events:none}
+  .live{position:absolute;top:13px;left:13px;display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:rgba(229,16,106,.92);padding:6px 12px;border-radius:999px;z-index:2}
   .live .d{width:8px;height:8px;border-radius:50%;background:#fff;animation:p 1.2s infinite}
-  @keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
-  .age{position:absolute;top:14px;right:14px;font-size:.7rem;font-weight:800;color:#fff;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);padding:5px 9px;border-radius:999px;z-index:2}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.2}}
+  .age{position:absolute;top:13px;right:13px;font-size:.7rem;font-weight:800;color:#fff;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);padding:5px 9px;border-radius:999px;z-index:2}
+  .hname{position:absolute;left:16px;bottom:34px;z-index:2}
+  .hname h1{margin:0;font-size:1.7rem;font-weight:800;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  .hname .s{color:#eadff0;font-size:.9rem;margin-top:2px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .hname .on{color:var(--ok);font-weight:800;font-size:.84rem;margin-top:5px;display:inline-flex;align-items:center;gap:6px}
+  .hname .on .d{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(88,217,137,.22)}
   .dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:2}
-  .dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);transition:all .3s}
+  .dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .3s}
   .dots i.on{background:#fff;width:20px;border-radius:999px}
-  .info{position:relative;padding:14px 18px 26px;text-align:center}
-  .info h1{margin:0;font-size:1.5rem;font-weight:800}
-  .info .sub{color:var(--muted);font-size:.9rem;margin-top:3px}
-  .info .on{color:#58d989;font-weight:700;font-size:.82rem;margin-top:6px;display:inline-flex;align-items:center;gap:6px}
-  .info .on .d{width:8px;height:8px;border-radius:50%;background:#58d989;box-shadow:0 0 0 3px rgba(88,217,137,.18)}
-  .pitch{color:#d9d3e4;font-size:1rem;line-height:1.5;margin:14px 4px 0}
-  .pitch b{color:#fff}
-  .cta{display:block;margin:18px 0 10px;background:linear-gradient(100deg,#2aabee,#229ed9);color:#fff;text-decoration:none;text-align:center;padding:1.15rem;border-radius:16px;font-size:1.12rem;font-weight:800;box-shadow:0 12px 30px -10px rgba(34,158,217,.7)}
+  /* conteudo */
+  .pad{padding:18px 16px 0}
+  .lead{font-size:1.16rem;line-height:1.4;font-weight:700;text-align:center;margin:4px 2px 2px}
+  .lead b{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .cta{display:block;margin:16px 0 6px;background:linear-gradient(100deg,var(--tg1),var(--tg2));color:#fff;text-decoration:none;text-align:center;padding:1.15rem;border-radius:16px;font-size:1.1rem;font-weight:800;box-shadow:0 14px 34px -10px rgba(34,158,217,.75)}
   .cta:active{transform:scale(.99)}
-  .cta .tgi{vertical-align:-2px;margin-right:6px}
-  .hint{color:var(--muted);font-size:.82rem;margin-top:4px}
-  .benes{display:flex;justify-content:center;gap:16px;margin-top:18px;flex-wrap:wrap}
+  .cta .tgi{vertical-align:-2px;margin-right:7px}
+  .free{text-align:center;color:var(--ok);font-size:.82rem;font-weight:800;margin-bottom:4px}
+  .free b{color:#fff}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:18px}
+  .card h2{font-size:1rem;margin:0 0 10px;font-weight:800;text-align:center}
+  .stack{list-style:none;margin:0;padding:0}
+  .stack li{display:flex;gap:10px;align-items:flex-start;font-size:.95rem;line-height:1.4;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .stack li:last-child{border-bottom:0}
+  .stack .ck{color:var(--ok);font-weight:900;flex:0 0 auto;margin-top:1px}
+  .stack b{color:#fff}
+  .anchor{text-align:center;color:var(--muted);font-size:.82rem;margin-top:12px}
+  .anchor b{color:#fff}
+  .pitch{color:#d9d3e4;font-size:1rem;line-height:1.55;margin:0}
+  .pitch b{color:#fff}
+  .guard{display:flex;gap:10px;align-items:center;background:rgba(88,217,137,.08);border:1px solid rgba(88,217,137,.3);border-radius:14px;padding:13px 14px;margin-top:18px;font-size:.9rem;line-height:1.45;color:#cfe9d7}
+  .guard .i{font-size:1.3rem;flex:0 0 auto}
+  .faq{margin-top:18px}
+  .faq .q{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px}
+  .faq .q b{display:block;font-size:.92rem;margin-bottom:3px}
+  .faq .q span{color:var(--muted);font-size:.86rem;line-height:1.45}
+  .benes{display:flex;justify-content:center;gap:14px;margin-top:18px;flex-wrap:wrap}
   .benes span{font-size:.78rem;color:var(--muted)}
   .benes b{color:#fff}
-  .note{color:#6f6782;font-size:.72rem;text-align:center;margin:24px 14px 30px;line-height:1.5}
-  .spacer{flex:1}
+  .note{color:var(--soft);font-size:.72rem;text-align:center;margin:22px 10px 8px;line-height:1.5}
+  /* sticky */
+  .bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:linear-gradient(180deg,rgba(11,11,15,0),rgba(11,11,15,.96) 34%);padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
+  .bar .in{max-width:440px;margin:0 auto}
+  .bar a{display:block;text-align:center;background:linear-gradient(100deg,var(--tg1),var(--tg2));color:#fff;text-decoration:none;padding:1.05rem;border-radius:14px;font-size:1.06rem;font-weight:800;box-shadow:0 10px 26px -8px rgba(34,158,217,.8)}
+  .bar a:active{transform:scale(.99)}
+  .bar .sub{text-align:center;color:var(--ok);font-size:.72rem;font-weight:700;margin-top:5px}
 </style>
 </head>
 <body>
@@ -53,33 +79,69 @@
     <div class="veil"></div>
     <span class="live"><span class="d"></span>Ao vivo agora</span>
     <span class="age">+18</span>
+    <div class="hname">
+      <h1>Mia 🔥</h1>
+      <div class="s">21 anos · São Paulo</div>
+      <div class="on"><span class="d"></span>online agora · te respondo na hora</div>
+    </div>
     <div class="dots" id="dots"><i class="on"></i><i></i><i></i><i></i></div>
   </div>
-  <div class="info">
-    <h1>Mia 🔥</h1>
-    <div class="sub">21 anos · São Paulo</div>
-    <div class="on"><span class="d"></span>online agora · te esperando com uma ideia na cabeça 😏</div>
-    <p class="pitch">tô sozinha, deitada, com a cabeça cheia de <b>ideia safada</b> 😈 tem uma <b>fantasia</b> que eu nunca tive coragem de contar pra ninguém — e hoje deu vontade de realizar com <b>alguém</b>. entra no meu <b>Telegram</b> que eu te conto tudinho no teu ouvido, te mando as fotos que eu <b>escondo de todo mundo</b> e a gente faz o que o Instagram <b>nunca ia deixar</b>. é um lado meu que <b>ninguém vê — só você</b>. o 1º minuto é por minha conta, sem cadastro, sem cartão. mas é <b>agora</b>, enquanto eu tô on e com vontade 🔥</p>
-    <a class="cta" id="go" href="#"><span class="tgi">✈️</span>Quero falar com a Mia agora 🔥</a>
-    <div class="hint">é só tocar — eu caio no teu Telegram na hora 💜</div>
+
+  <div class="pad">
+    <p class="lead">tô sozinha, com vontade, e hoje eu <b>escolhi você</b> pra brincar comigo 😈</p>
+    <a class="cta" id="go1" href="#"><span class="tgi">✈️</span>Falar com a Mia agora</a>
+    <div class="free">é <b>de graça</b> · sem cadastro · sem cartão</div>
+
+    <div class="card">
+      <h2>o que você ganha entrando AGORA 👇</h2>
+      <ul class="stack">
+        <li><span class="ck">✓</span><span>eu <b>ao vivo</b> no teu Telegram, respondendo <b>só você</b> — na hora</span></li>
+        <li><span class="ck">✓</span><span>sua <b>1ª foto minha sem censura</b>, de brinde já na entrada</span></li>
+        <li><span class="ck">✓</span><span>acesso ao meu <b>particular</b> — o que eu não posto em lugar nenhum</span></li>
+        <li><span class="ck">✓</span><span>a <b>fantasia</b> que eu nunca tive coragem de contar, no teu ouvido</span></li>
+      </ul>
+      <div class="anchor">tem gente que <b>paga</b> pra ver o que eu vou te mostrar — pra você, agora, o <b>1º minuto é por minha conta</b>.</div>
+    </div>
+
+    <div class="card">
+      <p class="pitch">entra no meu Telegram que eu te mostro meu <b>lado proibido</b> 😏 a gente faz o que o Instagram <b>nunca ia deixar</b>, e fica só entre a gente. é um lado meu que <b>ninguém vê — só você</b>. mas é <b>agora</b>, enquanto eu tô on e com vontade 🔥</p>
+    </div>
+
+    <div class="guard"><span class="i">🔒</span><span><b>Risco zero:</b> sem cartão, sem cadastro, sem compromisso. Não curtiu? é só fechar — você não perde nada. mas duvido que vá querer sair 😏</span></div>
+
+    <div class="faq">
+      <div class="q"><b>é de graça mesmo?</b><span>é sim. o 1º minuto comigo é por minha conta — você não paga nada pra entrar e falar comigo.</span></div>
+      <div class="q"><b>preciso cadastrar ou botar cartão?</b><span>nada disso. é só tocar no botão, abre meu Telegram e a gente já começa.</span></div>
+      <div class="q"><b>onde isso vai parar?</b><span>no meu Telegram privado, só nosso. discreto e sigiloso — ninguém mais vê.</span></div>
+    </div>
+
+    <a class="cta" id="go2" href="#" style="margin-top:18px"><span class="tgi">✈️</span>Quero você agora 😈</a>
+
     <div class="benes">
       <span>😈 <b>meu lado proibido</b></span>
       <span>🔒 <b>só você vê</b></span>
       <span>⚡ <b>ao vivo agora</b></span>
     </div>
-    <p class="note">Conteúdo +18. Ao continuar você confirma ter 18 anos ou mais.<br>Esta página não é afiliada ao Telegram.</p>
+    <p class="note">Conteúdo +18. Ao continuar você confirma ter 18 anos ou mais.<br>Esta página não é afiliada ao Telegram nem à Meta.</p>
   </div>
-  <div class="spacer"></div>
 </div>
+
+<div class="bar">
+  <div class="in">
+    <a id="go3" href="#">✈️ Me chama agora no Telegram 🔥</a>
+    <div class="sub">o 1º minuto é grátis · sem cartão</div>
+  </div>
+</div>
+
 <script>
 (function(){
   var BOT="mia_privadinho_bot";
   function qs(k){try{return new URL(location.href).searchParams.get(k)||"";}catch(e){return"";}}
   var ref=(qs("ref")||qs("utm_campaign")||"tg").trim().slice(0,60).replace(/[^a-zA-Z0-9_\-]/g,"")||"tg";
   var deep="https://t.me/"+BOT+"?start="+encodeURIComponent(ref);
-  var a=document.getElementById("go"); a.href=deep;
+  ["go1","go2","go3"].forEach(function(id){var a=document.getElementById(id);if(a)a.href=deep;});
 
-  // carrossel passando sozinho
+  // carrossel
   var slides=document.querySelectorAll(".hero .slide"), dots=document.querySelectorAll("#dots i"), i=0;
   setInterval(function(){
     slides[i].classList.remove("on"); dots[i].classList.remove("on");
@@ -98,8 +160,9 @@
     }
   }catch(e){}
 
-  // ao clicar tenta abrir o app; o href https://t.me (universal link) assume em paralelo
-  a.addEventListener("click",function(){
+  // ao clicar tenta abrir o app; o href https (universal link) assume em paralelo
+  document.addEventListener("click",function(ev){
+    var a=ev.target.closest("#go1,#go2,#go3"); if(!a) return;
     try{ var t="tg://resolve?domain="+BOT+"&start="+encodeURIComponent(ref);
       var ifr=document.createElement("iframe"); ifr.style.display="none"; ifr.src=t; document.body.appendChild(ifr);
       setTimeout(function(){ try{document.body.removeChild(ifr);}catch(e){} },1200);
