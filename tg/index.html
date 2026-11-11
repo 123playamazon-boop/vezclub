@@ -183,26 +183,33 @@
       headers:{"Content-Type":"application/json","apikey":"sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj"},
       body:JSON.stringify({ref:"tgtap_"+ref,path:"/tg/tap",token:ref})}).catch(function(){}); }catch(e){}
   }
-  function openTelegram(){
-    tap();
-    if(isAndroid){ try{ location.href=intentUrl; return; }catch(e){} } // intent fura o webview e abre o app
+  function tryApp(){ // tenta abrir o app do Telegram via esquema tg://
     try{ var t="tg://resolve?domain="+BOT+"&start="+encodeURIComponent(ref);
       var ifr=document.createElement("iframe"); ifr.style.display="none"; ifr.src=t; document.body.appendChild(ifr);
       setTimeout(function(){ try{document.body.removeChild(ifr);}catch(e){} },1200);
     }catch(e){}
-    try{ window.location.href=deep; }catch(e){}
   }
+  function showBrk(){ var o=document.getElementById("brk"); if(o)o.style.display="flex"; }
 
   document.addEventListener("click",function(ev){
     var a=ev.target.closest("#go1,#go2,#go3"); if(!a) return;
     ev.preventDefault();
-    openTelegram();
-    // navegador interno: se não saiu da página, mostra o "abrir no navegador"
-    if(inApp){ setTimeout(function(){ if(!document.hidden){ var o=document.getElementById("brk"); if(o)o.style.display="flex"; } }, isAndroid?1600:800); }
+    tap();
+    if(inApp && isAndroid){ // Android: intent fura o webview e abre o app direto
+      try{ location.href=intentUrl; }catch(e){}
+      setTimeout(function(){ if(!document.hidden) showBrk(); }, 1600);
+      return;
+    }
+    if(inApp){ // iOS/outros webviews: mandar pro t.me só abre tela quebrada -> instrui abrir no navegador
+      tryApp();
+      setTimeout(function(){ if(!document.hidden) showBrk(); }, 700);
+      return;
+    }
+    try{ window.location.href=deep; }catch(e){} // navegador normal: t.me abre o Telegram certinho
   });
 
   var bg=document.getElementById("brkgo");
-  if(bg)bg.addEventListener("click",function(ev){ ev.preventDefault(); openTelegram(); });
+  if(bg)bg.addEventListener("click",function(ev){ ev.preventDefault(); tap(); tryApp(); try{ window.location.href=deep; }catch(e){} });
 })();
 </script>
 </body>
