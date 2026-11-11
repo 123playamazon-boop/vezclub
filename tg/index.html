@@ -9,45 +9,50 @@
 <meta property="og:title" content="Mia — ao vivo agora 🔥">
 <meta property="og:description" content="Tô online agora. Vem conversar comigo — o 1º minuto é grátis.">
 <style>
-  :root{--bg:#0b0b0f;--card:#15131b;--line:#2a2535;--fg:#f4f1f8;--muted:#9a93a8;--accent:#e5106a;--accent2:#a855f7;--tg:#229ed9;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  :root{--bg:#0b0b0f;--card:#15131b;--line:#2a2535;--fg:#f4f1f8;--muted:#9a93a8;--accent:#e5106a;--accent2:#a855f7;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);-webkit-font-smoothing:antialiased}
   .wrap{max-width:440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-  .hero{position:relative;height:60vh;min-height:360px;overflow:hidden;border-bottom:1px solid var(--line)}
-  .hero .bg{position:absolute;inset:0;background-image:url('https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/ai_nsfw/gift-1793704590171-xt37.webp');background-size:cover;background-position:center;filter:blur(30px) brightness(.7) saturate(1.1);transform:scale(1.25)}
-  .hero .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,15,.15),rgba(11,11,15,.85) 78%,var(--bg))}
-  .hero .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:0 20px}
-  .lock{width:74px;height:74px;border-radius:50%;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:2rem;backdrop-filter:blur(2px)}
-  .live{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(229,16,106,.9);padding:5px 12px;border-radius:999px}
+  .hero{position:relative;width:100%;aspect-ratio:3/4;max-height:72vh;overflow:hidden;background:#000;border-bottom:1px solid var(--line)}
+  .slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
+  .slide.on{opacity:1}
+  .slide img{width:100%;height:100%;object-fit:cover;display:block}
+  .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,15,.28),rgba(11,11,15,0) 26%,rgba(11,11,15,0) 60%,rgba(11,11,15,.92));pointer-events:none}
+  .live{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(229,16,106,.92);padding:6px 12px;border-radius:999px;z-index:2}
   .live .d{width:8px;height:8px;border-radius:50%;background:#fff;animation:p 1.2s infinite}
   @keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
-  .info{position:relative;padding:18px 18px 26px;text-align:center}
+  .age{position:absolute;top:14px;right:14px;font-size:.7rem;font-weight:800;color:#fff;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);padding:5px 9px;border-radius:999px;z-index:2}
+  .dots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:2}
+  .dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);transition:all .3s}
+  .dots i.on{background:#fff;width:20px;border-radius:999px}
+  .info{position:relative;padding:14px 18px 26px;text-align:center}
   .info h1{margin:0;font-size:1.5rem;font-weight:800}
   .info .sub{color:var(--muted);font-size:.9rem;margin-top:3px}
   .info .on{color:#58d989;font-weight:700;font-size:.82rem;margin-top:6px;display:inline-flex;align-items:center;gap:6px}
-  .info .on .d{width:8px;height:8px;border-radius:50%;background:#58d989}
-  .pitch{color:#d9d3e4;font-size:1rem;line-height:1.5;margin:16px 4px 0}
+  .info .on .d{width:8px;height:8px;border-radius:50%;background:#58d989;box-shadow:0 0 0 3px rgba(88,217,137,.18)}
+  .pitch{color:#d9d3e4;font-size:1rem;line-height:1.5;margin:14px 4px 0}
   .pitch b{color:#fff}
-  .cta{display:block;margin:20px 0 10px;background:linear-gradient(100deg,#2aabee,#229ed9);color:#fff;text-decoration:none;text-align:center;padding:1.15rem;border-radius:16px;font-size:1.12rem;font-weight:800;box-shadow:0 12px 30px -10px rgba(34,158,217,.7)}
+  .cta{display:block;margin:18px 0 10px;background:linear-gradient(100deg,#2aabee,#229ed9);color:#fff;text-decoration:none;text-align:center;padding:1.15rem;border-radius:16px;font-size:1.12rem;font-weight:800;box-shadow:0 12px 30px -10px rgba(34,158,217,.7)}
   .cta:active{transform:scale(.99)}
   .cta .tgi{vertical-align:-2px;margin-right:6px}
   .hint{color:var(--muted);font-size:.82rem;margin-top:4px}
   .benes{display:flex;justify-content:center;gap:16px;margin-top:18px;flex-wrap:wrap}
   .benes span{font-size:.78rem;color:var(--muted)}
   .benes b{color:#fff}
-  .note{color:#6f6782;font-size:.72rem;text-align:center;margin:26px 14px;line-height:1.5}
+  .note{color:#6f6782;font-size:.72rem;text-align:center;margin:24px 14px 30px;line-height:1.5}
   .spacer{flex:1}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="hero">
-    <div class="bg"></div>
+  <div class="hero" id="hero">
+    <div class="slide on"><img src="img/p1.webp" alt="Mia" fetchpriority="high"></div>
+    <div class="slide"><img src="img/p2.webp" alt="Mia" loading="lazy"></div>
+    <div class="slide"><img src="img/p3.webp" alt="Mia" loading="lazy"></div>
     <div class="veil"></div>
-    <div class="mid">
-      <span class="live"><span class="d"></span>Ao vivo agora</span>
-      <div class="lock">🔞</div>
-    </div>
+    <span class="live"><span class="d"></span>Ao vivo agora</span>
+    <span class="age">+18</span>
+    <div class="dots" id="dots"><i class="on"></i><i></i><i></i></div>
   </div>
   <div class="info">
     <h1>Mia 🔥</h1>
@@ -70,10 +75,18 @@
   var BOT="mia_privadinho_bot";
   function qs(k){try{return new URL(location.href).searchParams.get(k)||"";}catch(e){return"";}}
   var ref=(qs("ref")||qs("utm_campaign")||"tg").trim().slice(0,60).replace(/[^a-zA-Z0-9_\-]/g,"")||"tg";
-  // monta o deep-link do bot com o ref como token de origem
   var deep="https://t.me/"+BOT+"?start="+encodeURIComponent(ref);
   var a=document.getElementById("go"); a.href=deep;
-  // registra a visita (mesma tabela link_hits, pra medir clique->chegada)
+
+  // carrossel passando sozinho
+  var slides=document.querySelectorAll(".hero .slide"), dots=document.querySelectorAll("#dots i"), i=0;
+  setInterval(function(){
+    slides[i].classList.remove("on"); dots[i].classList.remove("on");
+    i=(i+1)%slides.length;
+    slides[i].classList.add("on"); dots[i].classList.add("on");
+  }, 3200);
+
+  // beacon: registra a visita (clique -> chegada)
   try{
     var k="vez_tg_"+ref;
     if(!sessionStorage.getItem(k)){
@@ -83,14 +96,13 @@
         body:JSON.stringify({ref:"tg_"+ref,path:"/tg",token:ref,referrer:document.referrer})}).catch(function(){});
     }
   }catch(e){}
-  // ao clicar, tenta abrir o app; fallback pro https já é o href
-  a.addEventListener("click",function(ev){
-    try{ var t="tg://resolve?domain="+BOT+"&start="+encodeURIComponent(ref); var now=Date.now();
-      // tenta o esquema do app; se nao abrir rapido, o href https assume
+
+  // ao clicar tenta abrir o app; o href https://t.me (universal link) assume em paralelo
+  a.addEventListener("click",function(){
+    try{ var t="tg://resolve?domain="+BOT+"&start="+encodeURIComponent(ref);
       var ifr=document.createElement("iframe"); ifr.style.display="none"; ifr.src=t; document.body.appendChild(ifr);
       setTimeout(function(){ try{document.body.removeChild(ifr);}catch(e){} },1200);
     }catch(e){}
-    // nao previne o default: o href https://t.me abre em paralelo (universal link)
   });
 })();
 </script>
