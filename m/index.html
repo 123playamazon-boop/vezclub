@@ -149,13 +149,14 @@ a{color:inherit}
     }).join("");
 
     var feed=m.posts.map(function(p){
-      var locked=!p.is_free;
+      var locked=(p.locked!==undefined)?p.locked:!p.is_free;
       var vid=p.media_type==="video"?'<div class="vid">▶</div>':'';
+      var img=p.media?'<img src="'+esc(p.media)+'" alt="">':'';
       if(locked){
-        return '<div class="cell lock" data-pid="'+p.id+'"><img src="'+esc(p.media)+'" alt="">'+vid+
+        return '<div class="cell lock" data-pid="'+p.id+'">'+img+vid+
           '<div class="lk"><div class="ic">🔒</div>'+(p.price_cents?'<div class="pr">'+BRL(p.price_cents)+'</div>':'<div class="pr">assinantes</div>')+'</div></div>';
       }
-      return '<div class="cell"><img src="'+esc(p.media)+'" alt="">'+vid+'</div>';
+      return '<div class="cell">'+img+vid+'</div>';
     }).join("");
 
     app.innerHTML=
@@ -343,29 +344,38 @@ a{color:inherit}
     }catch(e){}
   }
 
-  // tenta carregar do Supabase; se não houver dados/políticas, usa demo
+  async function fetchFeed(creatorKey){
+    try{
+      var tok=await sessionToken();
+      var h={'Content-Type':'application/json','apikey':SB_KEY};
+      if(tok) h['Authorization']='Bearer '+tok;
+      var r=await fetch(FN+'feed',{method:'POST',headers:h,body:JSON.stringify({creator_key:creatorKey})});
+      return await r.json();
+    }catch(e){ return null; }
+  }
+  // carrega do Supabase; paywall server-side via feed(); fallback demo
   function load(){
     var handle=(qs("u")||qs("m")||"").replace(/^@/,"").trim();
     if(!sb || !handle){ render(DEMO); return; }
-    sb.from("creators").select("*").eq("handle",handle).maybeSingle().then(function(r){
-      var c=r && r.data;
-      if(!c){ render(DEMO); return; }
-      Promise.all([
-        sb.from("plans").select("*").eq("creator_key",c.key).eq("active",true).order("months",{ascending:true}),
-        sb.from("posts").select("id,is_free,price_cents,media_type,media_path").eq("creator_key",c.key).eq("status","published").order("created_at",{ascending:false}).limit(24)
-      ]).then(function(res){
-        var plans=(res[0] && res[0].data)||[];
-        var posts=(res[1] && res[1].data)||[];
+    sb.from("creators").select("*").or("handle.eq.@"+handle+",handle.eq."+handle+",key.eq."+handle).limit(1)
+      .then(async function(r){
+        var c=r && r.data && r.data[0];
+        if(!c){ render(DEMO); return; }
         var base="https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/";
+        var plansR, fd;
+        try{ plansR=await sb.from("plans").select("*").eq("creator_key",c.key).eq("active",true).order("months",{ascending:true}); }catch(e){ plansR=null; }
+        try{ fd=await fetchFeed(c.key); }catch(e){ fd=null; }
+        var plans=(plansR && plansR.data)||[];
+        var fdPosts=(fd && fd.posts)||null;
+        var counts=(fd && fd.counts)||{};
         render({
-          key:c.key, handle:c.handle, display_name:c.display_name, verified:true, online:c.online,
+          key:c.key, handle:(c.handle||handle).replace(/^@/,""), display_name:c.display_name, verified:true, online:c.online,
           hook:c.hook||"", avatar:base+(c.avatar_path||""), cover:base+(c.cover_path||c.avatar_path||""),
-          photos:"—", videos:"—", likes:"—",
+          photos:(counts.photos!=null?counts.photos:"—"), videos:(counts.videos!=null?counts.videos:"—"), likes:"—",
           plans:plans.length?plans.map(function(p){return {months:p.months,price_cents:p.price_cents,label:p.label||((p.months)+" mês"+(p.months>1?"es":"")),off:(p.months>1?"":"")};}):DEMO.plans,
-          posts:posts.length?posts.map(function(p){return {id:p.id,is_free:p.is_free,price_cents:p.price_cents,media_type:p.media_type,media:base+(p.media_path||"")};}):DEMO.posts
+          posts:fdPosts?fdPosts.map(function(p){return {id:p.id,locked:p.locked,is_free:!p.locked,price_cents:p.price_cents,media_type:p.media_type,media:p.url||""};}):DEMO.posts
         });
       }).catch(function(){ render(DEMO); });
-    }).catch(function(){ render(DEMO); });
   }
   load();
 })();
