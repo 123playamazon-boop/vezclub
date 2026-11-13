@@ -9,7 +9,7 @@
 :root{--bg:#0b0b0f;--card:#15131b;--card2:#1b1824;--line:#241f2e;--muted:#9a93a8;--tx:#f4f1f8;--ac:#c026d3;--ac2:#7c3aed;--ok:#2ecc71;--bad:#ff3b5c}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-.wrap{max-width:760px;margin:0 auto;padding:18px 16px 70px}
+.wrap{max-width:820px;margin:0 auto;padding:18px 16px 70px}
 h1{font-size:20px;margin:0 0 2px}.muted{color:var(--muted)}
 input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(--line);background:#0e0c14;color:var(--tx);font-size:16px}
 .btn{display:inline-block;padding:14px 18px;border:0;border-radius:12px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(90deg,var(--ac),var(--ac2));font-size:15px}
@@ -26,29 +26,49 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
 .badge{font-size:13px;font-weight:800;padding:5px 12px;border-radius:999px;background:#2a2335;color:#fff}
 .badge.n{background:linear-gradient(90deg,var(--ac),var(--ac2))}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.title{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .av{width:48px;height:48px;border-radius:50%;background:#2a2335;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none}
 .name{font-weight:800;font-size:18px}
 .sig{font-size:13px;color:var(--ok);margin-top:6px}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:11px 16px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--muted);font-weight:700;cursor:pointer;font-size:14px}
+.tab.on{background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;border-color:transparent}
+.tab .c{display:inline-block;margin-left:6px;background:rgba(255,255,255,.18);border-radius:999px;padding:1px 7px;font-size:12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stat .v{font-size:26px;font-weight:800}
+.stat .l{font-size:13px;color:var(--muted);margin-top:2px}
+.stat.hl{border-color:color-mix(in srgb,var(--ac) 50%,transparent)}
+.stat.hl .v{color:var(--ac)}
+.prow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}
+.pill{font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px}
+.pill.on{background:rgba(46,204,113,.16);color:var(--ok)}
+.pill.off{background:rgba(255,59,92,.16);color:var(--bad)}
+@media(min-width:620px){.stats{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="title"><div class="av">V</div><div><h1>Aprovação de produtoras</h1><div class="muted" style="font-size:13px">Vezclub · painel oficial</div></div></div>
+  <div class="title"><div class="av">V</div><div><h1>Painel Vezclub</h1><div class="muted" style="font-size:13px">Admin da equipe</div></div></div>
 
   <div id="gate" class="card hide">
-    <p class="muted">Acesso restrito. Informe a chave de admin.</p>
+    <p class="muted">Acesso restrito à equipe. Informe a chave de admin.</p>
     <input id="key" type="password" placeholder="chave de admin">
     <button class="btn big" id="enter" style="margin-top:12px">Entrar</button>
   </div>
 
   <div id="main" class="hide">
-    <div class="row" style="margin-bottom:14px">
-      <div><span class="badge n" id="count">—</span> <span class="muted">aguardando aprovação</span></div>
-      <button class="btn sec" id="reload">↻ Atualizar</button>
+    <div class="tabs">
+      <div class="tab on" data-tab="geral">📊 Visão geral</div>
+      <div class="tab" data-tab="pendentes">🕒 Pendentes <span class="c" id="tc-pend">0</span></div>
+      <div class="tab" data-tab="produtoras">👩 Produtoras <span class="c" id="tc-apr">0</span></div>
+      <div style="margin-left:auto"><button class="btn sec" id="reload">↻</button></div>
     </div>
-    <div id="list"></div>
-    <div id="empty" class="muted hide" style="text-align:center;padding:40px 10px">Nenhuma produtora aguardando aprovação 🎉<br><span style="font-size:13px">Quando alguém se cadastrar, aparece aqui.</span></div>
+
+    <div id="pane-geral"></div>
+    <div id="pane-pendentes" class="hide"></div>
+    <div id="pane-produtoras" class="hide"></div>
   </div>
 </div>
 
@@ -59,27 +79,53 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
   var FN=SB_URL+"/functions/v1/";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c];});}
-  var KEY='';
-  try{ KEY=localStorage.getItem('vez_admin_key')||''; }catch(e){}
+  function brl(c){return "R$ "+((c||0)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function initials(n){ n=String(n||'').trim(); return (n[0]||'?').toUpperCase(); }
+  var KEY=''; try{ KEY=localStorage.getItem('vez_admin_key')||''; }catch(e){}
   async function api(action,extra){ var r=await fetch(FN+'admin_kyc',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify(Object.assign({k:KEY,action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }
 
-  function show(id){ ['gate','main'].forEach(function(p){ $(p).classList.toggle('hide', p!==id); }); }
+  function showGate(){ $('gate').classList.remove('hide'); $('main').classList.add('hide'); }
+  function showMain(){ $('gate').classList.add('hide'); $('main').classList.remove('hide'); }
 
   $('enter').onclick=function(){ KEY=$('key').value.trim(); try{localStorage.setItem('vez_admin_key',KEY);}catch(e){} start(); };
   $('key').addEventListener('keydown',function(e){ if(e.key==='Enter') $('enter').click(); });
-  $('reload').onclick=loadList;
+  $('reload').onclick=function(){ loadAll(); };
 
-  function initials(n){ n=String(n||'').trim(); return (n[0]||'?').toUpperCase(); }
+  var current='geral';
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
+    t.onclick=function(){
+      current=t.getAttribute('data-tab');
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.toggle('on',x===t);});
+      ['geral','pendentes','produtoras'].forEach(function(p){ $('pane-'+p).classList.toggle('hide',p!==current); });
+    };
+  });
 
-  async function loadList(){
-    $('list').innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
+  async function loadOverview(){
+    var r=await api('overview');
+    if(r.error==='forbidden'){ try{localStorage.removeItem('vez_admin_key');}catch(e){} KEY=''; showGate(); return false; }
+    $('tc-pend').textContent=r.pending||0;
+    $('tc-apr').textContent=r.approved||0;
+    $('pane-geral').innerHTML=
+      '<div class="stats">'+
+      '<div class="stat hl"><div class="v">'+(r.pending||0)+'</div><div class="l">Aguardando aprovação</div></div>'+
+      '<div class="stat"><div class="v">'+(r.approved||0)+'</div><div class="l">Produtoras ativas</div></div>'+
+      '<div class="stat"><div class="v">'+(r.ai||0)+'</div><div class="l">Modelos IA</div></div>'+
+      '<div class="stat"><div class="v">'+(r.subscribers||0)+'</div><div class="l">Assinantes ativos</div></div>'+
+      '<div class="stat"><div class="v">'+(r.posts||0)+'</div><div class="l">Conteúdos publicados</div></div>'+
+      '<div class="stat"><div class="v" style="font-size:20px">'+brl(r.gmv_cents)+'</div><div class="l">Vendas totais (GMV)</div></div>'+
+      '</div>'+
+      ((r.pending||0)>0?'<p class="muted" style="margin-top:14px">Você tem <b style="color:var(--ac)">'+r.pending+'</b> produtora(s) esperando. Abra a aba <b>Pendentes</b> para revisar e aprovar.</p>':'<p class="muted" style="margin-top:14px">Nenhuma produtora pendente no momento. 🎉</p>');
+    return true;
+  }
+
+  async function loadPending(){
+    var box=$('pane-pendentes');
+    box.innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
     var r=await api('list',{status:'submitted'});
-    if(r.error==='forbidden'){ try{localStorage.removeItem('vez_admin_key');}catch(e){} KEY=''; show('gate'); return; }
+    if(r.error==='forbidden'){ showGate(); return; }
     var items=(r.items)||[];
-    $('count').textContent=items.length;
-    $('empty').classList.toggle('hide', items.length>0);
-    $('list').innerHTML='';
-    show('main');
+    if(!items.length){ box.innerHTML='<div class="card muted" style="text-align:center;padding:40px 10px">Nenhuma produtora aguardando aprovação 🎉<br><span style="font-size:13px">Quando alguém se cadastrar, aparece aqui.</span></div>'; return; }
+    box.innerHTML='';
     items.forEach(function(it){
       var el=document.createElement('div'); el.className='card';
       var nm=it.display_name||it.legal_name||'(sem nome)';
@@ -88,9 +134,8 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
           '<div><div class="name">'+esc(nm)+'</div><div class="muted" style="font-size:13px">'+esc(it.handle||'')+' · CPF '+esc(it.cpf||'—')+' · '+esc(it.phone||'—')+'</div></div></div>'+
         '<div class="docbox muted" style="font-size:13px">Carregando documentos…</div>'+
         '<div class="acts"><button class="btn bad">✕ Recusar</button><button class="btn ok">✓ Aprovar</button></div>';
-      $('list').appendChild(el);
+      box.appendChild(el);
       var ck=it.creator_key;
-      // load docs + full data inline
       api('detail',{creator_key:ck}).then(function(d){
         if(d&&d.kyc){
           var k=d.kyc, dd=d.docs||{};
@@ -105,12 +150,37 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
         } else { el.querySelector('.docbox').innerHTML='<span class="muted" style="font-size:13px">Não foi possível carregar os documentos.</span>'; }
       });
       var bad=el.querySelector('.btn.bad'), ok=el.querySelector('.btn.ok');
-      ok.onclick=async function(){ if(!confirm('Aprovar '+nm+'? Ela poderá publicar e receber.')) return; ok.disabled=true;bad.disabled=true;ok.textContent='Aprovando…'; var rr=await api('review',{creator_key:ck,approve:true}); if(rr.ok){ el.style.opacity=.4; el.querySelector('.acts').innerHTML='<div style="grid-column:1/3;text-align:center;color:var(--ok);font-weight:800;padding:8px">✓ Aprovada</div>'; setTimeout(loadList,900); } else { alert('Erro ao aprovar.'); ok.disabled=false;bad.disabled=false;ok.textContent='✓ Aprovar'; } };
-      bad.onclick=async function(){ var reason=prompt('Motivo da recusa (opcional):','documento ilegível'); if(reason===null) return; ok.disabled=true;bad.disabled=true;bad.textContent='Recusando…'; var rr=await api('review',{creator_key:ck,approve:false,reason:reason||''}); if(rr.ok){ el.style.opacity=.4; el.querySelector('.acts').innerHTML='<div style="grid-column:1/3;text-align:center;color:var(--bad);font-weight:800;padding:8px">✕ Recusada</div>'; setTimeout(loadList,900); } else { alert('Erro ao recusar.'); ok.disabled=false;bad.disabled=false;bad.textContent='✕ Recusar'; } };
+      ok.onclick=async function(){ if(!confirm('Aprovar '+nm+'? Ela poderá publicar e receber.')) return; ok.disabled=true;bad.disabled=true;ok.textContent='Aprovando…'; var rr=await api('review',{creator_key:ck,approve:true}); if(rr.ok){ el.style.opacity=.4; el.querySelector('.acts').innerHTML='<div style="grid-column:1/3;text-align:center;color:var(--ok);font-weight:800;padding:8px">✓ Aprovada</div>'; setTimeout(loadAll,900); } else { alert('Erro ao aprovar.'); ok.disabled=false;bad.disabled=false;ok.textContent='✓ Aprovar'; } };
+      bad.onclick=async function(){ var reason=prompt('Motivo da recusa (opcional):','documento ilegível'); if(reason===null) return; ok.disabled=true;bad.disabled=true;bad.textContent='Recusando…'; var rr=await api('review',{creator_key:ck,approve:false,reason:reason||''}); if(rr.ok){ el.style.opacity=.4; el.querySelector('.acts').innerHTML='<div style="grid-column:1/3;text-align:center;color:var(--bad);font-weight:800;padding:8px">✕ Recusada</div>'; setTimeout(loadAll,900); } else { alert('Erro ao recusar.'); ok.disabled=false;bad.disabled=false;bad.textContent='✕ Recusar'; } };
     });
   }
 
-  function start(){ if(!KEY){ show('gate'); return; } loadList(); }
+  async function loadProdutoras(){
+    var box=$('pane-produtoras');
+    box.innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
+    var r=await api('list',{status:'approved'});
+    if(r.error==='forbidden'){ showGate(); return; }
+    var items=(r.items)||[];
+    if(!items.length){ box.innerHTML='<div class="card muted" style="text-align:center;padding:40px 10px">Nenhuma produtora aprovada ainda.</div>'; return; }
+    var card=document.createElement('div'); card.className='card';
+    card.innerHTML='<div class="card-head" style="margin-bottom:6px"><b>Produtoras aprovadas</b> <span class="muted">('+items.length+')</span></div>';
+    items.forEach(function(it){
+      var nm=it.display_name||it.legal_name||'(sem nome)';
+      var row=document.createElement('div'); row.className='prow';
+      row.innerHTML=
+        '<div class="av" style="width:40px;height:40px;font-size:16px">'+esc(initials(nm))+'</div>'+
+        '<div style="flex:1"><div style="font-weight:700">'+esc(nm)+'</div><div class="muted" style="font-size:13px">'+esc(it.handle||'')+'</div></div>'+
+        '<span class="pill '+(it.approved?'on':'off')+'">'+(it.approved?'Ativa':'Pausada')+'</span>'+
+        '<button class="btn sec" style="padding:9px 13px;font-size:13px">'+(it.approved?'Pausar':'Reativar')+'</button>';
+      var btn=row.querySelector('button');
+      btn.onclick=async function(){ var act=!it.approved; if(!confirm((act?'Reativar':'Pausar')+' '+nm+'?')) return; btn.disabled=true; var rr=await api('set_active',{creator_key:it.creator_key,active:act}); if(rr.ok){ loadAll(); } else { alert('Erro.'); btn.disabled=false; } };
+      card.appendChild(row);
+    });
+    box.innerHTML=''; box.appendChild(card);
+  }
+
+  async function loadAll(){ var ok=await loadOverview(); if(ok===false) return; loadPending(); loadProdutoras(); }
+  function start(){ if(!KEY){ showGate(); return; } showMain(); loadAll(); }
   start();
 })();
 </script>
