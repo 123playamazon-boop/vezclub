@@ -1281,6 +1281,7 @@ fbq('track', 'PageView');
     document.body.appendChild(p); document.body.style.overflow = "hidden";
     document.getElementById("vezpanel-x").onclick = closeVezPanel;
   }
+  function requireSub(key) { if (state.subscribed[key]) return true; if (needLogin()) return false; toast(L("Assine pra desbloquear 💜", "Subscribe to unlock 💜", "Suscríbete para desbloquear 💜")); openPixSub(key, 1); return false; }
   function openLiveApp(key) { openVezPanel("/live/?c=" + encodeURIComponent(key) + "&embed=1", true); }
   function openCallApp(key) {
     if (!sb) { toast("Indisponível agora."); return; }
@@ -4118,20 +4119,26 @@ fbq('track', 'PageView');
         : '<div class="rc-sub"><div><b>Assine e veja tudo</b><div class="rc-sub-s">Acesso a todo o conteúdo dela por 30 dias</div></div><button class="btn btn-primary btn-sm" data-subscribe="' + creatorKey + '">' + usd(subPrice) + '/mês</button></div>';
       if (!pr.data.length) { b.innerHTML = cta + '<p class="muted-note" style="margin-top:0.7rem">Ainda não há conteúdo aprovado por aqui.</p>'; wireSub(b, creatorKey, subPrice); return; }
       pr.data.sort(function (a, b2) { return (b2.is_free ? 1 : 0) - (a.is_free ? 1 : 0); }); // free previews first
+      // regra da plataforma: no máximo 3 prévias grátis — o resto é só pra assinante
+      var FREE_CAP = 3, freeShown = 0, freeOkSet = {};
+      pr.data.forEach(function (p) { if (p.is_free && freeShown < FREE_CAP) { freeOkSet[p.id] = true; freeShown++; } });
       b.innerHTML = '<div class="rc-grid">' + pr.data.map(function (p) {
-        var isFree = !!p.is_free;
+        var isFree = !!p.is_free, freeOk = !!freeOkSet[p.id];
         var price = Math.round(p.price_cents / 100), isVideo = p.media_type === "video";
-        var access = isFree || subActive || unlockMap[p.id];
-        var media = access ? '<div class="rc-media" id="rc-' + p.id + '"></div>' : '<div class="rc-media locked"><div class="rc-locked">' + (isVideo ? I.video : I.lock) + '<span class="price">' + (isVideo ? L('1 vídeo', '1 video', '1 video') : L('1 foto', '1 photo', '1 foto')) + ' · ' + usd(price) + ' · 30 dias</span></div></div>';
-        var until = isFree ? '<div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div>'
+        var access = freeOk || subActive || unlockMap[p.id];
+        var cappedFree = isFree && !freeOk; // foto "grátis" além das 3 → travada pra assinante
+        var lockLabel = cappedFree ? L('assinantes', 'subscribers', 'suscriptores') : ((isVideo ? L('1 vídeo', '1 video', '1 video') : L('1 foto', '1 photo', '1 foto')) + ' · ' + usd(price) + ' · 30 dias');
+        var media = access ? '<div class="rc-media" id="rc-' + p.id + '"></div>' : '<div class="rc-media locked"><div class="rc-locked">' + (isVideo ? I.video : I.lock) + '<span class="price">' + lockLabel + '</span></div></div>';
+        var until = freeOk ? '<div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div>'
           : (unlockMap[p.id] ? '<div class="rc-until">Acesso até ' + fmtDate(unlockMap[p.id]) + '</div>' : (subActive ? '<div class="rc-until">Incluído na assinatura</div>' : ''));
         var foot;
-        if (isFree) foot = '<div class="rc-foot">' + until + ((subActive || !hasSub) ? '' : '<button class="btn btn-primary btn-sm btn-block" data-subscribe="' + creatorKey + '" style="margin-top:0.45rem">' + L("Ver tudo · assine", "See all · subscribe", "Ver todo · suscríbete") + '</button>') + '</div>';
+        if (freeOk) foot = '<div class="rc-foot">' + until + ((subActive || !hasSub) ? '' : '<button class="btn btn-primary btn-sm btn-block" data-subscribe="' + creatorKey + '" style="margin-top:0.45rem">' + L("Ver tudo · assine", "See all · subscribe", "Ver todo · suscríbete") + '</button>') + '</div>';
         else if (access) foot = '<div class="rc-foot">' + until + '</div>';
+        else if (cappedFree) foot = '<div class="rc-foot"><button class="btn btn-primary btn-sm btn-block" data-subscribe="' + creatorKey + '">' + L("Assine pra ver", "Subscribe to see", "Suscríbete para ver") + '</button></div>';
         else foot = '<div class="rc-foot"><button class="btn btn-primary btn-sm btn-block" data-unlock="' + p.id + '" data-price="' + price + '" data-mt="' + (isVideo ? 'video' : 'image') + '">' + L('Desbloquear', 'Unlock', 'Desbloquear') + ' ' + (isVideo ? L('1 vídeo', '1 video', '1 video') : L('1 foto', '1 photo', '1 foto')) + ' · ' + usd(price) + ' · 30 dias</button></div>';
         return '<div class="rc">' + media + '<div class="rc-cap">' + escHtml(p.caption || "") + '</div>' + foot + '</div>';
       }).join("") + '</div>' + cta;
-      pr.data.forEach(function (p) { if (p.is_free) showFree(p); else if (subActive || unlockMap[p.id]) showUnlocked(p); });
+      pr.data.forEach(function (p) { if (freeOkSet[p.id]) showFree(p); else if (subActive || unlockMap[p.id]) showUnlocked(p); });
       b.querySelectorAll("[data-unlock]").forEach(function (btn) {
         btn.onclick = function () {
           var id = +btn.getAttribute("data-unlock"), price = btn.getAttribute("data-price"), mt = btn.getAttribute("data-mt");
@@ -6253,15 +6260,17 @@ fbq('track', 'PageView');
     } else if (pixsub) {
       openPixSub(pixsub.getAttribute("data-pixsub"), parseInt(pixsub.getAttribute("data-months") || "1", 10));
     } else if (liveOpen) {
-      if (needLogin()) return;
-      openLiveApp(liveOpen.getAttribute("data-live"));
+      var _lk = liveOpen.getAttribute("data-live");
+      if (!requireSub(_lk)) return;
+      openLiveApp(_lk);
     } else if (callOpen) {
-      if (needLogin()) return;
-      openCallApp(callOpen.getAttribute("data-call"));
+      var _ck = callOpen.getAttribute("data-call");
+      if (!requireSub(_ck)) return;
+      openCallApp(_ck);
     } else if (chatOpen) {
       var _coid = chatOpen.getAttribute("data-chat-open");
-      if (AI_PERSONAS[_coid]) { openAiChat(_coid); } // chat de convidado: cria sessao anonima sozinho
-      else { if (needLogin()) return; openChatThread(_coid); }
+      if (AI_PERSONAS[_coid]) { openAiChat(_coid); } // chat de IA (persona): funil próprio
+      else { if (!requireSub(_coid)) return; openChatThread(_coid); } // modelo real: chat só pra assinante
     } else if (gift) {
       claimGift(gift.getAttribute("data-gift"));
     } else if (story) {
