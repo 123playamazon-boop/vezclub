@@ -109,7 +109,8 @@ a{color:inherit}
 (function(){
   var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
   var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
-  var sb=null; try{ sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false}}); }catch(e){}
+  var FN="https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/";
+  var sb=null; try{ sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}}); }catch(e){}
   var app=document.getElementById("app");
   var BRL=function(c){return "R$ "+(((c||0)/100).toFixed(2)).replace(".",",");};
   function qs(k){try{return new URL(location.href).searchParams.get(k)||"";}catch(e){return"";}}
@@ -190,10 +191,149 @@ a{color:inherit}
     });
   }
 
-  function goSub(m,plan){
-    // leva pro checkout da assinatura (SyncPay Planos) — a integração entra aqui
-    var u="/checkout.html?type=sub&creator="+encodeURIComponent(m.key)+"&months="+(plan?plan.months:1);
-    location.href=u;
+  // ---------- subscribe sheet ----------
+  var CTX=null, pollT=null, SHEET=null;
+  function injectSheetCss(){
+    if(document.getElementById('sheetcss')) return;
+    var s=document.createElement('style'); s.id='sheetcss';
+    s.textContent=
+      '#sheet{position:fixed;inset:0;z-index:9998;display:none;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.72)}'+
+      '#sheet.on{display:flex}'+
+      '#sheet .card{width:100%;max-width:520px;background:var(--card2);border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid var(--line);padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}'+
+      '#sheet h3{margin:2px 0 2px;font-size:18px}'+
+      '#sheet .sub{color:var(--muted);font-size:13px;margin:0 0 16px}'+
+      '#sheet label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}'+
+      '#sheet input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:#0e0c14;color:var(--tx);font-size:16px}'+
+      '#sheet .err{color:#ff7a90;font-size:13px;margin-top:10px;display:none}'+
+      '#sheet .x{float:right;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}'+
+      '#sheet .pane{display:none} #sheet .pane.on{display:block}'+
+      '#sheet .pixbox{background:#0e0c14;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;word-break:break-all;font-size:12px;color:#d8d2e6;max-height:120px;overflow:auto}'+
+      '#sheet .ok{text-align:center;padding:14px 0}'+
+      '#sheet .ok .big{font-size:42px}'+
+      '#sheet .muted2{color:var(--muted);font-size:12px;margin-top:12px;text-align:center}'+
+      '#sheet .btn{margin-top:16px}';
+    document.head.appendChild(s);
+  }
+  function buildSheet(){
+    if(SHEET) return SHEET;
+    injectSheetCss();
+    var d=document.createElement('div'); d.id='sheet';
+    d.innerHTML=
+      '<div class="card">'+
+        '<span class="x" data-close>×</span>'+
+        '<h3 id="sh-title">Assinar</h3>'+
+        '<p class="sub" id="sh-sub"></p>'+
+        // pane auth
+        '<div class="pane" id="pane-auth">'+
+          '<label>Seu e-mail</label><input id="in-email" type="email" inputmode="email" autocomplete="email" placeholder="voce@email.com">'+
+          '<label>Senha de acesso</label><input id="in-pass" type="password" autocomplete="current-password" placeholder="mínimo 6 caracteres">'+
+          '<div class="err" id="err-auth"></div>'+
+          '<button class="btn" id="btn-auth">Continuar</button>'+
+          '<p class="muted2">Você cria sua conta na hora. Serve pra voltar e ver seu conteúdo em qualquer celular.</p>'+
+        '</div>'+
+        // pane details
+        '<div class="pane" id="pane-det">'+
+          '<label>Seu nome completo</label><input id="in-name" type="text" autocomplete="name" placeholder="Nome e sobrenome">'+
+          '<label>CPF</label><input id="in-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00">'+
+          '<div class="err" id="err-det"></div>'+
+          '<button class="btn" id="btn-pix">Gerar Pix</button>'+
+          '<p class="muted2">O CPF é exigido pelo provedor de pagamento (SyncPay).</p>'+
+        '</div>'+
+        // pane pix
+        '<div class="pane" id="pane-pix">'+
+          '<p class="sub" id="pix-amt" style="margin-bottom:8px"></p>'+
+          '<div style="font-size:13px;color:var(--muted)">Copie o código Pix e pague no app do seu banco:</div>'+
+          '<div class="pixbox" id="pix-code"></div>'+
+          '<button class="btn" id="btn-copy">Copiar código Pix</button>'+
+          '<button class="btn sec" id="btn-paid" style="margin-top:10px">Já paguei — liberar acesso</button>'+
+          '<p class="muted2" id="pix-status">Assim que o pagamento cair, seu acesso libera automaticamente.</p>'+
+        '</div>'+
+        // pane ok
+        '<div class="pane" id="pane-ok">'+
+          '<div class="ok"><div class="big">✅</div><h3>Acesso liberado!</h3><p class="sub">Sua assinatura está ativa. Aproveite 😈</p></div>'+
+          '<button class="btn" id="btn-done">Ver o conteúdo</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(d);
+    SHEET=d;
+    d.querySelector('[data-close]').onclick=closeSheet;
+    d.addEventListener('click',function(e){ if(e.target===d) closeSheet(); });
+    d.querySelector('#btn-auth').onclick=doAuth;
+    d.querySelector('#btn-pix').onclick=doEnroll;
+    d.querySelector('#btn-copy').onclick=function(){ var t=d.querySelector('#pix-code').textContent; copyText(t); this.textContent='Copiado ✓'; var self=this; setTimeout(function(){self.textContent='Copiar código Pix';},1600); };
+    d.querySelector('#btn-paid').onclick=function(){ checkActive(true); };
+    d.querySelector('#btn-done').onclick=function(){ closeSheet(); location.reload(); };
+    return d;
+  }
+  function showPane(id){ ['auth','det','pix','ok'].forEach(function(p){ var el=SHEET.querySelector('#pane-'+p); if(el) el.classList.toggle('on', p===id); }); }
+  function setErr(id,msg){ var e=SHEET.querySelector('#'+id); if(!e) return; e.textContent=msg||''; e.style.display=msg?'block':'none'; }
+  function closeSheet(){ if(pollT){clearInterval(pollT);pollT=null;} if(SHEET) SHEET.classList.remove('on'); }
+  function copyText(t){ try{ navigator.clipboard.writeText(t); }catch(e){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} ta.remove(); } }
+
+  async function sessionToken(){ try{ var r=await sb.auth.getSession(); return r.data.session? r.data.session.access_token : null; }catch(e){ return null; } }
+
+  async function goSub(m,plan){
+    CTX={ m:m, plan:plan||(m.plans&&m.plans[0]), key:m.key, months:(plan&&plan.months)||1 };
+    if(m.key==='demo'){ alert('Esse é um perfil de demonstração. Com uma modelo real a assinatura fica ativa.'); return; }
+    buildSheet();
+    SHEET.querySelector('#sh-title').textContent='Assinar '+(m.display_name||'');
+    SHEET.querySelector('#sh-sub').textContent=(CTX.months===1?'1 mês':CTX.months+' meses')+' · '+BRL(CTX.plan?CTX.plan.price_cents:0);
+    setErr('err-auth',''); setErr('err-det','');
+    var tok=await sessionToken();
+    showPane(tok? 'det':'auth');
+    SHEET.classList.add('on');
+  }
+
+  async function doAuth(){
+    var email=SHEET.querySelector('#in-email').value.trim().toLowerCase();
+    var pass=SHEET.querySelector('#in-pass').value;
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ setErr('err-auth','E-mail inválido.'); return; }
+    if(pass.length<6){ setErr('err-auth','A senha precisa ter ao menos 6 caracteres.'); return; }
+    setErr('err-auth',''); var b=SHEET.querySelector('#btn-auth'); b.textContent='Entrando…'; b.disabled=true;
+    try{
+      var r=await sb.auth.signInWithPassword({email:email,password:pass});
+      if(r.error){
+        // tenta criar conta
+        var cr=await fetch(FN+'auth_signup',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:email,password:pass})});
+        var cj=await cr.json().catch(function(){return{};});
+        if(!cr.ok && !cj.ok){ setErr('err-auth', cj.error==='weak_password'?'Senha muito curta.':'Não consegui criar a conta. Confira o e-mail.'); b.textContent='Continuar'; b.disabled=false; return; }
+        var r2=await sb.auth.signInWithPassword({email:email,password:pass});
+        if(r2.error){ setErr('err-auth','Esse e-mail já tem conta com outra senha. Tente a senha certa.'); b.textContent='Continuar'; b.disabled=false; return; }
+      }
+      b.textContent='Continuar'; b.disabled=false;
+      showPane('det');
+    }catch(e){ setErr('err-auth','Erro de conexão. Tente de novo.'); b.textContent='Continuar'; b.disabled=false; }
+  }
+
+  async function doEnroll(){
+    var name=SHEET.querySelector('#in-name').value.trim();
+    var cpf=SHEET.querySelector('#in-cpf').value.replace(/\D/g,'');
+    if(name.length<3){ setErr('err-det','Digite seu nome completo.'); return; }
+    if(cpf.length!==11){ setErr('err-det','CPF inválido.'); return; }
+    setErr('err-det',''); var b=SHEET.querySelector('#btn-pix'); b.textContent='Gerando…'; b.disabled=true;
+    try{
+      var tok=await sessionToken();
+      if(!tok){ showPane('auth'); b.textContent='Gerar Pix'; b.disabled=false; return; }
+      var r=await fetch(FN+'sub_enroll',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify({creator_key:CTX.key,months:String(CTX.months),name:name,document:cpf})});
+      var j=await r.json().catch(function(){return{};});
+      if(!r.ok || !j.pix_code){ setErr('err-det', j.error==='bad_document'?'CPF inválido.':'Não consegui gerar o Pix agora. Tente de novo.'); b.textContent='Gerar Pix'; b.disabled=false; return; }
+      b.textContent='Gerar Pix'; b.disabled=false;
+      SHEET.querySelector('#pix-amt').textContent=BRL(j.amount_cents)+' · '+(CTX.months===1?'renova todo mês':'renova a cada '+CTX.months+' meses');
+      SHEET.querySelector('#pix-code').textContent=j.pix_code;
+      showPane('pix');
+      if(pollT) clearInterval(pollT);
+      pollT=setInterval(function(){ checkActive(false); }, 5000);
+    }catch(e){ setErr('err-det','Erro de conexão. Tente de novo.'); b.textContent='Gerar Pix'; b.disabled=false; }
+  }
+
+  async function checkActive(manual){
+    try{
+      var tok=await sessionToken(); if(!tok) return;
+      var r=await fetch(FN+'sub_check',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify({creator_key:CTX.key})});
+      var j=await r.json().catch(function(){return{};});
+      if(j.active){ if(pollT){clearInterval(pollT);pollT=null;} showPane('ok'); }
+      else if(manual){ var s=SHEET.querySelector('#pix-status'); if(s) s.textContent='Ainda não identifiquei o pagamento. Se já pagou, aguarde alguns segundos e toque de novo.'; }
+    }catch(e){}
   }
 
   // tenta carregar do Supabase; se não houver dados/políticas, usa demo
