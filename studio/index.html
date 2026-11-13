@@ -43,14 +43,21 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
   <div class="brand">Vezclub <span class="dot">Studio</span></div>
   <p class="muted" style="margin-top:0;font-size:13px">Painel da modelo — poste seu conteúdo e acompanhe seus ganhos.</p>
 
-  <!-- LOGIN -->
+  <!-- LOGIN / SIGNUP -->
   <div id="login" class="card hide">
-    <h3 style="margin:2px 0 2px">Entrar</h3>
-    <p class="muted" style="margin:0 0 6px;font-size:13px">Use o e-mail da sua conta de modelo.</p>
+    <div class="seg" id="auth-seg" style="margin:2px 0 14px">
+      <button data-mode="login" class="on">Entrar</button>
+      <button data-mode="signup">Criar conta</button>
+    </div>
+    <div id="signup-fields" class="hide">
+      <label>Seu nome artístico</label><input id="s-name" type="text" placeholder="Ex: Mia">
+      <label>@ do seu perfil (vira seu link)</label><input id="s-handle" type="text" placeholder="miaprivado" autocapitalize="none">
+    </div>
     <label>E-mail</label><input id="l-email" type="email" autocomplete="email">
-    <label>Senha</label><input id="l-pass" type="password" autocomplete="current-password">
+    <label>Senha <span class="muted" id="pw-hint" style="font-size:11px"></span></label><input id="l-pass" type="password" autocomplete="current-password">
     <div class="err" id="l-err"></div>
     <button class="btn" id="l-btn" style="margin-top:14px">Entrar</button>
+    <p class="muted" id="auth-hint" style="font-size:12px;margin-top:10px;text-align:center"></p>
   </div>
 
   <!-- NO CREATOR -->
@@ -153,12 +160,43 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     b.onclick=function(){ isFree=+b.getAttribute('data-free'); Array.prototype.forEach.call($('seg-type').children,function(x){x.classList.remove('on');}); b.classList.add('on'); $('price-wrap').style.display=isFree?'none':'block'; };
   });
 
+  var authMode='login';
+  function renderMode(){
+    var su=authMode==='signup';
+    $('signup-fields').classList.toggle('hide',!su);
+    $('l-btn').textContent=su?'Criar minha conta':'Entrar';
+    $('pw-hint').textContent=su?'(mín. 8 caracteres)':'';
+    $('auth-hint').textContent=su?'Você vira produtora de conteúdo e administra tudo pelo seu painel.':'';
+    Array.prototype.forEach.call($('auth-seg').children,function(b){ b.classList.toggle('on', b.getAttribute('data-mode')===authMode); });
+    err('l-err','');
+  }
+  Array.prototype.forEach.call($('auth-seg').children,function(b){ b.onclick=function(){ authMode=b.getAttribute('data-mode'); renderMode(); }; });
+  renderMode();
+
   $('l-btn').onclick=async function(){
     var email=$('l-email').value.trim().toLowerCase(), pass=$('l-pass').value;
     if(!email||!pass){ err('l-err','Preencha e-mail e senha.'); return; }
-    err('l-err',''); this.disabled=true; this.textContent='Entrando…';
+    err('l-err',''); var btn=this; btn.disabled=true;
+    if(authMode==='signup'){
+      var name=$('s-name').value.trim(), handle=$('s-handle').value.trim().replace(/^@/,'');
+      if(name.length<2){ err('l-err','Digite seu nome artístico.'); btn.disabled=false; return; }
+      if(handle.length<3){ err('l-err','Escolha um @ com pelo menos 3 letras.'); btn.disabled=false; return; }
+      if(pass.length<8){ err('l-err','A senha precisa ter ao menos 8 caracteres.'); btn.disabled=false; return; }
+      btn.textContent='Criando…';
+      var cr=await fetch(FN+'creator_signup',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:email,password:pass,display_name:name,handle:handle})});
+      var cj=await cr.json().catch(function(){return{};});
+      if(!cr.ok && !cj.ok){
+        var m={handle_taken:'Esse @ já está em uso. Escolha outro.',email_taken:'Esse e-mail já tem conta. Toque em "Entrar".',weak_password:'Senha muito fácil ou curta. Escolha uma mais forte.',bad_email:'E-mail inválido.',bad_handle:'@ inválido.'}[cj.error]||'Não consegui criar a conta. Tente de novo.';
+        err('l-err',m); btn.disabled=false; btn.textContent='Criar minha conta'; return;
+      }
+      var r2=await sb.auth.signInWithPassword({email:email,password:pass});
+      btn.disabled=false; btn.textContent='Criar minha conta';
+      if(r2.error){ err('l-err','Conta criada! Agora toque em "Entrar" com seu e-mail e senha.'); authMode='login'; renderMode(); return; }
+      boot(); return;
+    }
+    btn.textContent='Entrando…';
     var r=await sb.auth.signInWithPassword({email:email,password:pass});
-    this.disabled=false; this.textContent='Entrar';
+    btn.disabled=false; btn.textContent='Entrar';
     if(r.error){ err('l-err','E-mail ou senha incorretos.'); return; }
     boot();
   };
