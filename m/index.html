@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Vezclub</title>
+<style>
+:root{
+  --bg:#0b0b0f;--card:#15131b;--card2:#1b1824;--line:#241f2e;--muted:#9a93a8;
+  --tx:#f4f1f8;--ac:#c026d3;--ac2:#7c3aed;--ok:#2ecc71;--lock:#0f0d15;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:0 0 96px}
+img{display:block}
+a{color:inherit}
+.btn{display:block;width:100%;text-align:center;padding:15px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;color:#fff;background:linear-gradient(90deg,var(--ac),var(--ac2));box-shadow:0 8px 28px rgba(124,58,237,.35)}
+.btn.sec{background:var(--card2);box-shadow:none;border:1px solid var(--line)}
+.muted{color:var(--muted)}
+
+/* +18 gate */
+#gate{position:fixed;inset:0;z-index:9999;background:rgba(8,6,12,.98);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gate h1{font-size:22px;margin:0 0 6px}
+#gate p{color:var(--muted);max-width:340px;margin:0 0 22px;line-height:1.5}
+#gate .row{display:flex;gap:10px;max-width:340px;width:100%}
+#gate .btn{flex:1}
+
+/* hero */
+.hero{position:relative}
+.cover{width:100%;aspect-ratio:3/1.35;object-fit:cover;background:var(--card)}
+.cover-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,15,0) 40%,rgba(11,11,15,.85))}
+.live{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.live .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:p 1.6s infinite}
+@keyframes p{50%{opacity:.35}}
+.plus18{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.counts{position:absolute;right:12px;bottom:12px;display:flex;gap:14px;font-size:13px}
+.counts b{font-weight:800}
+.counts span{color:#e9e5f0}
+
+.head{padding:0 16px;margin-top:-34px;position:relative}
+.avatar{width:84px;height:84px;border-radius:50%;border:3px solid var(--bg);object-fit:cover;background:var(--card)}
+.name{display:flex;align-items:center;gap:7px;margin-top:8px}
+.name h1{font-size:22px;margin:0}
+.verif{color:#36a1ff;font-size:18px}
+.handle{color:var(--muted);font-size:14px;margin-top:2px}
+.hook{margin:12px 0 0;line-height:1.5;font-size:15px}
+
+.sect{padding:18px 16px 0}
+.sect h2{font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+
+/* plans */
+.plan{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s}
+.plan:hover,.plan.best{border-color:var(--ac)}
+.plan .l{display:flex;flex-direction:column}
+.plan .t{font-weight:700}
+.plan .s{color:var(--muted);font-size:13px;margin-top:2px}
+.plan .off{display:inline-block;margin-left:8px;font-size:11px;font-weight:800;color:#ffd0f6;background:rgba(192,38,211,.18);padding:2px 8px;border-radius:999px;vertical-align:middle}
+.plan .p{font-weight:800;font-size:18px;white-space:nowrap}
+
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px 0}
+.actions .btn{font-size:15px;padding:13px}
+
+/* tabs + feed */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:20px 16px 0}
+.tab{flex:1;text-align:center;padding:12px 0;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}
+.tab.on{color:var(--tx);border-bottom-color:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px 16px 0}
+.cell{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--card)}
+.cell img{width:100%;height:100%;object-fit:cover}
+.cell.lock img{filter:blur(18px) brightness(.5);transform:scale(1.1)}
+.cell .lk{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff}
+.cell .lk .ic{font-size:22px}
+.cell .lk .pr{font-size:12px;font-weight:800;background:rgba(0,0,0,.45);padding:3px 9px;border-radius:999px}
+.cell .vid{position:absolute;top:7px;right:7px;font-size:13px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+
+/* sticky */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:linear-gradient(180deg,rgba(11,11,15,0),rgba(11,11,15,.97) 30%);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.bar .in{max-width:720px;margin:0 auto}
+.bar .btn{display:flex;align-items:center;justify-content:center;gap:8px}
+.state{text-align:center;padding:70px 20px;color:var(--muted)}
+.spin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:var(--ac);margin:0 auto 16px;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div style="font-size:40px">🔞</div>
+  <h1>Conteúdo adulto (+18)</h1>
+  <p>Este perfil contém conteúdo adulto. Ao entrar, você confirma que tem <b>18 anos ou mais</b> e concorda com os termos.</p>
+  <div class="row">
+    <button class="btn sec" onclick="location.href='https://www.google.com'">Sair</button>
+    <button class="btn" id="gateok">Tenho 18+ · Entrar</button>
+  </div>
+</div>
+
+<div id="app" class="wrap">
+  <div class="state"><div class="spin"></div><p>carregando perfil…</p></div>
+</div>
+
+<div class="bar" id="bar" style="display:none">
+  <div class="in"><button class="btn" id="subBtn">🔓 Assinar — <span id="barPrice"></span></button></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
+  var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+  var sb=null; try{ sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false}}); }catch(e){}
+  var app=document.getElementById("app");
+  var BRL=function(c){return "R$ "+(((c||0)/100).toFixed(2)).replace(".",",");};
+  function qs(k){try{return new URL(location.href).searchParams.get(k)||"";}catch(e){return"";}}
+  function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c];});}
+
+  // +18 gate
+  try{ if(localStorage.getItem("vez_18")==="1"){ document.getElementById("gate").style.display="none"; } }catch(e){}
+  document.getElementById("gateok").onclick=function(){ try{localStorage.setItem("vez_18","1");}catch(e){} document.getElementById("gate").style.display="none"; };
+
+  // ---- demo (fallback enquanto não há dados/políticas) ----
+  var DEMO={
+    key:"demo", handle:"miaprivado", display_name:"Mia", verified:true, online:true,
+    hook:"tô sozinha e com vontade 😈 meu conteúdo sem censura é só aqui, amor",
+    avatar:"https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/ai_nsfw/g1.webp",
+    cover:"https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/ai_nsfw/g2.webp",
+    photos:99, videos:166, likes:"2.9K",
+    plans:[
+      {months:1,price_cents:1990,label:"1 mês"},
+      {months:3,price_cents:4190,label:"3 meses",off:"30% OFF"},
+      {months:6,price_cents:5990,label:"6 meses",off:"50% OFF"}
+    ],
+    posts:[1,2,3,4,5,6,7,8,9].map(function(i){return {id:i,is_free:i<=1,price_cents:i%3===0?1990:0,media_type:i%4===0?"video":"photo",media:"https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/ai_nsfw/g"+((i%8)+1)+".webp"};})
+  };
+
+  function render(m){
+    document.getElementById("bar").style.display="block";
+    var minPlan=m.plans[0]||{price_cents:1990};
+    document.getElementById("barPrice").textContent=BRL(minPlan.price_cents)+(minPlan.months>1?"":"/mês");
+    document.getElementById("subBtn").onclick=function(){ goSub(m, m.plans[0]); };
+
+    var plansHtml=m.plans.map(function(p,i){
+      return '<div class="plan'+(i===m.plans.length-1?" best":"")+'" data-i="'+i+'">'+
+        '<div class="l"><div class="t">'+esc(p.label)+(p.off?'<span class="off">'+esc(p.off)+'</span>':'')+'</div>'+
+        '<div class="s">'+(p.months>1?(BRL(Math.round(p.price_cents/p.months))+"/mês · cobra "+BRL(p.price_cents)):"renova todo mês")+'</div></div>'+
+        '<div class="p">'+BRL(p.price_cents)+'</div></div>';
+    }).join("");
+
+    var feed=m.posts.map(function(p){
+      var locked=!p.is_free;
+      var vid=p.media_type==="video"?'<div class="vid">▶</div>':'';
+      if(locked){
+        return '<div class="cell lock" data-pid="'+p.id+'"><img src="'+esc(p.media)+'" alt="">'+vid+
+          '<div class="lk"><div class="ic">🔒</div>'+(p.price_cents?'<div class="pr">'+BRL(p.price_cents)+'</div>':'<div class="pr">assinantes</div>')+'</div></div>';
+      }
+      return '<div class="cell"><img src="'+esc(p.media)+'" alt="">'+vid+'</div>';
+    }).join("");
+
+    app.innerHTML=
+      '<div class="hero">'+
+        '<img class="cover" src="'+esc(m.cover)+'" alt="">'+
+        '<div class="cover-grad"></div>'+
+        (m.online?'<div class="live"><span class="dot"></span> ONLINE AGORA</div>':'')+
+        '<div class="plus18">+18</div>'+
+        '<div class="counts"><span><b>'+m.photos+'</b> fotos</span><span><b>'+m.videos+'</b> vídeos</span><span>♡ <b>'+m.likes+'</b></span></div>'+
+      '</div>'+
+      '<div class="head">'+
+        '<img class="avatar" src="'+esc(m.avatar)+'" alt="">'+
+        '<div class="name"><h1>'+esc(m.display_name)+'</h1>'+(m.verified?'<span class="verif">✔</span>':'')+'</div>'+
+        '<div class="handle">@'+esc(m.handle)+'</div>'+
+        '<p class="hook">'+esc(m.hook)+'</p>'+
+      '</div>'+
+      '<div class="sect"><h2>Assine e desbloqueie tudo</h2>'+plansHtml+'</div>'+
+      '<div class="actions">'+
+        '<button class="btn sec" id="ppvBtn">💎 Packs avulsos</button>'+
+        '<button class="btn sec" id="tipBtn">🎁 Mandar gorjeta</button>'+
+      '</div>'+
+      '<div class="tabs"><div class="tab on">Publicações</div><div class="tab">Mídia</div></div>'+
+      '<div class="grid">'+feed+'</div>';
+
+    // wire plan rows
+    Array.prototype.forEach.call(document.querySelectorAll(".plan"),function(el){
+      el.onclick=function(){ goSub(m, m.plans[+el.getAttribute("data-i")]); };
+    });
+    document.getElementById("ppvBtn").onclick=function(){ alert("Packs avulsos — em breve no checkout."); };
+    document.getElementById("tipBtn").onclick=function(){ alert("Gorjeta — em breve."); };
+    Array.prototype.forEach.call(document.querySelectorAll(".cell.lock"),function(el){
+      el.onclick=function(){ goSub(m, m.plans[0]); };
+    });
+  }
+
+  function goSub(m,plan){
+    // leva pro checkout da assinatura (SyncPay Planos) — a integração entra aqui
+    var u="/checkout.html?type=sub&creator="+encodeURIComponent(m.key)+"&months="+(plan?plan.months:1);
+    location.href=u;
+  }
+
+  // tenta carregar do Supabase; se não houver dados/políticas, usa demo
+  function load(){
+    var handle=(qs("u")||qs("m")||"").replace(/^@/,"").trim();
+    if(!sb || !handle){ render(DEMO); return; }
+    sb.from("creators").select("*").eq("handle",handle).maybeSingle().then(function(r){
+      var c=r && r.data;
+      if(!c){ render(DEMO); return; }
+      Promise.all([
+        sb.from("plans").select("*").eq("creator_key",c.key).eq("active",true).order("months",{ascending:true}),
+        sb.from("posts").select("id,is_free,price_cents,media_type,media_path").eq("creator_key",c.key).eq("status","published").order("created_at",{ascending:false}).limit(24)
+      ]).then(function(res){
+        var plans=(res[0] && res[0].data)||[];
+        var posts=(res[1] && res[1].data)||[];
+        var base="https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/";
+        render({
+          key:c.key, handle:c.handle, display_name:c.display_name, verified:true, online:c.online,
+          hook:c.hook||"", avatar:base+(c.avatar_path||""), cover:base+(c.cover_path||c.avatar_path||""),
+          photos:"—", videos:"—", likes:"—",
+          plans:plans.length?plans.map(function(p){return {months:p.months,price_cents:p.price_cents,label:p.label||((p.months)+" mês"+(p.months>1?"es":"")),off:(p.months>1?"":"")};}):DEMO.plans,
+          posts:posts.length?posts.map(function(p){return {id:p.id,is_free:p.is_free,price_cents:p.price_cents,media_type:p.media_type,media:base+(p.media_path||"")};}):DEMO.posts
+        });
+      }).catch(function(){ render(DEMO); });
+    }).catch(function(){ render(DEMO); });
+  }
+  load();
+})();
+</script>
+</body>
+</html>
