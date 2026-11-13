@@ -376,6 +376,7 @@ a{color:inherit}
       .then(async function(r){
         var c=r && r.data && r.data[0];
         if(!c){ render(DEMO); return; }
+        if(!c.approved){ app.innerHTML='<div class="state" style="padding:72px 24px;text-align:center;color:var(--muted)">Perfil indisponível.</div>'; var bar0=document.getElementById("bar"); if(bar0) bar0.style.display="none"; return; }
         var base="https://mfxyavlpbofcdiylnnjm.supabase.co/storage/v1/object/public/avatars/";
         var plansR, fd;
         try{ plansR=await sb.from("plans").select("*").eq("creator_key",c.key).eq("active",true).order("months",{ascending:true}); }catch(e){ plansR=null; }

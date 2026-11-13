@@ -67,6 +67,38 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     <button class="btn sec" id="logout2" style="margin-top:12px">Sair</button>
   </div>
 
+  <!-- KYC -->
+  <div id="kyc" class="hide">
+    <div class="card">
+      <h3 style="margin:2px 0 4px">Verificação da conta</h3>
+      <p class="muted" style="margin:0 0 10px;font-size:13px">Pra sua conta ficar ativa e pública, envie seus dados e documento. É seguro e confidencial.</p>
+      <div class="err" id="k-rej" style="display:none;background:#2a1620;border:1px solid #502030;padding:10px;border-radius:8px;color:#ff9bb0"></div>
+      <label>Nome completo (como no documento)</label><input id="k-name" type="text">
+      <label>CPF</label><input id="k-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00">
+      <label>Data de nascimento</label><input id="k-birth" type="date">
+      <label>Telefone (WhatsApp)</label><input id="k-phone" type="text" inputmode="numeric" placeholder="(11) 90000-0000">
+      <label>Endereço completo</label><textarea id="k-addr" rows="2" placeholder="Rua, número, bairro, cidade, UF, CEP"></textarea>
+      <label>Documento — frente (RG ou CNH)</label><input id="k-front" type="file" accept="image/*">
+      <label>Documento — verso (opcional)</label><input id="k-back" type="file" accept="image/*">
+      <label>Selfie segurando o documento</label><input id="k-selfie" type="file" accept="image/*">
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-top:14px"><input id="k-tos" type="checkbox" style="width:auto;margin-top:3px"><span style="font-size:13px">Li e aceito o <a href="/termos/" target="_blank" style="color:var(--ac)">contrato de agenciamento e os termos</a>. Confirmo que tenho <b>18 anos ou mais</b> e que o documento é meu.</span></label>
+      <div id="k-prog" style="height:6px;background:#0e0c14;border-radius:4px;overflow:hidden;margin-top:12px;display:none"><div style="height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .2s"></div></div>
+      <div class="err" id="k-err"></div>
+      <button class="btn" id="k-submit" style="margin-top:12px">Enviar pra análise</button>
+      <button class="btn sec" id="k-logout" style="margin-top:8px">Sair</button>
+    </div>
+  </div>
+
+  <!-- EM ANÁLISE -->
+  <div id="pending" class="hide">
+    <div class="card" style="text-align:center">
+      <div style="font-size:40px">⏳</div>
+      <h3>Conta em análise</h3>
+      <p class="muted">Recebemos seus dados e documento. Assim que aprovarmos, seu perfil fica ativo e você já pode postar e receber. Normalmente em até 24h.</p>
+      <button class="btn sec" id="pending-logout" style="margin-top:12px">Sair</button>
+    </div>
+  </div>
+
   <!-- PANEL -->
   <div id="panel" class="hide">
     <div class="card" id="link-card">
@@ -145,7 +177,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
   var sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
   var $=function(id){return document.getElementById(id);};
   var BRL=function(c){return "R$ "+(((c||0)/100).toFixed(2)).replace(".",",");};
-  var show=function(id){ ['login','nocreator','panel'].forEach(function(p){ $(p).classList.toggle('hide', p!==id); }); };
+  var show=function(id){ ['login','nocreator','panel','kyc','pending'].forEach(function(p){ $(p).classList.toggle('hide', p!==id); }); };
   function err(id,m){ var e=$(id); e.textContent=m||''; e.style.display=m?'block':'none'; }
   async function token(){ try{ var r=await sb.auth.getSession(); return r.data.session?r.data.session.access_token:null; }catch(e){ return null; } }
   async function api(action,extra){
@@ -200,7 +232,36 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     if(r.error){ err('l-err','E-mail ou senha incorretos.'); return; }
     boot();
   };
-  $('logout').onclick=$('logout2').onclick=async function(){ await sb.auth.signOut(); show('login'); };
+  async function doLogout(){ await sb.auth.signOut(); show('login'); }
+  $('logout').onclick=$('logout2').onclick=$('k-logout').onclick=$('pending-logout').onclick=doLogout;
+
+  async function uploadKyc(kind,file){ var ext=(file.name.split('.').pop()||'').toLowerCase(); var uu=await api('kyc_upload_url',{kind:kind,ext:ext}); if(uu.error) return null; var up=await sb.storage.from('kyc').uploadToSignedUrl(uu.path,uu.token,file); if(up.error) return null; return uu.path; }
+  $('k-submit').onclick=async function(){
+    err('k-err','');
+    var name=$('k-name').value.trim(), cpf=$('k-cpf').value.replace(/\D/g,''), birth=$('k-birth').value, phone=$('k-phone').value.replace(/\D/g,''), addr=$('k-addr').value.trim();
+    var front=$('k-front').files[0], back=$('k-back').files[0], selfie=$('k-selfie').files[0];
+    if(name.length<5){ err('k-err','Digite seu nome completo.'); return; }
+    if(cpf.length!==11){ err('k-err','CPF inválido.'); return; }
+    if(!birth){ err('k-err','Informe a data de nascimento.'); return; }
+    if(phone.length<10){ err('k-err','Telefone inválido.'); return; }
+    if(addr.length<10){ err('k-err','Endereço incompleto.'); return; }
+    if(!front){ err('k-err','Envie a frente do documento.'); return; }
+    if(!selfie){ err('k-err','Envie a selfie com o documento.'); return; }
+    if(!$('k-tos').checked){ err('k-err','Você precisa aceitar os termos.'); return; }
+    var btn=this; btn.disabled=true; btn.textContent='Enviando…';
+    var pb=$('k-prog'); pb.style.display='block'; pb.firstElementChild.style.width='20%';
+    try{
+      var pf=await uploadKyc('doc_front',front); pb.firstElementChild.style.width='45%';
+      var ps=await uploadKyc('selfie',selfie); pb.firstElementChild.style.width='65%';
+      var pbk=back? await uploadKyc('doc_back',back):null; pb.firstElementChild.style.width='85%';
+      if(!pf||!ps){ err('k-err','Falha ao enviar as imagens. Tente de novo.'); btn.disabled=false; btn.textContent='Enviar pra análise'; pb.style.display='none'; return; }
+      var r=await api('kyc_submit',{legal_name:name,cpf:cpf,birth_date:birth,phone:phone,address:addr,doc_front:pf,doc_back:pbk,selfie:ps,tos_accept:true});
+      pb.firstElementChild.style.width='100%';
+      btn.disabled=false; btn.textContent='Enviar pra análise';
+      if(r.error){ err('k-err','Não consegui salvar. Confira os dados.'); pb.style.display='none'; return; }
+      show('pending');
+    }catch(e){ err('k-err','Erro. Tente de novo.'); btn.disabled=false; btn.textContent='Enviar pra análise'; pb.style.display='none'; }
+  };
 
   $('u-btn').onclick=async function(){
     var f=$('f-file').files[0];
@@ -281,6 +342,13 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     var me=await api('me',{});
     if(me.error==='auth'){ show('login'); return; }
     if(!me.creator){ show('nocreator'); return; }
+    if(!me.approved){
+      if(me.kyc_status==='submitted'){ show('pending'); return; }
+      if(me.kyc_status==='rejected' && me.reject_reason){ $('k-rej').textContent='Recusado: '+me.reject_reason+' — corrija e reenvie.'; $('k-rej').style.display='block'; } else { $('k-rej').style.display='none'; }
+      // pré-preenche se já houver dados
+      var kg=await api('kyc_get'); if(kg.kyc){ $('k-name').value=kg.kyc.legal_name||''; $('k-phone').value=kg.kyc.phone||''; $('k-addr').value=kg.kyc.address||''; }
+      show('kyc'); return;
+    }
     var gl=$('go-live'); if(gl) gl.href='/live/?c='+encodeURIComponent(me.creator.key);
     var h=(me.creator.handle||me.creator.key).replace(/^@/,'');
     $('my-link').value='vezclub.com/m/?u='+h;
