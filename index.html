@@ -2490,15 +2490,35 @@ fbq('track', 'PageView');
       if (c.hook) hh += '<div class="pf-hook">' + c.hook + '</div>';
       hh += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), L("assinantes", "subscribers", "suscriptores")) + st(nfmt(c.likes), L("curtidas", "likes", "me gusta")) + '</div>';
       if (c.online) hh += '<div class="pf-status"><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + '</div>';
-      // assinatura — preço em destaque, logo no topo
+      // ===== pacotes de assinatura estilo Privacy (oferta em destaque + durações com desconto) =====
       if (c.hasSub !== false) {
-        hh += '<div class="pf-section"><div class="offer"><div class="offer-pad">' +
-          '<div style="font-weight:800;font-size:1.02rem;margin-bottom:.15rem">' + L("Assine e desbloqueie tudo", "Subscribe and unlock everything", "Suscríbete y desbloquea todo") + '</div>' +
-          '<div class="offer-price"><span class="big">' + usd(pm) + '</span><span class="per">/' + L("mês · acesso a todo o conteúdo", "mo · access to all her content", "mes · acceso a todo el contenido") + '</span></div>' +
-          (subbed ? '<button class="btn btn-block btn-good" disabled style="margin-top:.7rem">' + I.check + ' ' + L("Assinatura ativa", "Subscription active", "Suscripción activa") + '</button>'
-                  : '<button class="btn btn-primary btn-block" data-sub="' + c.id + '" style="margin-top:.7rem">' + L("Assinar por ", "Subscribe for ", "Suscríbete por ") + usd(pm) + '/' + L("mês", "mo", "mes") + '</button>') +
-          '<div class="offer-micro" style="margin-top:.5rem">' + I.bolt + ' ' + L("Acesso na hora · cancele quando quiser", "Instant access · cancel anytime", "Acceso al instante · cancela cuando quieras") + '</div>' +
+        var promoPrice = Math.round(pm * 0.5 * 100) / 100;      // 1 mês com 50% off
+        var p3 = Math.round(pm * 3 * 0.9 * 100) / 100;          // 3 meses 10% off
+        var p6 = Math.round(pm * 6 * 0.72 * 100) / 100;         // 6 meses 28% off
+        var pfc1 = c.color1 || "#c026d3", pfc2 = c.color2 || "#7c3aed";
+        // oferta em destaque com contador
+        hh += '<div class="pf-section"><div class="offer" style="background:linear-gradient(135deg,' + pfc1 + ',' + pfc2 + ')"><div class="offer-pad">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">' +
+            '<div style="font-weight:900;font-size:1.05rem">🔥 ' + L("Oferta de hoje", "Today\'s deal", "Oferta de hoy") + '</div>' +
+            '<div style="text-align:right;font-size:.78rem;opacity:.9">' + L("Acaba em", "Ends in", "Termina en") + '<br><b id="promo-timer" style="font-size:1.05rem;font-variant-numeric:tabular-nums">03:00:00</b></div>' +
+          '</div>' +
+          '<p style="margin:.5rem 0 .9rem;font-size:.92rem;line-height:1.4;opacity:.96">"' + L("50% de desconto pra você ver tudo que eu já aprontei por aqui 🔥", "50% off so you can see everything I\'ve got here 🔥", "50% de descuento para que veas todo lo que tengo aquí 🔥") + '"</p>' +
+          (subbed ? '<button class="btn btn-block" style="background:#fff;color:' + pfc1 + '" disabled>' + I.check + ' ' + L("Assinatura ativa", "Subscription active", "Suscripción activa") + '</button>'
+                  : '<button class="btn btn-block" data-subtier="' + c.id + '" data-tierkey="promo" data-amt="' + Math.round(promoPrice * 100) + '" data-title="' + escHtml(L("Assinatura 1 mês", "1-month subscription", "Suscripción 1 mes")) + '" style="background:#fff;color:' + pfc1 + ';font-weight:900">' + L("Assinar por ", "Subscribe for ", "Suscríbete por ") + usd(promoPrice) + ' <span style="opacity:.75;font-weight:700">(50% off)</span></button>') +
+          '<div style="text-align:right;font-size:.82rem;opacity:.85;margin-top:.5rem">' + L("Preço normal", "Original price", "Precio normal") + ' <s>' + usd(pm) + '</s></div>' +
           '</div></div></div>';
+        // lista de assinaturas (durações)
+        if (!subbed) {
+          hh += '<div class="pf-section"><div class="pf-h">' + L("Assinaturas", "Subscriptions", "Suscripciones") + '</div><div class="ladder">';
+          function subDur(title, off, price, tierkey) {
+            return '<button class="ladder-row" data-subtier="' + c.id + '" data-tierkey="' + tierkey + '" data-amt="' + Math.round(price * 100) + '" data-title="' + escHtml(title) + '" style="width:100%;text-align:left;border:0;cursor:pointer;background:var(--card2,#1b1824);color:inherit">' +
+              '<div class="lr-main"><div class="lr-title">' + title + (off ? '<span class="lr-badge">' + off + '</span>' : '') + '</div></div>' +
+              '<div class="lr-price">' + usd(price) + '</div></button>';
+          }
+          hh += subDur(L("3 meses", "3 months", "3 meses"), "10% OFF", p3, "m3");
+          hh += subDur(L("6 meses", "6 months", "6 meses"), "28% OFF", p6, "m6");
+          hh += '</div><p class="muted-note" style="margin-top:.4rem;font-size:.8rem">' + L("Acesso na hora · cancele quando quiser", "Instant access · cancel anytime", "Acceso al instante · cancela cuando quieras") + '</p></div>';
+        }
       }
       // ações reais: mensagem, live, chamada — tudo dentro do perfil
       hh += '<div class="pf-section" style="display:grid;gap:.5rem">';
@@ -2506,8 +2526,13 @@ fbq('track', 'PageView');
       if (c.online) hh += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#ff3b5c,#c026d3);color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
       hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#c026d3,#7c3aed);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       hh += '</div>';
+      // barra de contagem de conteúdo (estilo Privacy: Publicações · Mídia)
+      hh += '<div class="pf-section" style="padding-top:.2rem"><div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden">' +
+        '<div style="padding:13px;text-align:center;border-bottom:2px solid var(--accent,#c026d3);font-weight:800"><span id="pf-cnt-posts">' + (c.posts || 0) + '</span> ' + L("Publicações", "Posts", "Publicaciones") + '</div>' +
+        '<div style="padding:13px;text-align:center;color:var(--muted);font-weight:700"><span id="pf-cnt-media">—</span> ' + L("Mídia", "Media", "Media") + '</div>' +
+      '</div></div>';
       // galeria de fotos (prévias bloqueadas) — dados reais
-      hh += '<div class="pf-section"><div class="pf-h">' + I.photo + ' ' + L("Galeria", "Gallery", "Galería") + ' <span style="font-weight:600;font-size:.8rem;color:var(--faint)">' + L("prévias grátis + desbloqueie", "free previews + unlock", "prévias gratis + desbloquea") + '</span></div><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+      hh += '<div class="pf-section" style="padding-top:.6rem"><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
       hh += '<div id="pf-packs" hidden></div>';
       // pacotes (loja dela, por coins)
       hh += '<div class="pf-section"><div class="pf-h">🛍 ' + L("Pacotes", "Packs", "Paquetes") + ' <span style="font-weight:600;font-size:.8rem;color:var(--faint)">' + L("desbloqueie com coins", "unlock with coins", "desbloquea con coins") + '</span></div><div id="pf-shop"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
@@ -2520,6 +2545,21 @@ fbq('track', 'PageView');
       app.innerHTML = hh;
       try { window.scrollTo(0, 0); } catch (e) {}
       startTicker();
+      // contador da oferta
+      (function () {
+        var el = document.getElementById("promo-timer"); if (!el) return;
+        var end = Date.now() + (3 * 3600 + Math.floor(seedRand(c.id, "promo") * 1800)) * 1000;
+        function tick() { var s = Math.max(0, Math.floor((end - Date.now()) / 1000)); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; el.textContent = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (ss < 10 ? "0" : "") + ss; }
+        tick(); if (window.__promoT) clearInterval(window.__promoT); window.__promoT = setInterval(tick, 1000);
+      })();
+      // contagem real de conteúdo (Publicações · Mídia)
+      if (sb) sb.from("posts").select("media_type", { count: "exact" }).eq("creator_key", c.id).eq("status", "approved").then(function (r) {
+        if (r.error) return; var rows = r.data || []; var total = (r.count != null ? r.count : rows.length);
+        var pe = document.getElementById("pf-cnt-posts"); if (pe) pe.textContent = total;
+        var me = document.getElementById("pf-cnt-media"); if (me) me.textContent = total;
+        var stEl = document.querySelector(".pf-stats"); // atualiza o "posts" do topo com o número real
+        if (stEl) { var firstN = stEl.querySelector(".n"); if (firstN) firstN.textContent = total; }
+      });
       loadBuyerContent(c.id);
       renderProductsInto(document.getElementById("pf-shop"), c.id, '<p class="muted-note">' + L("Ela ainda não postou pacotes 💜", "No packs yet 💜", "Aún no hay paquetes 💜") + '</p>');
       return;
