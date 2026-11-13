@@ -1296,6 +1296,90 @@ fbq('track', 'PageView');
     }, function () { toast("Erro de conexão."); });
   }
 
+  // ===== assinatura real em R$ via Pix (SyncPay) =====
+  function brl(cents) { return "R$ " + (((cents || 0) / 100).toFixed(2)).replace(".", ","); }
+  function loadPlansInto(c) {
+    var box = document.getElementById("pf-plans"); if (!box) return;
+    if (!sb) { box.innerHTML = '<p class="muted-note">' + L("Entre pra assinar.", "Sign in to subscribe.", "Entra para suscribirte.") + '</p>'; return; }
+    if (state.subscribed[c.id]) { box.innerHTML = '<div class="rc-sub on">' + I.check + '<span>' + L("Assinatura ativa · acesso a tudo", "Subscription active · full access", "Suscripción activa · acceso total") + '</span></div>'; return; }
+    var pfc1 = c.color1 || "#c026d3", pfc2 = c.color2 || "#7c3aed";
+    sb.from("plans").select("months,price_cents,label").eq("creator_key", c.id).eq("active", true).order("months", { ascending: true }).then(function (r) {
+      var plans = (r.data || []).filter(function (p) { return p.price_cents > 0; });
+      if (!plans.length) plans = [{ months: 1, price_cents: Math.round(c.subPrice * 100), label: "1 mês" }];
+      var base = plans[0], baseMonthly = base.price_cents / base.months;
+      box.innerHTML = plans.map(function (p) {
+        var perMonth = p.price_cents / p.months;
+        var off = (p.months > 1) ? Math.round((1 - perMonth / baseMonthly) * 100) : 0;
+        var lbl = p.label || (p.months + " " + (p.months > 1 ? L("meses", "months", "meses") : L("mês", "mo", "mes")));
+        var badge = off > 0 ? '<span style="font-weight:800;font-size:.72rem;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:999px;margin-left:6px">-' + off + '%</span>' : '';
+        var sub = p.months > 1 ? ('<div style="font-size:.78rem;opacity:.85;margin-top:2px">' + brl(perMonth) + '/' + L("mês", "mo", "mes") + '</div>') : '';
+        return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;margin-bottom:10px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(90deg,' + pfc1 + ',' + pfc2 + ');color:#fff">' +
+          '<span style="text-align:left"><span style="font-weight:800">' + lbl + '</span>' + badge + sub + '</span>' +
+          '<span style="font-weight:900;font-size:1.05rem">' + brl(p.price_cents) + '</span></button>';
+      }).join("") + '<p class="muted-note" style="margin-top:.3rem;font-size:.8rem">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</p>';
+    }, function () { box.innerHTML = '<p class="muted-note">' + L("Não consegui carregar os planos.", "Couldn't load plans.", "No pude cargar los planes.") + '</p>'; });
+  }
+  function ensurePixCss() {
+    if (document.getElementById("pixcss")) return; var s = document.createElement("style"); s.id = "pixcss";
+    s.textContent = '#pixsub{position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)}#pixsub .sh{width:100%;max-width:520px;background:#15131b;color:#f4f1f8;border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid #241f2e;padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}#pixsub h3{margin:0 0 4px;font-size:1.1rem}#pixsub label{display:block;font-size:.78rem;color:#9a93a8;margin:12px 0 5px}#pixsub input{width:100%;padding:13px;border-radius:12px;border:1px solid #241f2e;background:#0e0c14;color:#f4f1f8;font-size:16px}#pixsub .x{float:right;color:#9a93a8;font-size:22px;cursor:pointer;line-height:1}#pixsub .pbtn{width:100%;margin-top:16px;padding:15px;border:0;border-radius:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#c026d3,#7c3aed);cursor:pointer;font-size:16px}#pixsub .pbox{background:#0e0c14;border:1px solid #241f2e;border-radius:12px;padding:12px;margin-top:10px;word-break:break-all;font-size:12px;max-height:120px;overflow:auto}#pixsub .err{color:#ff7a90;font-size:13px;margin-top:10px;min-height:1px}#pixsub .pane{display:none}#pixsub .pane.on{display:block}';
+    document.head.appendChild(s);
+  }
+  function openPixSub(key, months) {
+    if (needLogin()) return;
+    ensurePixCss();
+    var old = document.getElementById("pixsub"); if (old) old.remove();
+    var ov = document.createElement("div"); ov.id = "pixsub";
+    ov.innerHTML = '<div class="sh">' +
+      '<span class="x" id="px-x">×</span>' +
+      '<h3>' + L("Assinar", "Subscribe", "Suscribir") + '</h3>' +
+      '<div class="pane on" id="px-form">' +
+        '<p style="color:#9a93a8;font-size:.85rem;margin:.2rem 0 0">' + L("Pagamento via Pix. O acesso libera assim que o pagamento cair.", "Pay via Pix. Access unlocks as soon as payment lands.", "Pago vía Pix. El acceso se libera al instante.") + '</p>' +
+        '<label>' + L("Seu nome completo", "Your full name", "Tu nombre completo") + '</label><input id="px-name" placeholder="Nome e sobrenome">' +
+        '<label>CPF</label><input id="px-cpf" inputmode="numeric" placeholder="000.000.000-00">' +
+        '<div class="err" id="px-err"></div>' +
+        '<button class="pbtn" id="px-gen">' + L("Gerar Pix", "Generate Pix", "Generar Pix") + '</button>' +
+      '</div>' +
+      '<div class="pane" id="px-pix">' +
+        '<p id="px-amt" style="font-weight:800;margin:.3rem 0"></p>' +
+        '<div style="font-size:.82rem;color:#9a93a8">' + L("Copie o código e pague no app do seu banco:", "Copy the code and pay in your bank app:", "Copia el código y paga en tu banco:") + '</div>' +
+        '<div class="pbox" id="px-code"></div>' +
+        '<button class="pbtn" id="px-copy">' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button>' +
+        '<p id="px-stat" style="margin-top:12px;color:#9a93a8;font-size:.8rem">' + L("Assim que o pagamento cair, seu acesso libera sozinho.", "As soon as payment lands, access unlocks automatically.", "En cuanto caiga el pago, el acceso se libera solo.") + '</p>' +
+      '</div>' +
+      '<div class="pane" id="px-ok" style="text-align:center">' +
+        '<div style="font-size:42px">✅</div><h3>' + L("Acesso liberado!", "Access unlocked!", "¡Acceso liberado!") + '</h3>' +
+        '<button class="pbtn" id="px-done">' + L("Ver o conteúdo", "See the content", "Ver el contenido") + '</button>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(ov);
+    var pollT = null;
+    function showPane(id) { ["px-form", "px-pix", "px-ok"].forEach(function (p) { var el = ov.querySelector("#" + p); if (el) el.classList.toggle("on", p === id); }); }
+    function close() { if (pollT) { clearInterval(pollT); pollT = null; } ov.remove(); }
+    ov.querySelector("#px-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.querySelector("#px-gen").onclick = function () {
+      var name = (ov.querySelector("#px-name").value || "").trim();
+      var cpf = (ov.querySelector("#px-cpf").value || "").replace(/\D/g, "");
+      var err = ov.querySelector("#px-err");
+      if (name.length < 3) { err.textContent = L("Digite seu nome completo.", "Enter your full name.", "Escribe tu nombre completo."); return; }
+      if (cpf.length !== 11) { err.textContent = L("CPF inválido.", "Invalid CPF.", "CPF inválido."); return; }
+      err.textContent = ""; var b = this; b.textContent = L("Gerando…", "Generating…", "Generando…"); b.disabled = true;
+      sb.functions.invoke("sub_enroll", { body: { creator_key: key, months: String(months), name: name, document: cpf } }).then(function (r) {
+        var j = (r && r.data) || {}; b.textContent = L("Gerar Pix", "Generate Pix", "Generar Pix"); b.disabled = false;
+        if ((r && r.error) || !j.pix_code) { err.textContent = (j.error === "bad_document") ? L("CPF inválido.", "Invalid CPF.", "CPF inválido.") : L("Não consegui gerar o Pix. Tente de novo.", "Could not generate Pix. Try again.", "No pude generar el Pix."); return; }
+        ov.querySelector("#px-amt").textContent = brl(j.amount_cents) + " · " + (String(months) === "1" ? L("renova todo mês", "renews monthly", "renueva cada mes") : L("renova a cada " + months + " meses", "renews every " + months + " months", "renueva cada " + months + " meses"));
+        ov.querySelector("#px-code").textContent = j.pix_code;
+        showPane("px-pix");
+        if (pollT) clearInterval(pollT);
+        pollT = setInterval(function () {
+          sb.functions.invoke("sub_check", { body: { creator_key: key } }).then(function (rr) { var jj = (rr && rr.data) || {}; if (jj.active) { clearInterval(pollT); pollT = null; showPane("px-ok"); state.subscribed[key] = true; } });
+        }, 5000);
+      }, function () { b.textContent = L("Gerar Pix", "Generate Pix", "Generar Pix"); b.disabled = false; err.textContent = L("Erro de conexão.", "Connection error.", "Error de conexión."); });
+    };
+    ov.querySelector("#px-copy").onclick = function () { var t = ov.querySelector("#px-code").textContent; try { navigator.clipboard.writeText(t); } catch (e) {} this.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); };
+    ov.querySelector("#px-done").onclick = function () { close(); render(); };
+  }
+
   function loadCreators(cb) {
     if (!sb) { if (cb) cb(); return; }
     sb.from("creators").select("key,display_name,handle,tag,tag_en,tag_es,sub_price_cents,is_ai,online,hook,hook_en,hook_es,color1,color2,avatar_path,cover_path,has_chat,has_subscription,created_at").then(function (r) {
@@ -2490,35 +2574,9 @@ fbq('track', 'PageView');
       if (c.hook) hh += '<div class="pf-hook">' + c.hook + '</div>';
       hh += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), L("assinantes", "subscribers", "suscriptores")) + st(nfmt(c.likes), L("curtidas", "likes", "me gusta")) + '</div>';
       if (c.online) hh += '<div class="pf-status"><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + '</div>';
-      // ===== pacotes de assinatura estilo Privacy (oferta em destaque + durações com desconto) =====
+      // ===== planos de assinatura (dados reais em R$, pagamento via Pix) =====
       if (c.hasSub !== false) {
-        var promoPrice = Math.round(pm * 0.5 * 100) / 100;      // 1 mês com 50% off
-        var p3 = Math.round(pm * 3 * 0.9 * 100) / 100;          // 3 meses 10% off
-        var p6 = Math.round(pm * 6 * 0.72 * 100) / 100;         // 6 meses 28% off
-        var pfc1 = c.color1 || "#c026d3", pfc2 = c.color2 || "#7c3aed";
-        // oferta em destaque com contador
-        hh += '<div class="pf-section"><div class="offer" style="background:linear-gradient(135deg,' + pfc1 + ',' + pfc2 + ')"><div class="offer-pad">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">' +
-            '<div style="font-weight:900;font-size:1.05rem">🔥 ' + L("Oferta de hoje", "Today\'s deal", "Oferta de hoy") + '</div>' +
-            '<div style="text-align:right;font-size:.78rem;opacity:.9">' + L("Acaba em", "Ends in", "Termina en") + '<br><b id="promo-timer" style="font-size:1.05rem;font-variant-numeric:tabular-nums">03:00:00</b></div>' +
-          '</div>' +
-          '<p style="margin:.5rem 0 .9rem;font-size:.92rem;line-height:1.4;opacity:.96">"' + L("50% de desconto pra você ver tudo que eu já aprontei por aqui 🔥", "50% off so you can see everything I\'ve got here 🔥", "50% de descuento para que veas todo lo que tengo aquí 🔥") + '"</p>' +
-          (subbed ? '<button class="btn btn-block" style="background:#fff;color:' + pfc1 + '" disabled>' + I.check + ' ' + L("Assinatura ativa", "Subscription active", "Suscripción activa") + '</button>'
-                  : '<button class="btn btn-block" data-subtier="' + c.id + '" data-tierkey="promo" data-amt="' + Math.round(promoPrice * 100) + '" data-title="' + escHtml(L("Assinatura 1 mês", "1-month subscription", "Suscripción 1 mes")) + '" style="background:#fff;color:' + pfc1 + ';font-weight:900">' + L("Assinar por ", "Subscribe for ", "Suscríbete por ") + usd(promoPrice) + ' <span style="opacity:.75;font-weight:700">(50% off)</span></button>') +
-          '<div style="text-align:right;font-size:.82rem;opacity:.85;margin-top:.5rem">' + L("Preço normal", "Original price", "Precio normal") + ' <s>' + usd(pm) + '</s></div>' +
-          '</div></div></div>';
-        // lista de assinaturas (durações)
-        if (!subbed) {
-          hh += '<div class="pf-section"><div class="pf-h">' + L("Assinaturas", "Subscriptions", "Suscripciones") + '</div><div class="ladder">';
-          function subDur(title, off, price, tierkey) {
-            return '<button data-subtier="' + c.id + '" data-tierkey="' + tierkey + '" data-amt="' + Math.round(price * 100) + '" data-title="' + escHtml(title) + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;margin-bottom:10px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(90deg,' + pfc1 + ',' + pfc2 + ');color:#fff;font-size:1rem">' +
-              '<span style="font-weight:800">' + title + (off ? ' <span style="font-weight:800;font-size:.72rem;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:999px;vertical-align:middle">' + off + '</span>' : '') + '</span>' +
-              '<span style="font-weight:900">' + usd(price) + '</span></button>';
-          }
-          hh += subDur(L("3 meses", "3 months", "3 meses"), "10% OFF", p3, "m3");
-          hh += subDur(L("6 meses", "6 months", "6 meses"), "28% OFF", p6, "m6");
-          hh += '</div><p class="muted-note" style="margin-top:.4rem;font-size:.8rem">' + L("Acesso na hora · cancele quando quiser", "Instant access · cancel anytime", "Acceso al instante · cancela cuando quieras") + '</p></div>';
-        }
+        hh += '<div class="pf-section"><div class="pf-h">' + L("Assinaturas", "Subscriptions", "Suscripciones") + '</div><div id="pf-plans"><p class="muted-note">' + L("Carregando planos…", "Loading plans…", "Cargando planes…") + '</p></div></div>';
       }
       // ações reais: mensagem, live, chamada — tudo dentro do perfil
       hh += '<div class="pf-section" style="display:grid;gap:.5rem">';
@@ -2540,18 +2598,12 @@ fbq('track', 'PageView');
       if (c.story) hh += '<div class="pf-section"><div class="pf-h">' + L("Sobre mim", "About me", "Sobre mí") + '</div><p class="pf-about">' + c.story + '</p></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
-        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + usd(pm) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Acesso na hora · cancele quando quiser", "Instant access · cancel anytime", "Acceso al instante · cancela cuando quieras") + '</div></div><button class="btn btn-primary" data-sub="' + c.id + '">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
+        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brl(Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
       }
       app.innerHTML = hh;
       try { window.scrollTo(0, 0); } catch (e) {}
       startTicker();
-      // contador da oferta
-      (function () {
-        var el = document.getElementById("promo-timer"); if (!el) return;
-        var end = Date.now() + (3 * 3600 + Math.floor(seedRand(c.id, "promo") * 1800)) * 1000;
-        function tick() { var s = Math.max(0, Math.floor((end - Date.now()) / 1000)); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; el.textContent = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (ss < 10 ? "0" : "") + ss; }
-        tick(); if (window.__promoT) clearInterval(window.__promoT); window.__promoT = setInterval(tick, 1000);
-      })();
+      loadPlansInto(c);
       // contagem real de conteúdo (Publicações · Mídia)
       if (sb) sb.from("posts").select("media_type", { count: "exact" }).eq("creator_key", c.id).eq("status", "approved").then(function (r) {
         if (r.error) return; var rows = r.data || []; var total = (r.count != null ? r.count : rows.length);
@@ -6162,6 +6214,7 @@ fbq('track', 'PageView');
     var chatOpen = e.target.closest("[data-chat-open]");
     var liveOpen = e.target.closest("[data-live]");
     var callOpen = e.target.closest("[data-call]");
+    var pixsub = e.target.closest("[data-pixsub]");
     var gift = e.target.closest("[data-gift]");
     var story = e.target.closest("[data-story]");
     var notif = e.target.closest("[data-notif]");
@@ -6197,6 +6250,8 @@ fbq('track', 'PageView');
     } else if (chatFab) {
       if (needLogin()) return;
       openChatList();
+    } else if (pixsub) {
+      openPixSub(pixsub.getAttribute("data-pixsub"), parseInt(pixsub.getAttribute("data-months") || "1", 10));
     } else if (liveOpen) {
       if (needLogin()) return;
       openLiveApp(liveOpen.getAttribute("data-live"));
