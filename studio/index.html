@@ -76,8 +76,9 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
         <span id="av-pill" style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#2a2335;color:var(--muted)">OFFLINE</span>
       </div>
       <p class="muted" style="font-size:13px;margin:6px 0 10px">Quando você fica <b>disponível</b>, seus assinantes podem te ligar por vídeo e você recebe a chamada aqui.</p>
-      <label>Preço por chamada (R$) — 0 = incluso na assinatura</label>
-      <input id="call-price" type="number" inputmode="numeric" placeholder="0,00" value="0">
+      <label>Coins por minuto (0 = chamadas desligadas)</label>
+      <input id="call-price" type="number" inputmode="numeric" placeholder="ex: 30" value="0">
+      <p class="muted" style="font-size:12px;margin:5px 0 0">O assinante compra coins e gasta por minuto. Você recebe 50% do valor.</p>
       <button class="btn" id="av-toggle" style="margin-top:12px">Ficar disponível</button>
       <div id="incoming" style="margin-top:14px"></div>
     </div>
@@ -187,15 +188,15 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
   var avail=false, incPoll=null;
   async function callApi(action,extra){ var tok=await token(); if(!tok) return {error:'auth'}; var r=await fetch(FN+'call',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify(Object.assign({action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }
   function renderAvail(){ $('av-pill').textContent=avail?'DISPONÍVEL':'OFFLINE'; $('av-pill').style.background=avail?'rgba(46,204,113,.18)':'#2a2335'; $('av-pill').style.color=avail?'#9effc0':'var(--muted)'; $('av-toggle').textContent=avail?'Ficar offline':'Ficar disponível'; $('av-toggle').style.background=avail?'var(--card2)':''; $('av-toggle').style.border=avail?'1px solid var(--line)':''; }
-  $('av-toggle').onclick=async function(){ var price=Math.round(parseFloat(($('call-price').value||'0').replace(',','.'))*100)||0; var r=await callApi('set_availability',{available:!avail,price_cents:price}); if(!r.error){ avail=!!r.available; renderAvail(); } };
+  $('av-toggle').onclick=async function(){ var cpm=parseInt($('call-price').value||'0',10)||0; var r=await callApi('set_availability',{available:!avail,coins_per_min:cpm}); if(!r.error){ avail=!!r.available; renderAvail(); } };
   async function pollIncoming(){
     var r=await callApi('incoming',{}); if(r.error) return;
     if(r.available!==undefined && r.available!==avail){ avail=r.available; renderAvail(); }
-    if(r.price_cents!==undefined && document.activeElement!==$('call-price')){ $('call-price').value=((r.price_cents||0)/100).toFixed(2).replace('.',','); }
+    if(r.coins_per_min!==undefined && document.activeElement!==$('call-price')){ $('call-price').value=(r.coins_per_min||0); }
     var calls=(r.calls)||[];
     $('incoming').innerHTML=calls.map(function(c){
       return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:8px">'+
-        '<div><div style="font-weight:700">📞 '+(c.buyer_name||'Assinante')+'</div><div class="muted" style="font-size:12px">chamando…'+((c.price_cents>0)?' · R$ '+((c.price_cents/100).toFixed(2).replace(".",",")):'')+'</div></div>'+
+        '<div><div style="font-weight:700">📞 '+(c.buyer_name||'Assinante')+'</div><div class="muted" style="font-size:12px">chamando…'+((c.coins_per_min>0)?' · '+c.coins_per_min+' coins/min':'')+'</div></div>'+
         '<div style="display:flex;gap:6px"><button class="btn" style="padding:9px 14px;margin:0" onclick="location.href=\'/call/?id='+c.id+'\'">Atender</button>'+
         '<button class="btn sec" style="padding:9px 12px;margin:0" data-decline="'+c.id+'">✕</button></div></div>';
     }).join('');

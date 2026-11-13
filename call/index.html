@@ -33,7 +33,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 <div class="app">
   <video id="remote" autoplay playsinline class="hide"></video>
   <video id="local" autoplay playsinline muted class="hide"></video>
-  <div class="hud hide" id="hud"><span class="badge"><span class="dot"></span> CHAMADA PRIVADA</span></div>
+  <div class="hud hide" id="hud"><span class="badge"><span class="dot"></span> CHAMADA PRIVADA</span><span class="badge" id="coins-badge" style="margin-left:8px">🪙 <span id="coins-left">—</span></span></div>
 
   <div class="center" id="center">
     <div class="pulse" id="pulse">📞</div>
@@ -65,7 +65,9 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
   async function token(){ try{ var r=await sb.auth.getSession(); return r.data.session?r.data.session.access_token:null; }catch(e){ return null; } }
   async function api(action,extra){ var tok=await token(); if(!tok) return {error:'auth'}; var r=await fetch(FN+'call',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify(Object.assign({action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }
 
-  var room=null, micOn=true, facing="user", poll=null, callId=qs('id');
+  var room=null, micOn=true, facing="user", poll=null, callId=qs('id'), tickTimer=null;
+  async function doTick(){ var r=await api('tick',{call_id:callId}); if(r && r.ended){ if(tickTimer){clearInterval(tickTimer);tickTimer=null;} endUi('Os coins acabaram'); } else if(r && r.balance!=null){ $('coins-left').textContent=r.balance; } }
+  function startTick(){ doTick(); if(tickTimer) clearInterval(tickTimer); tickTimer=setInterval(doTick, 20000); }
   async function join(res){
     if(poll){ clearInterval(poll); poll=null; }
     try{
@@ -78,10 +80,11 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
       var vt=room.localParticipant.getTrackPublication(LK.Track.Source.Camera);
       if(vt&&vt.track){ vt.track.attach($('local')); $('local').classList.remove('hide'); }
       $('hud').classList.remove('hide'); $('ctrl').classList.remove('hide');
+      startTick();
       if(room.numParticipants<=1){ center('Conectado','Esperando a outra pessoa entrar…',null,null,false); } else { $('center').classList.add('hide'); }
     }catch(e){ center('Erro de conexão', String(e&&e.message||e), '/', 'Início', false); }
   }
-  async function endUi(t){ try{ if(room) await room.disconnect(); }catch(e){} await api('end',{call_id:callId}); center(t||'Chamada encerrada','Obrigado 💜','/', 'Início', false); $('ctrl').classList.add('hide'); $('local').classList.add('hide'); $('remote').classList.add('hide'); }
+  async function endUi(t){ if(tickTimer){clearInterval(tickTimer);tickTimer=null;} try{ if(room) await room.disconnect(); }catch(e){} await api('end',{call_id:callId}); center(t||'Chamada encerrada','Obrigado 💜','/', 'Início', false); $('ctrl').classList.add('hide'); $('local').classList.add('hide'); $('remote').classList.add('hide'); }
 
   $('end').onclick=function(){ endUi('Você encerrou'); };
   $('mic').onclick=function(){ if(!room)return; micOn=!micOn; room.localParticipant.setMicrophoneEnabled(micOn); $('mic').textContent=micOn?'🎤 Mudo':'🔇 Ativar'; };
