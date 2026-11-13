@@ -6099,7 +6099,12 @@ fbq('track', 'PageView');
       var id = open.getAttribute("data-open") || open.getAttribute("data-creator");
       // 1 toque: clicar no card de uma persona de IA abre o chat direto. O botao "Ver perfil" (data-open) ainda vai pro perfil.
       if (!open.hasAttribute("data-open") && AI_PERSONAS[id]) { openAiChat(id); }
-      else { state.creatorId = id; state.view = "store"; render(); }
+      else {
+        // modelo REAL (não-IA): abre o perfil real /m/ dela, com live, chat, chamada, coins e assinatura tudo embutido
+        var cReal = CREATORS.find(function (x) { return x.id === id; });
+        if (cReal && !cReal.ai && !AI_PERSONAS[id]) { location.href = "/m/?u=" + encodeURIComponent(id); return; }
+        state.creatorId = id; state.view = "store"; render();
+      }
     } else if (sub) {
       if (needLogin()) return;
       var cid = sub.getAttribute("data-sub");
