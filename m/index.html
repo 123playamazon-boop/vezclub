@@ -107,6 +107,29 @@ a{color:inherit}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
+  // ---- player ao vivo embutido no perfil ----
+  var liveRoom=null;
+  function ensureLiveCss(){
+    if(document.getElementById('livecss')) return;
+    var s=document.createElement('style'); s.id='livecss';
+    s.textContent=
+      '#liveov{position:fixed;inset:0;z-index:10000;background:#000;display:none;flex-direction:column}'+
+      '#liveov.on{display:flex}'+
+      '#liveov video{width:100%;height:100%;object-fit:contain;background:#000}'+
+      '#liveov .lv-top{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:linear-gradient(180deg,rgba(0,0,0,.6),transparent)}'+
+      '#liveov .lv-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.55);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:800;color:#fff}'+
+      '#liveov .lv-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:p 1.6s infinite}'+
+      '#liveov .lv-x{color:#fff;font-size:30px;line-height:1;cursor:pointer;background:rgba(0,0,0,.45);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}'+
+      '#liveov .lv-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;gap:6px}'+
+      '#liveov .lv-center.hide{display:none}'+
+      '#liveov .lv-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:16px 16px calc(18px + env(safe-area-inset-bottom));background:linear-gradient(0deg,rgba(0,0,0,.7),transparent);display:flex;gap:10px}'+
+      '#liveov .lv-bottom .btn{margin:0}';
+    document.head.appendChild(s);
+  }
+  function loadLK(){ return new Promise(function(res,rej){ if(window.LivekitClient) return res(); var sc=document.createElement('script'); sc.src="https://cdn.jsdelivr.net/npm/livekit-client@2.5.7/dist/livekit-client.umd.min.js"; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); }); }
+  function lvMsg(t){ var c=document.getElementById('lv-center'); if(!c) return; c.classList.remove('hide'); var m=document.getElementById('lv-msg'); if(m) m.textContent=t; var sp=c.querySelector('.spin'); if(sp) sp.style.display=t==='' ? 'none':'block'; }
+  function closeLive(){ try{ if(liveRoom) liveRoom.disconnect(); }catch(e){} liveRoom=null; var ov=document.getElementById('liveov'); if(ov) ov.classList.remove('on'); }
+  window.__vezCloseLive=closeLive;
   var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
   var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
   var FN="https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/";
@@ -163,7 +186,7 @@ a{color:inherit}
       '<div class="hero">'+
         '<img class="cover" src="'+esc(m.cover)+'" alt="">'+
         '<div class="cover-grad"></div>'+
-        (m.online?(m.key!=='demo'?'<a class="live" href="/live/?c='+encodeURIComponent(m.key)+'" style="text-decoration:none;color:inherit"><span class="dot"></span> AO VIVO · ENTRAR</a>':'<div class="live"><span class="dot"></span> ONLINE AGORA</div>'):'')+
+        (m.online?(m.key!=='demo'?'<button class="live" id="liveBtn" style="border:0;cursor:pointer;color:inherit"><span class="dot"></span> AO VIVO · ENTRAR</button>':'<div class="live"><span class="dot"></span> ONLINE AGORA</div>'):'')+
         '<div class="plus18">+18</div>'+
         '<div class="counts"><span><b>'+m.photos+'</b> fotos</span><span><b>'+m.videos+'</b> vídeos</span><span>♡ <b>'+m.likes+'</b></span></div>'+
       '</div>'+
@@ -186,6 +209,8 @@ a{color:inherit}
     Array.prototype.forEach.call(document.querySelectorAll(".plan"),function(el){
       el.onclick=function(){ goSub(m, m.plans[+el.getAttribute("data-i")]); };
     });
+    var lvb=document.getElementById("liveBtn");
+    if(lvb) lvb.onclick=function(){ openLive(m); };
     document.getElementById("chatBtn").onclick=function(){ if(m.key==='demo'){ alert('Perfil de demonstração.'); return; } location.href='/dm/?c='+encodeURIComponent(m.key); };
     document.getElementById("tipBtn").onclick=function(){ alert("Gorjeta — em breve."); };
     var cb=document.getElementById("callBtn");
@@ -205,6 +230,46 @@ a{color:inherit}
     Array.prototype.forEach.call(document.querySelectorAll(".cell.lock"),function(el){
       el.onclick=function(){ goSub(m, m.plans[0]); };
     });
+  }
+
+  // ---------- live embutido ----------
+  async function openLive(m){
+    ensureLiveCss();
+    var ov=document.getElementById('liveov');
+    if(!ov){
+      ov=document.createElement('div'); ov.id='liveov';
+      ov.innerHTML='<div class="lv-top"><span class="lv-badge"><span class="dot"></span> AO VIVO</span><span class="lv-x" id="lv-close">×</span></div>'+
+        '<video id="lv-video" autoplay playsinline></video>'+
+        '<div class="lv-center" id="lv-center"><div class="spin"></div><p id="lv-msg">conectando…</p></div>'+
+        '<div class="lv-bottom"><button class="btn" id="lv-call">📞 Chamar pra chat privado</button></div>';
+      document.body.appendChild(ov);
+      ov.querySelector('#lv-close').onclick=closeLive;
+    }
+    ov.classList.add('on'); lvMsg('conectando…');
+    var lc=ov.querySelector('#lv-call');
+    if(lc) lc.onclick=function(){ closeLive(); var cb=document.getElementById('callBtn'); if(cb) cb.click(); else alert('Chamada privada indisponível agora.'); };
+    var tok=await sessionToken();
+    if(!tok){ closeLive(); goSub(m, m.plans&&m.plans[0]); return; }
+    try{ await loadLK(); }catch(e){ lvMsg('Não consegui carregar o vídeo.'); return; }
+    var r,j;
+    try{
+      r=await fetch(FN+'live_token',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify({creator_key:m.key})});
+      j=await r.json();
+    }catch(e){ lvMsg('Erro de conexão.'); return; }
+    if(j.error==='not_subscriber'){ closeLive(); goSub(m, m.plans&&m.plans[0]); return; }
+    if(j.error==='livekit_not_configured'){ lvMsg('O ao vivo está sendo ativado. Volte logo 💜'); return; }
+    if(j.error || !j.token){ lvMsg('Live indisponível agora.'); return; }
+    var LK=window.LivekitClient;
+    try{
+      liveRoom=new LK.Room({adaptiveStream:true});
+      liveRoom.on(LK.RoomEvent.TrackSubscribed,function(track){
+        if(track.kind==='video'){ try{ track.attach(document.getElementById('lv-video')); }catch(e){} var c=document.getElementById('lv-center'); if(c) c.classList.add('hide'); }
+        if(track.kind==='audio'){ try{ track.attach(); }catch(e){} }
+      });
+      liveRoom.on(LK.RoomEvent.Disconnected,function(){ lvMsg('A transmissão terminou.'); });
+      await liveRoom.connect(j.url, j.token, {autoSubscribe:true});
+      if(liveRoom.numParticipants<=1){ lvMsg('Aguardando a modelo começar… 💜'); }
+    }catch(e){ lvMsg('Não consegui entrar na live.'); }
   }
 
   // ---------- subscribe sheet ----------
