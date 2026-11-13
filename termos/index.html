@@ -3,50 +3,175 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vezclub — Termos</title>
+<title>Vezclub — Contrato de Agenciamento</title>
 <style>
-:root{--bg:#0b0b0f;--card:#15131b;--line:#241f2e;--muted:#9a93a8;--tx:#f4f1f8;--ac:#c026d3}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6}
-.wrap{max-width:720px;margin:0 auto;padding:24px 18px 60px}
-h1{font-size:22px}h2{font-size:16px;margin-top:26px;color:#fff}
-p,li{color:#d7d2e0;font-size:15px}.muted{color:var(--muted)}
-a{color:var(--ac)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+:root{--bg:#0b0b0f;--card:#15131b;--card2:#1b1824;--line:#241f2e;--muted:#9a93a8;--tx:#f4f1f8;--ac:#c026d3;--ac2:#7c3aed;--ok:#2ecc71}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.65}
+.wrap{max-width:760px;margin:0 auto;padding:22px 18px 70px}
+h1{font-size:21px;line-height:1.35;margin:4px 0 6px}
+h2{font-size:16px;margin-top:30px;color:#fff;border-top:1px solid var(--line);padding-top:18px}
+h3{font-size:14px;margin-top:22px;color:var(--ac)}
+p,li{color:#d7d2e0;font-size:14.5px}
+li{margin:5px 0}
+.muted{color:var(--muted)}
+strong{color:#fff}
+.fill{color:var(--ac);font-weight:700}
+.fill.done{color:var(--ok);background:rgba(46,204,113,.08);padding:1px 5px;border-radius:5px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--card2);color:#fff}
+.sigbar{position:sticky;top:0;z-index:5;background:linear-gradient(90deg,rgba(192,38,211,.16),rgba(124,58,237,.16));border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;backdrop-filter:blur(6px)}
+.sigbar b{color:#fff}
+.sigbar .ok{color:var(--ok);font-weight:800}
+.note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:16px 0}
+.back{display:inline-block;margin-bottom:8px;color:var(--ac);text-decoration:none;font-weight:700}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Termos de Uso e Contrato de Agenciamento</h1>
-  <p class="muted">Vezclub — plataforma de conteúdo adulto. Última atualização: 2026.</p>
-  <p>Ao criar uma conta de produtora e marcar o aceite, você concorda com os termos abaixo. Este resumo acompanha o <b>Contrato de Agenciamento</b> completo, que prevalece em caso de dúvida.</p>
-
-  <div class="card">
-    <h2>1. Elegibilidade</h2>
-    <p>Você declara ter <b>18 anos ou mais</b>, ser plenamente capaz e que o documento enviado é seu e verdadeiro. Contas são ativadas somente após verificação de identidade (KYC).</p>
-
-    <h2>2. Consentimento e livre vontade</h2>
-    <p>A produção e divulgação do seu conteúdo é feita com o seu <b>livre e expresso consentimento</b>. Não há aliciamento, exploração ou qualquer forma de coação — você lê, concorda e assina por vontade própria.</p>
-
-    <h2>3. Direitos de imagem</h2>
-    <p>Você autoriza o uso, edição e divulgação da sua imagem, voz e conteúdo nas plataformas e canais do Vezclub, <b>no Brasil e no exterior</b>, em qualquer idioma, pelo prazo contratado. Você mantém a titularidade e pode encerrar conforme as regras do contrato.</p>
-
-    <h2>4. Divisão de valores</h2>
-    <p>As receitas geradas pelo seu conteúdo (assinaturas, conteúdo avulso, chamadas, gorjetas) são divididas <b>50% para você e 50% para a agência</b>, de forma limpa, sem deduções de custos operacionais.</p>
-
-    <h2>5. Exclusividade e gestão</h2>
-    <p>Durante a vigência, a gestão do seu conteúdo e canais é feita pela agência, conforme o contrato. Desvios ou vendas por fora estão sujeitos às penalidades previstas.</p>
-
-    <h2>6. Pagamentos</h2>
-    <p>Os repasses são feitos por Pix/transferência, conforme o combinado. Você é responsável pelos seus tributos. Você <b>não é empregada</b> da empresa — você contrata uma agência de marketing e management.</p>
-
-    <h2>7. Conduta e legalidade</h2>
-    <p>É proibido conteúdo que envolva menores, não consentimento, violência real ou qualquer ilegalidade. A conta pode ser suspensa a qualquer momento em caso de violação.</p>
-
-    <h2>8. Privacidade</h2>
-    <p>Seus dados e documentos são armazenados de forma segura e confidencial, usados apenas para verificação e cumprimento legal.</p>
+  <a class="back" href="/studio/">‹ Voltar ao painel</a>
+  <div class="sigbar" id="sigbar">
+    <span class="muted">Assinatura digital</span><br>
+    <span id="sigtxt">Faça login no painel da produtora para assinar este contrato com os seus dados.</span>
   </div>
-
-  <p class="muted" style="margin-top:20px">Dúvidas? Fale com o Vezclub. O contrato completo é fornecido no seu onboarding.</p>
+<h1>CONTRATO DE AGENCIAMENTO, USO DE IMAGEM E DIVISÃO DE RECEITAS</h1>
+<h2>Cláusula 1ª — Partes, Considerandos e Objeto</h2>
+<p><strong>1.1. Das partes.</strong> De um lado, <strong>VEZCLUB</strong>, inscrita no CNPJ/CPF nº [número], com sede em [endereço completo], doravante <strong>AGÊNCIA</strong>; de outro, <strong><span class="fill" data-f="name">[nome completo da modelo]</span></strong>, [nacionalidade], [estado civil], portadora do RG nº [número] e do CPF nº [número], residente em [endereço completo], <strong>maior de 18 anos</strong>, doravante <strong>MODELO</strong>. Em conjunto, as &quot;Partes&quot;.</p>
+<p><strong>1.2. Considerandos.</strong> (a) a MODELO cria e comercializa conteúdo adulto; (b) a AGÊNCIA presta serviços de gestão de carreira, marketing e comercialização desse conteúdo; (c) as Partes desejam formalizar o agenciamento pelo prazo e condições deste contrato.</p>
+<p><strong>1.3. Objeto.</strong> A MODELO contrata a AGÊNCIA para, com exclusividade (Cláusula 6ª), prestar serviços de agenciamento, gestão e comercialização de sua imagem e conteúdo, incluindo:</p>
+<ul><li>gestão das contas de <strong>Instagram</strong>, <strong>OnlyFans</strong> e demais <strong>plataformas de conteúdo adulto</strong> (perfis, publicações, legendas, agenda);</li><li><strong>impulsionamento e tráfego pago</strong> (Meta/Instagram/Facebook Ads e outras mídias), criativos e campanhas;</li><li><strong>produção, edição e curadoria</strong> de fotos e vídeos a partir do material da MODELO;</li><li><strong>estratégia de monetização</strong>, precificação, promoções e funis de venda;</li><li><strong>atendimento e chat</strong> com assinantes/clientes, vendas e pós-venda, por equipe ou ferramentas da AGÊNCIA;</li><li><strong>gestão de recebimentos</strong> e repasses (Cláusula 7ª).</li></ul>
+<p><strong>1.4.</strong> Os serviços podem ser prestados pela AGÊNCIA ou por terceiros por ela contratados, permanecendo a AGÊNCIA responsável perante a MODELO.</p>
+<h2>Cláusula 2ª — Definições</h2>
+<ul><li><strong>Plataformas:</strong> Instagram, OnlyFans, Privacy e quaisquer sites, apps ou redes de conteúdo adulto ou de divulgação <strong>indicados pela AGÊNCIA</strong> e geridos sob este contrato.</li><li><strong>Conteúdo:</strong> todas as fotos, vídeos, áudios, textos, lives e materiais produzidos pela MODELO ou pela AGÊNCIA a partir da imagem, voz e nome da MODELO, <strong>inclusive o material explícito e de nudez</strong>.</li><li><strong>Receita Bruta:</strong> o valor total gerado pela exploração do Conteúdo e das Plataformas antes das taxas das plataformas e gateways.</li><li><strong>Receita Líquida (base do rateio):</strong> o valor <strong>efetivamente recebido e confirmado nos gateways de pagamento e plataformas</strong>, descontadas <strong>apenas</strong> as taxas das próprias plataformas/gateways e os estornos/chargebacks. <strong>Nenhuma outra dedução entra antes do rateio</strong> — custos de equipe, produção e <strong>tráfego pago</strong> são da AGÊNCIA e saem da parte dela; a parte da MODELO é limpa. Cada Parte responde pelos tributos sobre a sua parcela.</li><li><strong>Vigência:</strong> o período definido na Cláusula 5ª.</li></ul>
+<h2>Cláusula 3ª — Declarações e Garantias da Modelo</h2>
+<p>A MODELO declara e garante, sob as penas da lei, que:</p>
+<p><strong>3.1.</strong> é <strong>maior de 18 anos</strong> e plenamente capaz, e fornecerá à AGÊNCIA cópia de <strong>documento oficial de identidade com foto</strong> para comprovação de idade e identidade, mantida em arquivo;</p>
+<p><strong>3.2.</strong> é a <strong>única titular dos direitos</strong> sobre a própria imagem, voz e nome, podendo cedê-los e autorizá-los nos termos deste contrato;</p>
+<p><strong>3.3.</strong> todo o Conteúdo que fornecer é de sua autoria ou devidamente autorizado, <strong>não viola direitos de terceiros</strong> e <strong>não contém imagem de menores de 18 anos</strong> nem material ilícito;</p>
+<p><strong>3.4.</strong> não possui contrato de exclusividade, agenciamento ou cessão vigente que conflite com este; e</p>
+<p><strong>3.5.</strong> os dados cadastrais e bancários que fornecer são verdadeiros.</p>
+<p><strong>3.6. Livre e espontânea vontade.</strong> A MODELO declara que celebra este contrato por <strong>livre e espontânea vontade</strong>, que <strong>leu, compreendeu e concordou</strong> com todas as regras e obrigações aqui previstas, e que <strong>nada foi obtido mediante pressão, intimidação, ameaça, coação, fraude ou abuso</strong> de qualquer espécie. A MODELO participa de forma consciente e voluntária e teve a oportunidade de esclarecer dúvidas e de buscar orientação jurídica própria antes de assinar.</p>
+<p><strong>3.7. Natureza lícita do objeto.</strong> As Partes declaram que o objeto deste contrato é a <strong>criação, divulgação e venda de conteúdo e de imagem adultos</strong>, de pessoa <strong>maior de 18 anos</strong>, produzidos de forma <strong>consensual</strong>. Este contrato <strong>não constitui, não autoriza e não envolve</strong> exploração sexual, aliciância ou induzimento à prostituição, tráfico de pessoas, trabalho forçado, nem qualquer ato de prostituição ou serviço sexual presencial. A relação se limita à <strong>gestão e comercialização de conteúdo digital</strong> que a MODELO concorda livremente em produzir, preservadas a sua dignidade e a sua autonomia.</p>
+<p><strong>3.8. Assunção de risco quanto a terceiros e exposição.</strong> A MODELO reconhece que o conteúdo adulto é publicado e comercializado e que pode, eventualmente, tornar-se conhecido de ou impactar terceiros — <strong>pais, familiares, parentes, filhos, amigos, parceiros</strong> ou qualquer outra pessoa do seu círculo — bem como gerar <strong>exposição social, repercussão pública, perda de emprego ou de oportunidades</strong>. A MODELO declara estar <strong>ciente desses riscos</strong> e que <strong>os assume de forma livre, consciente, voluntária e exclusiva</strong>, por sua própria escolha, e que <strong>não questionará nem responsabilizará a AGÊNCIA</strong>, nem fará qualquer reclamação, exigência ou pleito contra ela, em razão dessas repercussões. A decisão sobre o que produzir e divulgar é <strong>exclusivamente da MODELO</strong>, resguardados os seus limites (Anexo II), e ela <strong>isenta a AGÊNCIA de qualquer responsabilidade</strong> por tais consequências.</p>
+<h2>Cláusula 4ª — Uso de Imagem, Voz e Nome; Propriedade do Conteúdo</h2>
+<p><strong>4.1. Autorização.</strong> A MODELO autoriza a AGÊNCIA, durante a Vigência, a <strong>captar, produzir, editar, reproduzir, publicar, distribuir e comercializar</strong> sua imagem, voz, nome artístico e semelhança, no Brasil e no exterior, nas Plataformas, em peças publicitárias e em campanhas de tráfego pago (inclusive Meta Ads), <strong>exclusivamente</strong> para divulgar e vender o Conteúdo objeto deste contrato.</p>
+<p><strong>4.2. Edição.</strong> Inclui recortes, montagens, legendas, marca d&#x27;água e ajustes, <strong>sem desvirtuar</strong> a imagem da MODELO nem associá-la a contexto ofensivo, político ou que ela recuse por escrito.</p>
+<p><strong>4.3. Limites.</strong> Não abrange a criação de conteúdo íntimo novo sem a participação/consentimento da MODELO, nem uso para finalidade estranha a este contrato.</p>
+<p><strong>4.4. Propriedade.</strong> O Conteúdo poderá ser explorado pela AGÊNCIA durante a Vigência. Encerrado o contrato, a <strong>titularidade do Conteúdo permanece/retorna à MODELO</strong>, ressalvado o item 4.5.</p>
+<p><strong>4.5. Uso após o término.</strong> Encerrado o contrato por qualquer motivo, a AGÊNCIA poderá <strong>continuar usando a imagem da MODELO em peças e campanhas por até 90 (noventa) dias</strong> após o término, para encerramento das ações em andamento.</p>
+<p><strong>4.6. Revogação.</strong> A MODELO pode revogar, para o futuro, a autorização de uso da sua imagem em novas peças mediante rescisão (Cláusula 9ª), <strong>ressalvado o material que ela já tenha entregue e consentido para venda, cuja comercialização é irrevogável</strong> (Cláusula 4.7), e observado o prazo de 90 dias do item 4.5.</p>
+<p><strong>4.7. Conteúdo explícito e de nudez.</strong> A MODELO autoriza expressamente a AGÊNCIA a <strong>comercializar todas as imagens explícitas e vídeos de nudez</strong> que ela produzir e <strong>consentir</strong> em disponibilizar, para venda nas Plataformas (OnlyFans, packs, PPV, conteúdos personalizados e similares), cabendo à MODELO a comissão da Cláusula 7ª (50% da Receita Líquida). O consentimento é dado a cada conjunto de material que a MODELO entregar à AGÊNCIA para venda, presumindo-se a autorização pela própria entrega. Uma vez disponibilizado para venda, <strong>o direito da AGÊNCIA de comercializar aquele material é irrevogável e por prazo indeterminado</strong>: a MODELO não poderá exigir sua retirada nem questionar sua comercialização posterior, inclusive após o término do contrato. Todo o material é de pessoa <strong>maior de 18 anos</strong> e produzido de forma <strong>consensual</strong> (Cláusulas 3ª e 9ª).</p>
+<p><strong>4.8. Atendimento em nome da MODELO.</strong> A MODELO autoriza a AGÊNCIA e sua equipe a <strong>conversar, responder e vender aos assinantes e clientes em nome dela</strong> (chat, mensagens e interações), como parte do serviço, mantendo a persona e os limites da MODELO. A MODELO reconhece e consente que nem toda interação será feita pessoalmente por ela.</p>
+<p><strong>4.9. Abrangência mundial e idiomas.</strong> A imagem, a voz, o nome e o Conteúdo da MODELO poderão ser trabalhados, editados, adaptados, legendados, <strong>traduzidos para qualquer idioma</strong>, divulgados e comercializados <strong>no Brasil e em qualquer país do exterior</strong>, em <strong>todos os territórios, plataformas e mídias</strong>, sem limitação geográfica. A MODELO declara estar <strong>ciente e de acordo</strong> com a exploração do seu Conteúdo <strong>para o mundo todo</strong>, inclusive a tradução e legendagem para outras línguas e a venda a público estrangeiro, cabendo-lhe a comissão da Cláusula 7ª em qualquer caso.</p>
+<h2>Cláusula 5ª — Prazo e Obrigações da Agência</h2>
+<p><strong>5.1. Prazo.</strong> Este contrato vigora pelo prazo inicial de <strong>6 (seis) meses</strong>, contados da <strong>data de assinatura</strong>, renovável por igual período mediante acordo escrito das Partes. Não havendo manifestação, extingue-se ao fim do prazo.</p>
+<p><strong>5.2.</strong> A AGÊNCIA obriga-se a:</p>
+<ul><li>gerir as contas e publicar o Conteúdo com diligência profissional;</li><li>planejar e executar o tráfego pago e as campanhas de crescimento;</li><li>realizar o atendimento e as vendas, buscando a melhor monetização;</li><li>prestar contas e repassar os valores devidos (Cláusula 7ª);</li><li>manter sigilo sobre os dados e a intimidade da MODELO (Cláusula 8ª);</li><li>não praticar atos que exponham a MODELO a risco reputacional ou jurídico indevido;</li><li>devolver acessos e materiais ao término do contrato.</li></ul>
+<p><strong>5.3. Estrutura e equipe à disposição da MODELO.</strong> Em contrapartida à remuneração da Cláusula 7ª, a AGÊNCIA coloca à disposição da MODELO, sem custo adicional (ressalvado o tráfego pago da Cláusula 8ª), toda a estrutura de gestão de carreira, incluindo:</p>
+<ul><li><strong>Construção de marca no Instagram</strong> — posicionamento, identidade visual, bio, destaques, linha editorial, calendário de posts e crescimento de seguidores;</li><li><strong>Construção de marca no Facebook</strong> e demais redes de divulgação;</li><li><strong>Construção de marca via divulgação paga</strong> — estratégia, criação e gestão de anúncios;</li><li><strong>Copywriter</strong> — textos de posts, anúncios, legendas e páginas de venda;</li><li><strong>Editor de vídeo</strong> e <strong>editor de foto</strong> — produção e tratamento do Conteúdo;</li><li><strong>Gestor de tráfego</strong> — campanhas de impulsionamento e aquisição;</li><li><strong>Equipe de atendimento e vendas</strong> — chat, conversão e pós-venda;</li><li><strong>Estratégia de monetização e precificação</strong>, relatórios e acompanhamento de resultados.</li></ul>
+<p>As Partes reconhecem que essa estrutura completa de produção, marca, marketing, tráfego e vendas é a <strong>contrapartida que justifica a divisão de 50% prevista na Cláusula 7ª</strong>.</p>
+<h2>Cláusula 6ª — Obrigações da Modelo, Exclusividade e Não-Circunvenção</h2>
+<p><strong>6.1.</strong> A MODELO obriga-se a:</p>
+<ul><li>fornecer, com regularidade, o Conteúdo e os materiais acordados, no padrão de qualidade combinado;</li><li><strong>seguir todas as orientações da AGÊNCIA</strong> quanto aos posts do Instagram e demais redes (linha editorial, formato, horários, chamadas e roteiro);</li><li>manter conduta compatível com a imagem profissional;</li><li>não divulgar senhas nem interferir nas contas sem alinhamento com a AGÊNCIA;</li><li><strong>não repassar seu contato pessoal</strong> (telefone, redes privadas, Pix) a clientes ou assinantes;</li><li>comunicar à AGÊNCIA qualquer contato comercial recebido diretamente.</li></ul>
+<p><strong>6.2. Exclusividade e gestão integral.</strong> Durante a Vigência, a exclusividade é <strong>total</strong>, em <strong>todas as plataformas indicadas pela AGÊNCIA</strong>, e <strong>toda a atividade profissional da MODELO em conteúdo adulto e de divulgação é gerida exclusivamente pela AGÊNCIA</strong>. A MODELO <strong>não poderá</strong>, direta ou indiretamente, por si ou por terceiros: (i) produzir, publicar ou vender qualquer Conteúdo por fora deste contrato; (ii) atender clientes ou assinantes por conta própria; (iii) manter contas ou perfis paralelos não informados à AGÊNCIA; (iv) repassar seu contato pessoal a clientes ou assinantes; ou (v) contratar outra agência ou terceiro para os mesmos fins.</p>
+<p><strong>6.3. Não-circunvenção (anti-bypass).</strong> A MODELO compromete-se a <strong>não comercializar, receber pagamentos ou desviar assinantes/clientes por fora</strong> do sistema da AGÊNCIA (contas paralelas, Pix direto, outras plataformas não informadas) com o fim de burlar a divisão de receitas. A infração sujeita a MODELO a pagar à AGÊNCIA o valor desviado <strong>acrescido de multa de [50]%</strong>, sem prejuízo da rescisão por justa causa.</p>
+<p><strong>6.4. Não-aliciância.</strong> Durante a Vigência e por <strong>12 (doze) meses</strong> após o término, a MODELO não aliciará equipe, fornecedores ou assinantes captados pela AGÊNCIA para fora dela.</p>
+<p><strong>6.5. Direção criativa.</strong> A MODELO seguirá o planejamento e as orientações da AGÊNCIA para posts, campanhas e produção de Conteúdo, que têm caráter vinculante, salvo quando contrariarem a lei, a dignidade da MODELO ou limites que ela fixar previamente por escrito.</p>
+<h2>Cláusula 7ª — Contas, Remuneração (50/50) e Prestação de Contas</h2>
+<p><strong>7.1. Titularidade das contas.</strong> As contas nas Plataformas serão mantidas <strong>em nome da MODELO</strong> (titular/performer), com acesso operacional concedido à AGÊNCIA para a gestão. Senhas e 2FA serão compartilhados de forma segura e <strong>revogados ao término</strong>. [<strong>Alternativa: contas operadas pela AGÊNCIA — ver &quot;Pontos a decidir&quot;.</strong>]</p>
+<p><strong>7.2. Fluxo de recebimento e pagamento.</strong> Conforme a plataforma, os valores podem ser recebidos pela AGÊNCIA ou diretamente pela MODELO, aplicando-se a divisão da Cláusula 7.3 em qualquer caso:</p>
+<ul><li><strong>(a) Quando a AGÊNCIA receber</strong> os valores (em conta, gateway ou Pix sob sua gestão), ela reterá a sua parte de 50% e <strong>repassará à MODELO</strong> os 50% dela, na forma da Cláusula 7.4;</li><li><strong>(b) Quando a MODELO receber</strong> os valores diretamente (por exemplo, quando a própria plataforma paga na conta dela), ela <strong>pagará à AGÊNCIA</strong> os 50% devidos, na mesma periodicidade da Cláusula 7.4.</li></ul>
+<p>A apuração e a prestação de contas seguem a Cláusula 7.5, com base nas estatísticas das próprias plataformas e gateways.</p>
+<p><strong>7.3. Divisão.</strong> A <strong>Receita Líquida</strong> (Cláusula 2ª) será dividida <strong>50% para a AGÊNCIA e 50% para a MODELO</strong>.</p>
+<p><strong>7.4. Repasse.</strong> O repasse da parte da MODELO será <strong>quinzenal</strong>, até o <strong>5º dia útil</strong> após o fechamento de cada quinzena, via Pix ou transferência na conta indicada por ela.</p>
+<p><strong>7.5. Prestação de contas.</strong> A AGÊNCIA enviará à MODELO, a cada período, <strong>extrato</strong> com Receita Bruta, deduções discriminadas, Receita Líquida e o valor repassado, com os comprovantes quando solicitados.</p>
+<h2>Cláusula 8ª — Tráfego Pago, Despesas, Confidencialidade e Dados</h2>
+<p><strong>8.1. Investimento em tráfego.</strong> O investimento em anúncios (Meta e outras mídias) é <strong>integralmente custeado pela AGÊNCIA</strong> e <strong>não é deduzido</strong> da base de rateio — sai da parte da AGÊNCIA. A MODELO recebe 50% da Receita Líquida <strong>sem qualquer desconto</strong> de tráfego, equipe ou produção.</p>
+<p><strong>8.2. Demais despesas.</strong> Despesas extraordinárias (produção externa, viagens etc.) dependem de <strong>aprovação prévia por escrito</strong> da parte que as suportará.</p>
+<p><strong>8.3. Confidencialidade.</strong> As Partes manterão sigilo sobre dados pessoais, financeiros, senhas, estratégias e a intimidade uma da outra, durante e após o contrato, salvo exigência legal.</p>
+<p><strong>8.4. Proteção de dados (LGPD).</strong> A AGÊNCIA tratará os dados pessoais da MODELO e dos assinantes conforme a Lei nº 13.709/2018 (LGPD), <strong>apenas para as finalidades deste contrato</strong>. Quanto aos dados dos assinantes, a MODELO atua como <strong>controladora</strong> e a AGÊNCIA como <strong>operadora</strong>, tratando-os conforme as instruções da MODELO. A AGÊNCIA adotará medidas de segurança, auxiliará no atendimento a pedidos dos titulares e <strong>comunicará a MODELO em até 72 horas</strong> qualquer incidente de segurança que afete esses dados, eliminando-os quando não mais necessários ou ao término do contrato.</p>
+<h2>Cláusula 9ª — Conduta, Conteúdo Proibido e Rescisão</h2>
+<p><strong>9.1. Conteúdo proibido.</strong> É <strong>vedado</strong> produzir, publicar ou comercializar qualquer material que envolva <strong>menores de 18 anos</strong>, ausência de consentimento, violência ilícita ou conteúdo proibido por lei ou pelas regras das Plataformas. A violação enseja <strong>rescisão imediata por justa causa</strong> e responsabilização exclusiva de quem lhe der causa.</p>
+<p><strong>9.2. Rescisão sem justa causa.</strong> Qualquer Parte pode rescindir mediante <strong>aviso prévio de 30 dias</strong> por escrito. A rescisão antecipada imotivada pela MODELO antes do fim dos 6 meses, ou a quebra da exclusividade/anti-bypass (Cláusulas 6.2 e 6.3), sujeita-a à <strong>multa de R$ 100.000,00 (cem mil reais)</strong>, sem prejuízo dos valores já devidos e de perdas e danos.</p>
+<p><strong>9.3. Rescisão por justa causa.</strong> O descumprimento de obrigação relevante (incluindo as Cláusulas 6.3 e 9.1), não sanado em [5] dias de notificação, permite a rescisão imediata pela Parte inocente, sem prejuízo de perdas e danos.</p>
+<p><strong>9.4. Efeitos do término e transição.</strong> Com o término, por qualquer motivo: (a) cessam as autorizações de uso de imagem, <strong>ressalvado o material já vendido/consentido</strong> (Cláusula 4.7) e o prazo de 90 dias do item 4.5; (b) a MODELO <strong>alterará todas as senhas e o 2FA das contas em até 48 horas</strong> e a AGÊNCIA confirmará por escrito que não mantém mais acesso; (c) a AGÊNCIA entregará as filas de conteúdo e cooperará por um período de transição de até 7 dias, se solicitado; (d) os valores pendentes são acertados em até 10 dias, <strong>incluindo a comissão sobre a receita gerada antes do término e paga depois</strong>. Sobrevivem ao término as cláusulas de confidencialidade, proteção de dados, uso irrevogável do material vendido (4.7), anti-bypass, responsabilidade/indenização e foro.</p>
+<h2>Cláusula 10ª — Responsabilidade, Independência e Disposições Gerais</h2>
+<p><strong>10.1. Independência e ausência de vínculo.</strong> Este é um contrato de <strong>prestação de serviços de agenciamento e marketing</strong>: a MODELO <strong>contrata a AGÊNCIA</strong> para gerir e divulgar a sua carreira e, em contrapartida, as Partes dividem a receita na forma da Cláusula 7ª, cabendo à AGÊNCIA arcar com os seus <strong>custos operacionais</strong> (equipe, produção e tráfego pago). A MODELO <strong>não é empregada, funcionária, sócia nem subordinada</strong> da AGÊNCIA: atua como <strong>contratante dos serviços</strong> e profissional independente, sem vínculo empregatício, societário ou de subordinação. Cada Parte responde pelas suas próprias obrigações fiscais e trabalhistas.</p>
+<p><strong>10.2. Responsabilidade e indenização.</strong> Cada Parte responde pelos atos a que der causa. A MODELO indeniza a AGÊNCIA por reclamações decorrentes da inveracidade de suas declarações (Cláusula 3ª); a AGÊNCIA indeniza a MODELO pelo uso de imagem fora do autorizado.</p>
+<p><strong>10.3. Limitação.</strong> Nenhuma Parte responde por lucros cessantes ou danos indiretos, salvo dolo ou culpa grave.</p>
+<p><strong>10.4. Gerais.</strong> (a) alterações somente por <strong>aditivo escrito</strong>; (b) a tolerância não implica novação; (c) a nulidade de uma cláusula não contamina as demais; (d) este instrumento é o acordo integral entre as Partes; (e) é <strong>vedada a cessão</strong> deste contrato sem anuência da outra Parte.</p>
+<p><strong>10.5. Lei e foro.</strong> Aplica-se a lei brasileira. Fica eleito o foro da comarca da <strong>Capital de São Paulo/SP</strong>, com renúncia a qualquer outro, por mais privilegiado que seja.</p>
+<h2>Cláusula 11ª — Risco de Plataforma e Força Maior</h2>
+<p><strong>11.1.</strong> A MODELO reconhece que as Plataformas (OnlyFans, Instagram, Facebook etc.) são terceiros, cujas regras, taxas, algoritmos e decisões de moderação estão <strong>fora do controle da AGÊNCIA</strong> e podem mudar sem aviso.</p>
+<p><strong>11.2.</strong> Se uma Plataforma suspender, limitar ou encerrar uma conta, a AGÊNCIA empregará esforços razoáveis para ajudar no recurso, mas <strong>não responde pela suspensão nem por suas consequências</strong>, salvo quando causada por culpa própria. Durante a suspensão, as obrigações relativas àquela conta ficam suspensas e o prazo do contrato continua correndo.</p>
+<p><strong>11.3. Força maior.</strong> Nenhuma Parte responde por atraso ou falha causada por eventos fora de seu controle razoável (quedas de plataforma, ações de gateways, falhas de internet, doença, caso fortuito ou força maior), desde que comunique a outra prontamente e retome assim que possível.</p>
+<h2>Cláusula 12ª — Sem Garantia de Resultado</h2>
+<p><strong>12.1.</strong> A AGÊNCIA <strong>não garante</strong> faturamento, número de assinantes, crescimento, posicionamento ou qualquer outro resultado. Quaisquer números discutidos antes da assinatura são <strong>meras estimativas e ilustrações</strong>, sem valor de promessa.</p>
+<h2>Cláusula 13ª — Registros, Auditoria e Conferência</h2>
+<p><strong>13.1.</strong> A AGÊNCIA manterá registros corretos da receita, deduções e repasses de cada conta por, no mínimo, <strong>5 (cinco) anos</strong> após o término, ou pelo prazo que a lei exigir.</p>
+<p><strong>13.2.</strong> Uma vez por ano e no término, a MODELO pode solicitar uma <strong>conferência</strong> da Receita Líquida e dos repasses dos últimos 12 meses, que a AGÊNCIA fornecerá em até 30 dias. Havendo diferença superior a 5%, a Parte que deu causa corrige em até 14 dias. A base são as estatísticas das próprias Plataformas e gateways, às quais ambas as Partes têm acesso de leitura.</p>
+<h2>Cláusula 14ª — Assinatura Eletrônica, Notificações e Idioma</h2>
+<p><strong>14.1. Assinatura eletrônica.</strong> Este contrato pode ser assinado <strong>eletronicamente</strong> e em vias separadas; a assinatura eletrônica ou o nome digitado em serviço de assinatura tem o mesmo efeito de uma assinatura de próprio punho.</p>
+<p><strong>14.2. Notificações.</strong> Avisos formais serão enviados por e-mail aos endereços indicados pelas Partes, com cópia pelo canal de comunicação combinado, e consideram-se recebidos no dia útil seguinte ao envio.</p>
+<p><strong>14.3. Canal e idioma.</strong> O canal oficial de comunicação entre as Partes é [WhatsApp / Telegram / e-mail]. Este contrato é celebrado em português, que prevalece sobre qualquer tradução.</p>
+<h2>Cláusula 15ª — Assinaturas e Anexos</h2>
+<p>E por estarem justas e contratadas, as Partes assinam este instrumento em 2 (duas) vias de igual teor, na presença de 2 (duas) testemunhas.</p>
+<p>Local e data: [cidade], <span class="fill" data-f="date">[DD/MM/AAAA]</span>.</p>
+<table><thead><tr><th>Parte</th><th>Nome</th><th>Assinatura</th><th>Documento</th></tr></thead><tbody><tr><td>AGÊNCIA</td><td>VEZCLUB</td><td></td><td>[CNPJ/CPF]</td></tr><tr><td>MODELO</td><td><span class="fill" data-f="name">[nome]</span></td><td></td><td><span class="fill" data-f="cpf">[CPF]</span></td></tr><tr><td>Testemunha 1</td><td><span class="fill" data-f="name">[nome]</span></td><td></td><td><span class="fill" data-f="cpf">[CPF]</span></td></tr><tr><td>Testemunha 2</td><td><span class="fill" data-f="name">[nome]</span></td><td></td><td><span class="fill" data-f="cpf">[CPF]</span></td></tr></tbody></table>
+<h3>Anexo I — Termo de Autorização de Uso de Imagem</h3>
+<p>Eu, <span class="fill" data-f="name">[nome]</span>, CPF <span class="fill" data-f="cpf">[CPF]</span>, maior de 18 anos, autorizo [AGÊNCIA] a usar minha imagem, voz e nome na forma da Cláusula 4ª do contrato de <span class="fill" data-f="date">[DD/MM/AAAA]</span>, para divulgação e comercialização do Conteúdo e em campanhas de tráfego pago, no Brasil e no exterior, durante a vigência e pelo prazo residual ali previsto. Declaro ter lido e concordado.</p>
+<p>Assinatura da MODELO: [assinatura] — Data: <span class="fill" data-f="date">[DD/MM/AAAA]</span></p>
+<h3>Anexo II — Entregas da MODELO e Limites de Conteúdo</h3>
+<p><strong>Entregas mínimas.</strong> Base confortável e pensada para <strong>escalar sem sobrecarregar a MODELO</strong>: a ideia é <strong>gravar em lote em 1 dia de produção por semana</strong> e a AGÊNCIA transformar esse material em conteúdo para a semana inteira. Estes números são o <strong>piso</strong>; o descumprimento reiterado é causa de rescisão (Cláusula 9ª).</p>
+<table><thead><tr><th>Item</th><th>Entrega mínima</th></tr></thead><tbody><tr><td>Dia de produção (gravação em lote)</td><td>1 por semana</td></tr><tr><td>Fotos para feed e PPV</td><td>20 por semana, entregues em lote</td></tr><tr><td>Vídeos curtos (1 a 3 min) para venda/PPV</td><td>2 por semana</td></tr><tr><td>Vídeo longo (5 a 15 min)</td><td>3 por mês</td></tr><tr><td>Clipes/teasers para redes (Reels, TikTok)</td><td>10 por semana</td></tr><tr><td>Conteúdo personalizado (sob demanda)</td><td>até 5 por semana, entregue em 48 a 72h</td></tr><tr><td>Resposta à AGÊNCIA</td><td>até 24h em dias úteis</td></tr><tr><td>Forma de entrega</td><td>pasta no Google Drive ou Dropbox compartilhada com a AGÊNCIA</td></tr></tbody></table>
+<p>O volume acima é o piso para alimentar as plataformas, as redes e os anúncios ao mesmo tempo. Querendo produzir mais, a AGÊNCIA escala o investimento em tráfego na mesma proporção. Ajustes nas quantidades podem ser propostos por escrito conforme os resultados.</p>
+<p><strong>Limites da MODELO.</strong> Marque o que você <strong>não</strong> faz — a AGÊNCIA não venderá nem prometerá nada disso aos clientes:</p>
+<ul><li>[ ] Mostrar o rosto</li><li>[ ] Revelar localização ou cidade</li><li>[ ] Conteúdo com outras pessoas (colaborações, b/g)</li><li>[ ] Chamadas de vídeo ao vivo</li><li>[ ] Determinados atos ou fetiches: ________________________________</li><li>[ ] Outros: ________________________________</li><li>[ ] Outros: ________________________________</li></ul>
+<p>Encontros presenciais com assinantes/clientes <strong>nunca serão ofertados</strong> pela AGÊNCIA, independentemente desta lista. A MODELO pode atualizar estes limites por escrito a qualquer tempo, e a AGÊNCIA os respeitará em todo atendimento e divulgação.</p>
+  <div class="note">
+    <p style="margin:0" class="muted">Ao marcar <strong>“Li e aceito o contrato”</strong> no seu cadastro de produtora e enviar a documentação, você assina este instrumento <strong>eletronicamente</strong> (Cláusula 14.1): o nome e o CPF informados, a data e a hora do aceite ficam registrados como sua assinatura, com o mesmo valor de uma assinatura de próprio punho.</p>
+  </div>
 </div>
+<script>
+(function(){
+  var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
+  var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+  var FN=SB_URL+"/functions/v1/";
+  function today(){var d=new Date();function z(n){return (n<10?'0':'')+n;}return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear();}
+  function setFills(name,cpf,done){
+    Array.prototype.forEach.call(document.querySelectorAll('.fill'),function(el){
+      var f=el.getAttribute('data-f'), v=null;
+      if(f==='name') v=name; else if(f==='cpf') v=cpf; else if(f==='date') v=today();
+      if(v){ el.textContent=v; if(done) el.classList.add('done'); }
+    });
+  }
+  async function init(){
+    var sb=null;
+    try{ sb=window.supabase && window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true}}); }catch(e){}
+    if(!sb){ return; }
+    var ses=null; try{ var r=await sb.auth.getSession(); ses=r.data.session; }catch(e){}
+    if(!ses){ return; }
+    var tok=ses.access_token;
+    var kyc=null;
+    try{
+      var rr=await fetch(FN+'creator_api',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify({action:'kyc_get'})});
+      var jj=await rr.json(); kyc=jj.kyc||jj;
+    }catch(e){}
+    var name=(kyc&&(kyc.legal_name||kyc.name))||(ses.user&&ses.user.email)||'';
+    var cpf=(kyc&&kyc.cpf)||'';
+    var accepted=kyc&&kyc.tos_accepted_at;
+    if(name){ setFills(name,cpf,!!accepted); }
+    var sb2=document.getElementById('sigtxt');
+    if(accepted){
+      sb2.innerHTML='<span class="ok">✓ Assinado digitalmente</span> por <b>'+name+'</b>'+(cpf?' (CPF '+cpf+')':'')+' em '+String(accepted).slice(0,19).replace('T',' ')+'.';
+    } else if(name){
+      sb2.innerHTML='Pré-preenchido para <b>'+name+'</b>'+(cpf?' (CPF '+cpf+')':'')+'. A assinatura é registrada quando você marcar o aceite e enviar o cadastro no painel.';
+    }
+  }
+  var s=document.createElement('script');
+  s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
+  s.onload=init; s.onerror=function(){}; document.head.appendChild(s);
+})();
+</script>
 </body>
 </html>
