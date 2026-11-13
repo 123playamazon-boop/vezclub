@@ -9,39 +9,47 @@
 :root{--bg:#0b0b0f;--card:#15131b;--card2:#1b1824;--line:#241f2e;--muted:#9a93a8;--tx:#f4f1f8;--ac:#c026d3;--ac2:#7c3aed;--ok:#2ecc71;--bad:#ff3b5c}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-.wrap{max-width:720px;margin:0 auto;padding:18px 16px 60px}
-h2{font-size:18px}.muted{color:var(--muted)}
-input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0e0c14;color:var(--tx);font-size:15px}
-.btn{display:inline-block;padding:12px 18px;border:0;border-radius:11px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(90deg,var(--ac),var(--ac2))}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 70px}
+h1{font-size:20px;margin:0 0 2px}.muted{color:var(--muted)}
+input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(--line);background:#0e0c14;color:var(--tx);font-size:16px}
+.btn{display:inline-block;padding:14px 18px;border:0;border-radius:12px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(90deg,var(--ac),var(--ac2));font-size:15px}
+.btn:disabled{opacity:.5}
 .btn.ok{background:var(--ok)}.btn.bad{background:var(--bad)}.btn.sec{background:var(--card2);border:1px solid var(--line)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.docs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.docs a img{width:100%;border-radius:10px;border:1px solid var(--line)}
-.kv{font-size:14px;margin:4px 0}.kv b{color:var(--muted);font-weight:600}
-.hide{display:none}.badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#2a2335;color:var(--muted)}
+.btn.big{width:100%;padding:17px;font-size:17px;text-align:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.docs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0}
+.docs a{display:block}.docs a img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.docs .lbl{font-size:11px;text-align:center;color:var(--muted);margin-top:3px}
+.kv{font-size:15px;margin:7px 0;display:flex;gap:8px}.kv b{color:var(--muted);font-weight:600;min-width:92px;display:inline-block}
+.hide{display:none}
+.badge{font-size:13px;font-weight:800;padding:5px 12px;border-radius:999px;background:#2a2335;color:#fff}
+.badge.n{background:linear-gradient(90deg,var(--ac),var(--ac2))}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.av{width:48px;height:48px;border-radius:50%;background:#2a2335;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none}
+.name{font-weight:800;font-size:18px}
+.sig{font-size:13px;color:var(--ok);margin-top:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h2>Vezclub — Aprovação de produtoras</h2>
+  <div class="title"><div class="av">V</div><div><h1>Aprovação de produtoras</h1><div class="muted" style="font-size:13px">Vezclub · painel oficial</div></div></div>
 
   <div id="gate" class="card hide">
     <p class="muted">Acesso restrito. Informe a chave de admin.</p>
     <input id="key" type="password" placeholder="chave de admin">
-    <button class="btn" id="enter" style="margin-top:10px">Entrar</button>
+    <button class="btn big" id="enter" style="margin-top:12px">Entrar</button>
   </div>
 
   <div id="main" class="hide">
-    <div class="row" style="margin-bottom:10px">
-      <div><span class="badge" id="count">—</span> <span class="muted">pendentes</span></div>
-      <button class="btn sec" id="reload">Atualizar</button>
+    <div class="row" style="margin-bottom:14px">
+      <div><span class="badge n" id="count">—</span> <span class="muted">aguardando aprovação</span></div>
+      <button class="btn sec" id="reload">↻ Atualizar</button>
     </div>
     <div id="list"></div>
-    <div id="empty" class="muted hide" style="text-align:center;padding:30px">Nenhuma produtora aguardando aprovação 🎉</div>
+    <div id="empty" class="muted hide" style="text-align:center;padding:40px 10px">Nenhuma produtora aguardando aprovação 🎉<br><span style="font-size:13px">Quando alguém se cadastrar, aparece aqui.</span></div>
   </div>
-
-  <div id="detail" class="hide"></div>
 </div>
 
 <script>
@@ -55,47 +63,51 @@ input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(-
   try{ KEY=localStorage.getItem('vez_admin_key')||''; }catch(e){}
   async function api(action,extra){ var r=await fetch(FN+'admin_kyc',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify(Object.assign({k:KEY,action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }
 
-  function show(id){ ['gate','main','detail'].forEach(function(p){ $(p).classList.toggle('hide', p!==id); }); }
+  function show(id){ ['gate','main'].forEach(function(p){ $(p).classList.toggle('hide', p!==id); }); }
 
   $('enter').onclick=function(){ KEY=$('key').value.trim(); try{localStorage.setItem('vez_admin_key',KEY);}catch(e){} start(); };
+  $('key').addEventListener('keydown',function(e){ if(e.key==='Enter') $('enter').click(); });
   $('reload').onclick=loadList;
 
+  function initials(n){ n=String(n||'').trim(); return (n[0]||'?').toUpperCase(); }
+
   async function loadList(){
+    $('list').innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
     var r=await api('list',{status:'submitted'});
     if(r.error==='forbidden'){ try{localStorage.removeItem('vez_admin_key');}catch(e){} KEY=''; show('gate'); return; }
     var items=(r.items)||[];
     $('count').textContent=items.length;
     $('empty').classList.toggle('hide', items.length>0);
-    $('list').innerHTML=items.map(function(it){
-      return '<div class="card"><div class="row"><div><div style="font-weight:700">'+esc(it.display_name||it.legal_name)+' <span class="muted">'+esc(it.handle||'')+'</span></div><div class="muted" style="font-size:13px">CPF '+esc(it.cpf)+' · '+esc(it.phone)+'</div></div><button class="btn" data-ck="'+esc(it.creator_key)+'">Revisar</button></div></div>';
-    }).join('');
-    Array.prototype.forEach.call(document.querySelectorAll('[data-ck]'),function(el){ el.onclick=function(){ openDetail(el.getAttribute('data-ck')); }; });
+    $('list').innerHTML='';
     show('main');
-  }
-
-  async function openDetail(ck){
-    var r=await api('detail',{creator_key:ck});
-    if(r.error){ alert('Erro ao abrir.'); return; }
-    var k=r.kyc, d=r.docs||{};
-    function img(u,lbl){ return u? '<a href="'+esc(u)+'" target="_blank"><img src="'+esc(u)+'" alt="'+lbl+'"><div class="muted" style="font-size:11px;text-align:center">'+lbl+'</div></a>':'<div class="muted" style="font-size:12px">'+lbl+': —</div>'; }
-    $('detail').innerHTML=
-      '<div class="card">'+
-        '<button class="btn sec" id="back" style="margin-bottom:12px">‹ Voltar</button>'+
-        '<h2 style="margin:0 0 2px">'+esc(k.legal_name)+'</h2>'+
-        '<div class="kv"><b>CPF:</b> '+esc(k.cpf)+'</div>'+
-        '<div class="kv"><b>Nascimento:</b> '+esc(k.birth_date)+'</div>'+
-        '<div class="kv"><b>Telefone:</b> '+esc(k.phone)+'</div>'+
-        '<div class="kv"><b>Endereço:</b> '+esc(k.address)+'</div>'+
-        '<div class="kv"><b>Termos aceitos em:</b> '+esc((k.tos_accepted_at||'').slice(0,19).replace("T"," "))+'</div>'+
-        '<div class="docs">'+img(d.doc_front,'Frente')+img(d.doc_back,'Verso')+img(d.selfie,'Selfie')+'</div>'+
-        '<label class="muted" style="font-size:13px">Motivo (se recusar)</label>'+
-        '<textarea id="reason" rows="2" placeholder="ex: documento ilegível"></textarea>'+
-        '<div class="row" style="margin-top:12px"><button class="btn bad" id="reject">Recusar</button><button class="btn ok" id="approve">Aprovar ✓</button></div>'+
-      '</div>';
-    $('back').onclick=loadList;
-    $('approve').onclick=async function(){ this.disabled=true; var rr=await api('review',{creator_key:ck,approve:true}); if(rr.ok){ loadList(); } else { alert('Erro.'); this.disabled=false; } };
-    $('reject').onclick=async function(){ var reason=$('reason').value.trim(); this.disabled=true; var rr=await api('review',{creator_key:ck,approve:false,reason:reason}); if(rr.ok){ loadList(); } else { alert('Erro.'); this.disabled=false; } };
-    show('detail');
+    items.forEach(function(it){
+      var el=document.createElement('div'); el.className='card';
+      var nm=it.display_name||it.legal_name||'(sem nome)';
+      el.innerHTML=
+        '<div class="title" style="margin-bottom:10px"><div class="av">'+esc(initials(nm))+'</div>'+
+          '<div><div class="name">'+esc(nm)+'</div><div class="muted" style="font-size:13px">'+esc(it.handle||'')+' · CPF '+esc(it.cpf||'—')+' · '+esc(it.phone||'—')+'</div></div></div>'+
+        '<div class="docbox muted" style="font-size:13px">Carregando documentos…</div>'+
+        '<div class="acts"><button class="btn bad">✕ Recusar</button><button class="btn ok">✓ Aprovar</button></div>';
+      $('list').appendChild(el);
+      var ck=it.creator_key;
+      // load docs + full data inline
+      api('detail',{creator_key:ck}).then(function(d){
+        if(d&&d.kyc){
+          var k=d.kyc, dd=d.docs||{};
+          function img(u,lbl){ return u? '<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="'+lbl+'"><div class="lbl">'+lbl+'</div></a>':'<div class="muted lbl" style="padding:20px 0">'+lbl+': —</div>'; }
+          var sig = k.tos_accepted_at ? '<div class="sig">✓ Contrato assinado em '+esc(String(k.tos_accepted_at).slice(0,19).replace("T"," "))+'</div>' : '';
+          el.querySelector('.docbox').innerHTML=
+            '<div class="docs">'+img(dd.doc_front,'Frente')+img(dd.doc_back,'Verso')+img(dd.selfie,'Selfie')+'</div>'+
+            '<div class="kv"><b>Nome</b><span>'+esc(k.legal_name)+'</span></div>'+
+            '<div class="kv"><b>Nascimento</b><span>'+esc(k.birth_date)+'</span></div>'+
+            '<div class="kv"><b>Endereço</b><span>'+esc(k.address)+'</span></div>'+
+            sig;
+        } else { el.querySelector('.docbox').innerHTML='<span class="muted" style="font-size:13px">Não foi possível carregar os documentos.</span>'; }
+      });
+      var bad=el.querySelector('.btn.bad'), ok=el.querySelector('.btn.ok');
+      ok.onclick=async function(){ if(!confirm('Aprovar '+nm+'? Ela poderá publicar e receber.')) return; ok.disabled=true;bad.disabled=true;ok.textContent='Aprovando…'; var rr=await api('review',{creator_key:ck,approve:true}); if(rr.ok){ el.style.opacity=.4; el.querySelector('.acts').innerHTML='<div style="grid-column:1/3;text-align:center;color:var(--ok);font-weight:800;padding:8px">✓ Aprovada</div>'; setTimeout(loadList,900); } else { alert('Erro ao aprovar.'); ok.disabled=false;bad.disabled=false;ok.textContent='✓ Aprovar'; } };
+      bad.onclick=async function(){ var reason=prompt('Motivo da recusa (opcional):','documento ilegível'); if(reason===null) return; ok.disabled=true;bad.disabled=true;bad.textContent='Recusando…'; var rr=await api('review',{creator_key:ck,approve:false,reason:reason||''}); if(rr.ok){ el.style.opacity=.4; el.querySelector('.acts').innerHTML='<div style="grid-column:1/3;text-align:center;color:var(--bad);font-weight:800;padding:8px">✕ Recusada</div>'; setTimeout(loadList,900); } else { alert('Erro ao recusar.'); ok.disabled=false;bad.disabled=false;bad.textContent='✕ Recusar'; } };
+    });
   }
 
   function start(){ if(!KEY){ show('gate'); return; } loadList(); }

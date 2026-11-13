@@ -3363,31 +3363,14 @@ fbq('track', 'PageView');
 
     html += '<div class="card" data-pane="geral"><div class="card-head"><h3>Vendas ao vivo</h3><button class="btn btn-ghost btn-sm" data-notif>' + I.bolt + ' Ativar alertas</button></div><div id="live-sales"><p class="muted-note">Aguardando vendas…</p></div></div>';
 
-    html += '<div class="card" data-pane="modelos" style="margin-top:1.2rem"><div class="card-head"><h3>Criadoras</h3><button class="btn btn-primary btn-sm" data-stub="Adicionar criadora">' + I.plus + ' Adicionar criadora</button></div>' +
-      '<div class="table-wrap"><table><thead><tr><th>Criadora</th><th>Status KYC</th><th class="num">Vendas (mês)</th><th class="num">Comissão (50%)</th><th>Ações</th></tr></thead><tbody>';
-    rows.forEach(function (r) {
-      if (!r.c) return;
-      var com = Math.round(r.month * 0.85 * 0.5);
-      var pill = r.status === "ok" ? '<span class="pill ok"><span class="d"></span>Verificada</span>'
-        : r.status === "pend" ? '<span class="pill pend"><span class="d"></span>KYC pendente</span>'
-        : '<span class="pill off"><span class="d"></span>Pausada</span>';
-      var act = r.status === "pend"
-        ? '<button class="btn btn-primary btn-sm" data-stub="Aprovar KYC de ' + r.c.name + '">Aprovar KYC</button>'
-        : r.status === "off"
-          ? '<button class="btn btn-ghost btn-sm" data-stub="Reativar ' + r.c.name + '">Reativar</button>'
-          : '<button class="btn btn-ghost btn-sm" data-stub="Pagar ' + r.c.name + '">Pagar</button>';
-      html += '<tr><td><div class="t-creator">' + avatar(r.c) + '<div><div style="font-weight:600">' + r.c.name + '</div><small>' + r.c.handle + '</small></div></div></td>' +
-        '<td>' + pill + '</td><td class="num">' + (r.month ? dual(r.month) : "—") + '</td><td class="num">' + (com ? dual(com) : "—") + '</td><td>' + act + '</td></tr>';
-    });
-    html += '</tbody></table></div></div>';
+    html += '<div class="card" data-pane="modelos" style="margin-top:1.2rem;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)"><div class="card-head"><h3>✅ Aprovar produtoras (KYC real)</h3><span class="hint">documento + selfie</span></div>' +
+      '<p class="lead" style="margin:.2rem 0 1rem">As produtoras que fazem cadastro de verdade (documento, selfie, dados e aceite do contrato) aparecem no <b>painel de aprovação oficial</b>. É lá que você revisa e aprova com um toque.</p>' +
+      '<a class="btn btn-primary" href="/admin/" target="_blank" rel="noopener" style="font-size:1rem;padding:.9rem 1.4rem">Abrir painel de aprovação →</a>' +
+      '<p class="muted-note" style="margin-top:.9rem">Documentos ficam em armazenamento privado e nunca aparecem no app público.</p></div>';
 
     html += '<div class="card" data-pane="modelos" style="margin-top:1.2rem"><div class="card-head"><h3>Fila de análise de conteúdo</h3><span class="hint">conteúdo real</span></div>' +
       '<div id="admin-review"><p class="muted-note">Carregando…</p></div>' +
-      '<p class="muted-note">Conteúdo que violar as regras é recusado, e a criadora pode ser suspensa na tabela acima.</p></div>';
-
-    html += '<div class="card" data-pane="modelos" style="margin-top:1.2rem"><div class="card-head"><h3>Verificações 18+ pendentes (KYC)</h3><span class="hint">documentos privados</span></div>' +
-      '<div id="kyc-review"><p class="muted-note">Carregando…</p></div>' +
-      '<p class="muted-note">Aprovar libera a criadora a publicar. Os documentos ficam em armazenamento privado e nunca aparecem no app público.</p></div>';
+      '<p class="muted-note">Conteúdo que violar as regras é recusado.</p></div>';
 
     html += '<div class="card" data-pane="modelos" style="margin-top:1.2rem"><div class="card-head"><h3>Modelos de IA</h3><span class="hint">só o admin cria</span></div>' +
       '<div class="form">' +
