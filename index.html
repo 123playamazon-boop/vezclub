@@ -1297,7 +1297,7 @@ fbq('track', 'PageView');
   }
 
   // ===== assinatura real em R$ via Pix (SyncPay) =====
-  function brl(cents) { return "R$ " + (((cents || 0) / 100).toFixed(2)).replace(".", ","); }
+  function brlc(cents) { return "R$ " + (((cents || 0) / 100).toFixed(2)).replace(".", ","); }
   function loadPlansInto(c) {
     var box = document.getElementById("pf-plans"); if (!box) return;
     if (!sb) { box.innerHTML = '<p class="muted-note">' + L("Entre pra assinar.", "Sign in to subscribe.", "Entra para suscribirte.") + '</p>'; return; }
@@ -1312,10 +1312,10 @@ fbq('track', 'PageView');
         var off = (p.months > 1) ? Math.round((1 - perMonth / baseMonthly) * 100) : 0;
         var lbl = p.label || (p.months + " " + (p.months > 1 ? L("meses", "months", "meses") : L("mês", "mo", "mes")));
         var badge = off > 0 ? '<span style="font-weight:800;font-size:.72rem;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:999px;margin-left:6px">-' + off + '%</span>' : '';
-        var sub = p.months > 1 ? ('<div style="font-size:.78rem;opacity:.85;margin-top:2px">' + brl(perMonth) + '/' + L("mês", "mo", "mes") + '</div>') : '';
+        var sub = p.months > 1 ? ('<div style="font-size:.78rem;opacity:.85;margin-top:2px">' + brlc(perMonth) + '/' + L("mês", "mo", "mes") + '</div>') : '';
         return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;margin-bottom:10px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(90deg,' + pfc1 + ',' + pfc2 + ');color:#fff">' +
           '<span style="text-align:left"><span style="font-weight:800">' + lbl + '</span>' + badge + sub + '</span>' +
-          '<span style="font-weight:900;font-size:1.05rem">' + brl(p.price_cents) + '</span></button>';
+          '<span style="font-weight:900;font-size:1.05rem">' + brlc(p.price_cents) + '</span></button>';
       }).join("") + '<p class="muted-note" style="margin-top:.3rem;font-size:.8rem">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</p>';
     }, function () { box.innerHTML = '<p class="muted-note">' + L("Não consegui carregar os planos.", "Couldn't load plans.", "No pude cargar los planes.") + '</p>'; });
   }
@@ -1367,7 +1367,7 @@ fbq('track', 'PageView');
       sb.functions.invoke("sub_enroll", { body: { creator_key: key, months: String(months), name: name, document: cpf } }).then(function (r) {
         var j = (r && r.data) || {}; b.textContent = L("Gerar Pix", "Generate Pix", "Generar Pix"); b.disabled = false;
         if ((r && r.error) || !j.pix_code) { err.textContent = (j.error === "bad_document") ? L("CPF inválido.", "Invalid CPF.", "CPF inválido.") : L("Não consegui gerar o Pix. Tente de novo.", "Could not generate Pix. Try again.", "No pude generar el Pix."); return; }
-        ov.querySelector("#px-amt").textContent = brl(j.amount_cents) + " · " + (String(months) === "1" ? L("renova todo mês", "renews monthly", "renueva cada mes") : L("renova a cada " + months + " meses", "renews every " + months + " months", "renueva cada " + months + " meses"));
+        ov.querySelector("#px-amt").textContent = brlc(j.amount_cents) + " · " + (String(months) === "1" ? L("renova todo mês", "renews monthly", "renueva cada mes") : L("renova a cada " + months + " meses", "renews every " + months + " months", "renueva cada " + months + " meses"));
         ov.querySelector("#px-code").textContent = j.pix_code;
         showPane("px-pix");
         if (pollT) clearInterval(pollT);
@@ -2598,7 +2598,7 @@ fbq('track', 'PageView');
       if (c.story) hh += '<div class="pf-section"><div class="pf-h">' + L("Sobre mim", "About me", "Sobre mí") + '</div><p class="pf-about">' + c.story + '</p></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
-        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brl(Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
+        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brlc(Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
       }
       app.innerHTML = hh;
       try { window.scrollTo(0, 0); } catch (e) {}
