@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Vezclub — Mensagens</title>
+<style>
+:root{--bg:#0b0b0f;--card:#15131b;--card2:#1b1824;--line:#241f2e;--muted:#9a93a8;--tx:#f4f1f8;--ac:#c026d3;--ac2:#7c3aed;--ok:#2ecc71}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.app{max-width:640px;margin:0 auto;height:100dvh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--card)}
+.top .av{width:38px;height:38px;border-radius:50%;background:var(--card2);object-fit:cover}
+.top .nm{font-weight:700}.top .back{color:var(--muted);cursor:pointer;font-size:20px;margin-right:2px}
+.top .sub{font-size:11px;color:var(--ok)}
+.body{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:78%;padding:9px 12px;border-radius:14px;font-size:15px;line-height:1.35;word-wrap:break-word}
+.msg.me{align-self:flex-end;background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;background:var(--card2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.bar{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--card)}
+.bar input{flex:1;padding:12px 14px;border-radius:22px;border:1px solid var(--line);background:#0e0c14;color:var(--tx);font-size:16px}
+.bar button{border:0;border-radius:22px;padding:0 18px;font-weight:800;color:#fff;background:linear-gradient(90deg,var(--ac),var(--ac2));cursor:pointer}
+.state{padding:50px 24px;text-align:center;color:var(--muted)}
+.state a{color:var(--ac)}
+.thread{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line);cursor:pointer}
+.thread .av{width:44px;height:44px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px}
+.thread .nm{font-weight:700}.thread .pv{color:var(--muted);font-size:13px}
+.hide{display:none}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:var(--ac);margin:40px auto;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="loading"><div class="spin"></div></div>
+
+  <!-- thread list (creator) -->
+  <div id="list" class="hide" style="flex:1;overflow:auto">
+    <div class="top"><span class="nm">Mensagens</span></div>
+    <div id="threads"></div>
+    <div class="state hide" id="list-empty">Nenhuma conversa ainda.</div>
+  </div>
+
+  <!-- chat -->
+  <div id="chat" class="hide" style="flex:1;display:flex;flex-direction:column;min-height:0">
+    <div class="top">
+      <span class="back" id="back">‹</span>
+      <div class="av" id="c-av"></div>
+      <div><div class="nm" id="c-name">—</div><div class="sub" id="c-sub"></div></div>
+    </div>
+    <div class="body" id="body"></div>
+    <div class="bar">
+      <input id="inp" placeholder="Escreva uma mensagem…" autocomplete="off">
+      <button id="send">Enviar</button>
+    </div>
+  </div>
+
+  <!-- blocked / need login -->
+  <div id="blocked" class="hide"><div class="state" id="blocked-txt"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
+  var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+  var FN=SB_URL+"/functions/v1/";
+  var sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+  var $=function(id){return document.getElementById(id);};
+  function qs(k){try{return new URL(location.href).searchParams.get(k)||"";}catch(e){return"";}}
+  function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c];});}
+  function showOnly(id){ ['loading','list','chat','blocked'].forEach(function(p){ $(p).classList.toggle('hide', p!==id); }); }
+  async function token(){ try{ var r=await sb.auth.getSession(); return r.data.session?r.data.session.access_token:null; }catch(e){ return null; } }
+  async function api(action,extra){ var tok=await token(); if(!tok) return {error:'auth'}; var r=await fetch(FN+'dm',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify(Object.assign({action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }
+
+  var state={conv:null, lastId:0, role:null, poll:null};
+  function addMsg(m, mine){ var d=document.createElement('div'); d.className='msg '+(mine?'me':'them'); d.textContent=m.body; $('body').appendChild(d); }
+  function renderMsgs(msgs){ $('body').innerHTML=''; msgs.forEach(function(m){ addMsg(m, m.sender_role===state.role); if(m.id>state.lastId) state.lastId=m.id; }); scrollB(); }
+  function scrollB(){ var b=$('body'); b.scrollTop=b.scrollHeight; }
+
+  function startPoll(){ if(state.poll) clearInterval(state.poll); state.poll=setInterval(async function(){
+    if(!state.conv) return; var r=await api('since',{conversation:state.conv, after:state.lastId});
+    if(r.messages && r.messages.length){ r.messages.forEach(function(m){ addMsg(m, m.sender_role===state.role); if(m.id>state.lastId) state.lastId=m.id; }); scrollB(); }
+  }, 2500); }
+
+  async function openChat(res, peerName, peerAv, subLabel){
+    state.conv=res.conversation; state.lastId=0;
+    $('c-name').textContent=peerName||(res.peer&&res.peer.name)||'';
+    $('c-sub').textContent=subLabel||'';
+    var av=peerAv||(res.peer&&res.peer.avatar);
+    $('c-av').innerHTML = av? '<img src="'+SB_URL+'/storage/v1/object/public/avatars/'+esc(av)+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">' : '💬';
+    renderMsgs(res.messages||[]);
+    showOnly('chat'); $('inp').focus(); startPoll();
+  }
+
+  $('send').onclick=send; $('inp').addEventListener('keydown',function(e){ if(e.key==='Enter') send(); });
+  async function send(){ var t=$('inp').value.trim(); if(!t||!state.conv) return; $('inp').value='';
+    var optimistic={body:t, sender_role:state.role}; addMsg(optimistic,true); scrollB();
+    var r=await api('send',{conversation:state.conv, body:t});
+    if(r.error){ var d=document.createElement('div'); d.className='state'; d.style.color='#ff7a90'; d.textContent=r.error==='sub_expired'?'Sua assinatura expirou.':'Não enviou. Tente de novo.'; $('body').appendChild(d); }
+    else if(r.id && r.id>state.lastId) state.lastId=r.id;
+  }
+  $('back').onclick=function(){ if(state.poll) clearInterval(state.poll); state.conv=null; if(state.role==='creator') loadThreads(); else history.length>1?history.back():location.href='/'; };
+
+  async function loadThreads(){
+    var r=await api('threads',{});
+    var th=(r.threads)||[];
+    $('threads').innerHTML=th.map(function(t){ return '<div class="thread" data-id="'+esc(t.id)+'"><div class="av">👤</div><div><div class="nm">'+esc(t.buyer_name||'Assinante')+'</div><div class="pv">toque pra abrir</div></div></div>'; }).join('');
+    $('list-empty').classList.toggle('hide', th.length>0);
+    Array.prototype.forEach.call(document.querySelectorAll('.thread'),function(el){ el.onclick=async function(){ var r2=await api('open_thread',{conversation:el.getAttribute('data-id')}); if(!r2.error) openChat(r2, r2.peer&&r2.peer.name,'', ''); }; });
+    showOnly('list');
+  }
+
+  async function boot(){
+    var tok=await token();
+    if(!tok){ showOnly('blocked'); $('blocked-txt').innerHTML='Você precisa estar logada(o). <a href="/">Voltar</a>'; return; }
+    var who=await api('whoami',{});
+    var cParam=qs('c');
+    if(cParam && who.creator_key!==cParam){ // subscriber opening chat with a creator
+      state.role='buyer';
+      var r=await api('open',{creator_key:cParam});
+      if(r.error==='not_subscriber'){ showOnly('blocked'); $('blocked-txt').innerHTML='Assine pra conversar com ela. <a href="/m/?u='+esc(cParam)+'">Ver perfil</a>'; return; }
+      if(r.error){ showOnly('blocked'); $('blocked-txt').textContent='Não foi possível abrir o chat.'; return; }
+      openChat(r, null, null, 'assinante');
+      return;
+    }
+    if(who.creator_key){ state.role='creator'; loadThreads(); return; }
+    showOnly('blocked'); $('blocked-txt').innerHTML='Abra uma conversa pelo perfil de uma modelo. <a href="/">Início</a>';
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

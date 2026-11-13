@@ -175,7 +175,7 @@ a{color:inherit}
       '</div>'+
       '<div class="sect"><h2>Assine e desbloqueie tudo</h2>'+plansHtml+'</div>'+
       '<div class="actions">'+
-        '<button class="btn sec" id="ppvBtn">💎 Packs avulsos</button>'+
+        '<button class="btn sec" id="chatBtn">💬 Conversar</button>'+
         '<button class="btn sec" id="tipBtn">🎁 Mandar gorjeta</button>'+
       '</div>'+
       '<div class="tabs"><div class="tab on">Publicações</div><div class="tab">Mídia</div></div>'+
@@ -185,7 +185,7 @@ a{color:inherit}
     Array.prototype.forEach.call(document.querySelectorAll(".plan"),function(el){
       el.onclick=function(){ goSub(m, m.plans[+el.getAttribute("data-i")]); };
     });
-    document.getElementById("ppvBtn").onclick=function(){ alert("Packs avulsos — em breve no checkout."); };
+    document.getElementById("chatBtn").onclick=function(){ if(m.key==='demo'){ alert('Perfil de demonstração.'); return; } location.href='/dm/?c='+encodeURIComponent(m.key); };
     document.getElementById("tipBtn").onclick=function(){ alert("Gorjeta — em breve."); };
     Array.prototype.forEach.call(document.querySelectorAll(".cell.lock"),function(el){
       el.onclick=function(){ goSub(m, m.plans[0]); };
