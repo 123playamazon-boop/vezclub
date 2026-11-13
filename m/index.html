@@ -130,6 +130,37 @@ a{color:inherit}
   function lvMsg(t){ var c=document.getElementById('lv-center'); if(!c) return; c.classList.remove('hide'); var m=document.getElementById('lv-msg'); if(m) m.textContent=t; var sp=c.querySelector('.spin'); if(sp) sp.style.display=t==='' ? 'none':'block'; }
   function closeLive(){ try{ if(liveRoom) liveRoom.disconnect(); }catch(e){} liveRoom=null; var ov=document.getElementById('liveov'); if(ov) ov.classList.remove('on'); }
   window.__vezCloseLive=closeLive;
+
+  // ---- painel embutido (chat / chamada) via iframe, sem sair do perfil ----
+  function ensurePanelCss(){
+    if(document.getElementById('panelcss')) return;
+    var s=document.createElement('style'); s.id='panelcss';
+    s.textContent=
+      '#vpanel{position:fixed;inset:0;z-index:10001;background:#0b0b0f;display:none;flex-direction:column}'+
+      '#vpanel.on{display:flex}'+
+      '#vpanel .vp-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);background:var(--card)}'+
+      '#vpanel .vp-back{background:var(--card2);border:1px solid var(--line);color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center}'+
+      '#vpanel .vp-ttl{font-weight:800;font-size:15px}'+
+      '#vpanel iframe{flex:1;width:100%;border:0;background:#0b0b0f}';
+    document.head.appendChild(s);
+  }
+  function openPanel(url,title,allowMedia){
+    ensurePanelCss();
+    var p=document.getElementById('vpanel');
+    if(!p){ p=document.createElement('div'); p.id='vpanel';
+      p.innerHTML='<div class="vp-top"><button class="vp-back" id="vp-back">‹</button><div class="vp-ttl" id="vp-ttl"></div></div><div id="vp-frame"></div>';
+      document.body.appendChild(p);
+      p.querySelector('#vp-back').onclick=closePanel;
+    }
+    p.querySelector('#vp-ttl').textContent=title||'';
+    var holder=p.querySelector('#vp-frame'); holder.style.cssText='flex:1;display:flex'; holder.innerHTML='';
+    var f=document.createElement('iframe');
+    f.src=url; if(allowMedia) f.setAttribute('allow','camera; microphone; autoplay; fullscreen; clipboard-read; clipboard-write');
+    holder.appendChild(f);
+    p.classList.add('on');
+  }
+  function closePanel(){ var p=document.getElementById('vpanel'); if(p){ p.classList.remove('on'); var h=p.querySelector('#vp-frame'); if(h) h.innerHTML=''; } }
+  window.__vezClosePanel=closePanel;
   var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
   var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
   var FN="https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/";
@@ -211,7 +242,7 @@ a{color:inherit}
     });
     var lvb=document.getElementById("liveBtn");
     if(lvb) lvb.onclick=function(){ openLive(m); };
-    document.getElementById("chatBtn").onclick=function(){ if(m.key==='demo'){ alert('Perfil de demonstração.'); return; } location.href='/dm/?c='+encodeURIComponent(m.key); };
+    document.getElementById("chatBtn").onclick=function(){ if(m.key==='demo'){ alert('Perfil de demonstração.'); return; } openPanel('/dm/?c='+encodeURIComponent(m.key)+'&embed=1', '💬 '+(m.display_name||'Chat'), false); };
     document.getElementById("tipBtn").onclick=function(){ alert("Gorjeta — em breve."); };
     var cb=document.getElementById("callBtn");
     if(cb) cb.onclick=async function(){
@@ -223,8 +254,8 @@ a{color:inherit}
       var j=await r.json().catch(function(){return{};});
       if(j.error==='not_subscriber'){ alert('Assine pra fazer chamadas privadas com ela.'); cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; return; }
       if(j.error==='offline' || j.error==='calls_off'){ alert('As chamadas dela estão off agora. Tente mais tarde.'); cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; return; }
-      if(j.error==='no_coins'){ location.href='/coins/?back='+encodeURIComponent(location.pathname+location.search); return; }
-      if(j.call_id){ location.href='/call/?id='+encodeURIComponent(j.call_id); }
+      if(j.error==='no_coins'){ cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; openPanel('/coins/?embed=1', '🪙 Comprar coins', false); return; }
+      if(j.call_id){ cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; openPanel('/call/?id='+encodeURIComponent(j.call_id)+'&embed=1', '📞 Chamada privada', true); }
       else { alert('Não consegui iniciar a chamada agora.'); cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; }
     };
     Array.prototype.forEach.call(document.querySelectorAll(".cell.lock"),function(el){

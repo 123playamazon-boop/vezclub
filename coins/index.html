@@ -131,5 +131,20 @@ h2{font-size:18px;margin:4px 0 2px}
   boot();
 })();
 </script>
+<script>
+(function(){
+  try{
+    if(new URL(location.href).searchParams.get("embed")!=="1") return;
+    function closeParent(){ try{ if(window.parent && window.parent!==window && window.parent.__vezClosePanel){ window.parent.__vezClosePanel(); return true; } }catch(e){} return false; }
+    document.addEventListener("click",function(e){
+      var el=e.target.closest && e.target.closest("a,button"); if(!el) return;
+      var href=el.getAttribute && el.getAttribute("href");
+      var txt=(el.textContent||"").trim().toLowerCase();
+      var isExit=(href && (href==="/" || href.indexOf("/m/")===0)) || txt==="voltar" || txt==="in\u00edcio" || txt==="inicio" || txt==="fechar" || txt==="sair";
+      if(isExit){ if(closeParent()){ e.preventDefault(); e.stopPropagation(); } }
+    }, true);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
