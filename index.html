@@ -1264,6 +1264,38 @@ fbq('track', 'PageView');
       var m = {}; r.data.forEach(function (p) { p.greeting = (lang === "en" ? (p.greeting_en || p.greeting) : lang === "es" ? (p.greeting_es || p.greeting) : p.greeting); m[p.creator_key] = p; }); AI_PERSONAS = m;
     });
   }
+  // ===== vídeo dentro do perfil (live + chamada privada) — painel embutido, sem sair da página =====
+  function closeVezPanel() { var p = document.getElementById("vezpanel"); if (p) { var h = p.querySelector(".vp-frame"); if (h) h.innerHTML = ""; p.remove(); } document.body.style.overflow = ""; }
+  window.__vezClosePanel = closeVezPanel;
+  function openVezPanel(url, allowMedia) {
+    closeVezPanel();
+    var p = document.createElement("div"); p.id = "vezpanel";
+    p.style.cssText = "position:fixed;inset:0;z-index:100000;background:#0b0b0f;display:flex;flex-direction:column";
+    var top = document.createElement("div");
+    top.style.cssText = "display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:#15131b;border-bottom:1px solid #241f2e";
+    top.innerHTML = '<button id="vezpanel-x" style="background:#1b1824;border:1px solid #241f2e;color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer">‹</button><div style="font-weight:800;color:#f4f1f8;font-size:15px">' + L("Voltar ao perfil", "Back to profile", "Volver al perfil") + "</div>";
+    var holder = document.createElement("div"); holder.className = "vp-frame"; holder.style.cssText = "flex:1;display:flex";
+    var f = document.createElement("iframe"); f.src = url; f.style.cssText = "flex:1;width:100%;border:0;background:#0b0b0f";
+    if (allowMedia) f.setAttribute("allow", "camera; microphone; autoplay; fullscreen");
+    holder.appendChild(f); p.appendChild(top); p.appendChild(holder);
+    document.body.appendChild(p); document.body.style.overflow = "hidden";
+    document.getElementById("vezpanel-x").onclick = closeVezPanel;
+  }
+  function openLiveApp(key) { openVezPanel("/live/?c=" + encodeURIComponent(key) + "&embed=1", true); }
+  function openCallApp(key) {
+    if (!sb) { toast("Indisponível agora."); return; }
+    toast(L("Chamando…", "Calling…", "Llamando…"));
+    sb.functions.invoke("call", { body: { action: "request", creator_key: key } }).then(function (r) {
+      var j = (r && r.data) || {}; var err = j.error || (r && r.error && "net");
+      if (err === "not_subscriber") { toast(L("Assine pra chamar ela em vídeo.", "Subscribe to video-call her.", "Suscríbete para videollamarla.")); return; }
+      if (err === "offline" || err === "calls_off") { toast(L("As chamadas dela estão off agora.", "Her calls are off right now.", "Sus llamadas están apagadas ahora.")); return; }
+      if (err === "no_coins") { openVezPanel("/coins/?embed=1", true); return; }
+      if (err) { toast(L("Não consegui iniciar a chamada.", "Could not start the call.", "No pude iniciar la llamada.")); return; }
+      if (j.call_id) { openVezPanel("/call/?id=" + encodeURIComponent(j.call_id) + "&embed=1", true); }
+      else { toast(L("Não consegui iniciar a chamada.", "Could not start the call.", "No pude iniciar la llamada.")); }
+    }, function () { toast("Erro de conexão."); });
+  }
+
   function loadCreators(cb) {
     if (!sb) { if (cb) cb(); return; }
     sb.from("creators").select("key,display_name,handle,tag,tag_en,tag_es,sub_price_cents,is_ai,online,hook,hook_en,hook_es,color1,color2,avatar_path,cover_path,has_chat,has_subscription,created_at").then(function (r) {
@@ -2467,6 +2499,14 @@ fbq('track', 'PageView');
       else html += '<div class="pf-status" style="color:var(--muted)">' + I.clock + ' ' + L("Costuma responder em ", "Usually replies in ", "Suele responder en ") + c.responds + '</div>';
     } else {
       html += '<div class="pf-status"><span class="live-dot"></span>' + L("Online · conteúdo novo toda semana", "Online · new content every week", "Online · contenido nuevo cada semana") + '</div>';
+    }
+
+    // ações reais de vídeo (modelos reais, não personas de IA): live + chamada privada, tudo dentro do perfil
+    if (!c.ai) {
+      html += '<div class="pf-section" style="display:grid;gap:.6rem">';
+      if (c.online) html += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#ff3b5c,#c026d3);color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
+      html += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#c026d3,#7c3aed);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
+      html += '</div>';
     }
 
     // live ticker — escondido no funil de chat: ver os outros fãs quebra a sensação de ser o único
@@ -6033,6 +6073,8 @@ fbq('track', 'PageView');
     var like = e.target.closest("[data-like]");
     var chatFab = e.target.closest("[data-chat-fab]");
     var chatOpen = e.target.closest("[data-chat-open]");
+    var liveOpen = e.target.closest("[data-live]");
+    var callOpen = e.target.closest("[data-call]");
     var gift = e.target.closest("[data-gift]");
     var story = e.target.closest("[data-story]");
     var notif = e.target.closest("[data-notif]");
@@ -6068,6 +6110,12 @@ fbq('track', 'PageView');
     } else if (chatFab) {
       if (needLogin()) return;
       openChatList();
+    } else if (liveOpen) {
+      if (needLogin()) return;
+      openLiveApp(liveOpen.getAttribute("data-live"));
+    } else if (callOpen) {
+      if (needLogin()) return;
+      openCallApp(callOpen.getAttribute("data-call"));
     } else if (chatOpen) {
       var _coid = chatOpen.getAttribute("data-chat-open");
       if (AI_PERSONAS[_coid]) { openAiChat(_coid); } // chat de convidado: cria sessao anonima sozinho
@@ -6099,12 +6147,7 @@ fbq('track', 'PageView');
       var id = open.getAttribute("data-open") || open.getAttribute("data-creator");
       // 1 toque: clicar no card de uma persona de IA abre o chat direto. O botao "Ver perfil" (data-open) ainda vai pro perfil.
       if (!open.hasAttribute("data-open") && AI_PERSONAS[id]) { openAiChat(id); }
-      else {
-        // modelo REAL (não-IA): abre o perfil real /m/ dela, com live, chat, chamada, coins e assinatura tudo embutido
-        var cReal = CREATORS.find(function (x) { return x.id === id; });
-        if (cReal && !cReal.ai && !AI_PERSONAS[id]) { location.href = "/m/?u=" + encodeURIComponent(id); return; }
-        state.creatorId = id; state.view = "store"; render();
-      }
+      else { state.creatorId = id; state.view = "store"; render(); }
     } else if (sub) {
       if (needLogin()) return;
       var cid = sub.getAttribute("data-sub");
