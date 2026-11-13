@@ -62,9 +62,13 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
 
   <!-- NO CREATOR -->
   <div id="nocreator" class="card hide">
-    <h3>Conta sem perfil vinculado</h3>
-    <p class="muted">Esse login ainda não está ligado a nenhuma modelo. Fale com o Vezclub pra vincular seu perfil.</p>
-    <button class="btn sec" id="logout2" style="margin-top:12px">Sair</button>
+    <h3 style="margin:2px 0 4px">Criar seu perfil de produtora</h3>
+    <p class="muted" style="margin:0 0 6px;font-size:13px">Falta pouco! Escolha seu nome e seu @ pra ativar seu painel.</p>
+    <label>Nome artístico</label><input id="nc-name" type="text" placeholder="Ex: Mia">
+    <label>@ do seu perfil (vira seu link)</label><input id="nc-handle" type="text" placeholder="miaprivado" autocapitalize="none">
+    <div class="err" id="nc-err"></div>
+    <button class="btn" id="nc-create" style="margin-top:12px">Criar meu perfil</button>
+    <button class="btn sec" id="logout2" style="margin-top:8px">Sair</button>
   </div>
 
   <!-- KYC -->
@@ -336,6 +340,17 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     $('pf-msg').textContent=r.error?'Erro ao salvar. Tente de novo.':'Perfil salvo ✓';
     if(patch.avatar_path){ $('pf-avatar').src=SB_URL+'/storage/v1/object/public/avatars/'+patch.avatar_path+'?t='+Date.now(); $('pf-avatar-file').value=''; }
     if(patch.cover_path){ $('pf-cover-file').value=''; }
+  };
+
+  $('nc-create').onclick=async function(){
+    var name=$('nc-name').value.trim(), handle=$('nc-handle').value.trim().replace(/^@/,'');
+    if(name.length<2){ err('nc-err','Digite seu nome artístico.'); return; }
+    if(handle.length<3){ err('nc-err','Escolha um @ com pelo menos 3 letras.'); return; }
+    err('nc-err',''); var btn=this; btn.disabled=true; btn.textContent='Criando…';
+    var r=await api('become',{display_name:name,handle:handle});
+    btn.disabled=false; btn.textContent='Criar meu perfil';
+    if(r.error){ err('nc-err', r.error==='handle_taken'?'Esse @ já está em uso. Escolha outro.':(r.error==='bad_handle'?'@ inválido.':'Não consegui criar. Tente de novo.')); return; }
+    boot();
   };
 
   async function boot(){
