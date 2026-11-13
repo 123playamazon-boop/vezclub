@@ -2563,8 +2563,8 @@ fbq('track', 'PageView');
       return '<button class="btn ' + (block ? "btn-block " : "") + 'btn-primary" data-sub="' + c.id + '">Assinar ' + usd(c.subPrice) + '/mês</button>';
     }
 
-    // ===== MODELO REAL: layout padrão Privacy (preço e pacotes no topo + galeria) =====
-    if (!chatOnly) {
+    // ===== TODAS as modelos (reais e IA): layout padrão Privacy (preço e pacotes no topo + galeria) =====
+    if (true) {
       var pm = c.subPrice;
       var hh = '<button class="back" id="back">' + I.back + L("Voltar ao feed", "Back to feed", "Volver al feed") + '</button>';
       hh += '<div class="profile">';
@@ -2582,7 +2582,7 @@ fbq('track', 'PageView');
       // ações: mensagem (verde WhatsApp) e chamada — vídeo ao vivo desligado até testar real
       hh += '<div class="pf-section" style="display:grid;gap:.5rem">';
       if (c.hasChat !== false) hh += '<button class="btn btn-block" data-chat-open="' + c.id + '" style="background:#25c35e;color:#fff">' + I.chatic + ' ' + L("Mandar mensagem", "Send a message", "Enviar mensaje") + '</button>';
-      hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:#1b6fe3;color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
+      if (!c.ai) hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:#1b6fe3;color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       hh += '</div>';
       // barra de contagem de conteúdo (estilo Privacy: Publicações · Mídia)
       hh += '<div class="pf-section" style="padding-top:.2rem"><div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden">' +
