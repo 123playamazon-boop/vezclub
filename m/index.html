@@ -296,7 +296,14 @@ a{color:inherit}
         // tenta criar conta
         var cr=await fetch(FN+'auth_signup',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:email,password:pass})});
         var cj=await cr.json().catch(function(){return{};});
-        if(!cr.ok && !cj.ok){ setErr('err-auth', cj.error==='weak_password'?'Senha muito curta.':'Não consegui criar a conta. Confira o e-mail.'); b.textContent='Continuar'; b.disabled=false; return; }
+        if(!cr.ok && !cj.ok){
+          var dt=String(cj.detail||'').toLowerCase(); var m;
+          if(cj.error==='weak_password') m='A senha precisa ter ao menos 6 caracteres.';
+          else if(dt.indexOf('weak')>=0 || dt.indexOf('known')>=0 || dt.indexOf('guess')>=0) m='Essa senha é muito fácil ou já vazou na internet. Escolha uma mais forte.';
+          else if(cj.error==='bad_email') m='E-mail inválido.';
+          else m='Não consegui criar a conta. Confira o e-mail e a senha.';
+          setErr('err-auth', m); b.textContent='Continuar'; b.disabled=false; return;
+        }
         var r2=await sb.auth.signInWithPassword({email:email,password:pass});
         if(r2.error){ setErr('err-auth','Esse e-mail já tem conta com outra senha. Tente a senha certa.'); b.textContent='Continuar'; b.disabled=false; return; }
       }
