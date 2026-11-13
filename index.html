@@ -4105,7 +4105,7 @@ fbq('track', 'PageView');
       var cta = !hasSub ? ''
         : subActive
         ? '<div class="rc-sub on">' + I.check + '<span>Assinatura ativa · acesso a tudo até ' + fmtDate(subUntil) + '</span></div>'
-        : '<div class="rc-sub"><div><b>Assine e veja tudo</b><div class="rc-sub-s">Acesso a todo o conteúdo dela por 30 dias</div></div><button class="btn btn-primary btn-sm" data-subscribe="' + creatorKey + '">' + usd(subPrice) + '/mês</button></div>';
+        : '<div class="rc-sub"><div><b>Assine e veja tudo</b><div class="rc-sub-s">Acesso a todo o conteúdo dela por 30 dias</div></div><button class="btn btn-primary btn-sm" data-subscribe="' + creatorKey + '">' + brlc(Math.round(subPrice * 100)) + '/mês</button></div>';
       if (!pr.data.length) { b.innerHTML = cta + '<p class="muted-note" style="margin-top:0.7rem">Ainda não há conteúdo aprovado por aqui.</p>'; wireSub(b, creatorKey, subPrice); return; }
       pr.data.sort(function (a, b2) { return (b2.is_free ? 1 : 0) - (a.is_free ? 1 : 0); }); // free previews first
       // regra da plataforma: no máximo 3 prévias grátis — o resto é só pra assinante
@@ -4116,7 +4116,7 @@ fbq('track', 'PageView');
         var price = Math.round(p.price_cents / 100), isVideo = p.media_type === "video";
         var access = freeOk || subActive || unlockMap[p.id];
         var cappedFree = isFree && !freeOk; // foto "grátis" além das 3 → travada pra assinante
-        var lockLabel = cappedFree ? L('assinantes', 'subscribers', 'suscriptores') : ((isVideo ? L('1 vídeo', '1 video', '1 video') : L('1 foto', '1 photo', '1 foto')) + ' · ' + usd(price) + ' · 30 dias');
+        var lockLabel = cappedFree ? L('assinantes', 'subscribers', 'suscriptores') : ((isVideo ? L('1 vídeo', '1 video', '1 video') : L('1 foto', '1 photo', '1 foto')) + ' · ' + brlc(p.price_cents) + ' · 30 dias');
         var media = access ? '<div class="rc-media" id="rc-' + p.id + '"></div>' : '<div class="rc-media locked"><div class="rc-locked">' + (isVideo ? I.video : I.lock) + '<span class="price">' + lockLabel + '</span></div></div>';
         var until = freeOk ? '<div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div>'
           : (unlockMap[p.id] ? '<div class="rc-until">Acesso até ' + fmtDate(unlockMap[p.id]) + '</div>' : (subActive ? '<div class="rc-until">Incluído na assinatura</div>' : ''));
@@ -4124,7 +4124,7 @@ fbq('track', 'PageView');
         if (freeOk) foot = '<div class="rc-foot">' + until + ((subActive || !hasSub) ? '' : '<button class="btn btn-primary btn-sm btn-block" data-subscribe="' + creatorKey + '" style="margin-top:0.45rem">' + L("Ver tudo · assine", "See all · subscribe", "Ver todo · suscríbete") + '</button>') + '</div>';
         else if (access) foot = '<div class="rc-foot">' + until + '</div>';
         else if (cappedFree) foot = '<div class="rc-foot"><button class="btn btn-primary btn-sm btn-block" data-subscribe="' + creatorKey + '">' + L("Assine pra ver", "Subscribe to see", "Suscríbete para ver") + '</button></div>';
-        else foot = '<div class="rc-foot"><button class="btn btn-primary btn-sm btn-block" data-unlock="' + p.id + '" data-price="' + price + '" data-mt="' + (isVideo ? 'video' : 'image') + '">' + L('Desbloquear', 'Unlock', 'Desbloquear') + ' ' + (isVideo ? L('1 vídeo', '1 video', '1 video') : L('1 foto', '1 photo', '1 foto')) + ' · ' + usd(price) + ' · 30 dias</button></div>';
+        else foot = '<div class="rc-foot"><button class="btn btn-primary btn-sm btn-block" data-unlock="' + p.id + '" data-price="' + price + '" data-mt="' + (isVideo ? 'video' : 'image') + '">' + L('Desbloquear', 'Unlock', 'Desbloquear') + ' ' + (isVideo ? L('1 vídeo', '1 video', '1 video') : L('1 foto', '1 photo', '1 foto')) + ' · ' + brlc(p.price_cents) + ' · 30 dias</button></div>';
         return '<div class="rc">' + media + '<div class="rc-cap">' + escHtml(p.caption || "") + '</div>' + foot + '</div>';
       }).join("") + '</div>' + cta;
       pr.data.forEach(function (p) { if (freeOkSet[p.id]) showFree(p); else if (subActive || unlockMap[p.id]) showUnlocked(p); });
