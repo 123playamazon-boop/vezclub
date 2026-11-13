@@ -84,7 +84,7 @@ fbq('track', 'PageView');
     --warn-tint: rgba(201,130,10,0.14);
     --crit: #e04852;
     --lock1: #2f6bff;
-    --lock2: #7a3cff;
+    --lock2: #1b4fd1;
     --shadow: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.06);
     --radius: 16px;
     --font-display: "Sora", system-ui, sans-serif;
@@ -110,7 +110,7 @@ fbq('track', 'PageView');
       --warn-tint: rgba(224,162,53,0.16);
       --crit: #ff6b6f;
       --lock1: #3a6dff;
-      --lock2: #8a4dff;
+      --lock2: #3b6fe0;
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.38);
       color-scheme: dark;
     }
@@ -134,7 +134,7 @@ fbq('track', 'PageView');
     --warn-tint: rgba(224,162,53,0.16);
     --crit: #ff6b6f;
     --lock1: #3a6dff;
-    --lock2: #8a4dff;
+    --lock2: #3b6fe0;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.38);
     color-scheme: dark;
   }
@@ -540,14 +540,14 @@ fbq('track', 'PageView');
   .rules-conseq { background: rgba(224,72,82,0.1); border: 1px solid color-mix(in srgb, var(--crit) 32%, transparent); border-radius: 11px; padding: 0.75rem 0.9rem; font-size: 0.84rem; margin-top: 1rem; }
 
   /* ---------- banner 1º minuto grátis ---------- */
-  .free-ban { display: flex; align-items: center; gap: 0.8rem; cursor: default; margin: 0 0 1rem; padding: 0.85rem 1rem; border-radius: 16px; position: relative; overflow: hidden; background: linear-gradient(100deg, #6d28d9 0%, #9333ea 42%, #db2777 100%); box-shadow: 0 8px 24px rgba(147, 51, 234, 0.32); }
+  .free-ban { display: flex; align-items: center; gap: 0.8rem; cursor: default; margin: 0 0 1rem; padding: 0.85rem 1rem; border-radius: 16px; position: relative; overflow: hidden; background: linear-gradient(100deg, #1e40af 0%, #1d4ed8 42%, #db2777 100%); box-shadow: 0 8px 24px rgba(147, 51, 234, 0.32); }
   .free-ban::after { content: ""; position: absolute; inset: 0; background: radial-gradient(380px 110px at 12% -10%, rgba(255, 255, 255, 0.25), transparent 70%); pointer-events: none; }
   .fb-ico { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.25); display: flex; align-items: center; justify-content: center; position: relative; }
   .fb-ico svg { width: 24px; height: 24px; }
-  .fb-dot { position: absolute; top: -3px; right: -3px; width: 13px; height: 13px; border-radius: 50%; background: #22c55e; border: 2.5px solid #9333ea; }
+  .fb-dot { position: absolute; top: -3px; right: -3px; width: 13px; height: 13px; border-radius: 50%; background: #22c55e; border: 2.5px solid #1d4ed8; }
   .fb-txt { flex: 1 1 auto; min-width: 0; }
   .fb-txt h2 { color: #fff; font-weight: 800; font-size: 1.15rem; line-height: 1.1; letter-spacing: -0.01em; }
-  .fb-free { background: #fff; color: #9333ea; padding: 0 0.4rem; border-radius: 6px; margin-left: 2px; }
+  .fb-free { background: #fff; color: #1d4ed8; padding: 0 0.4rem; border-radius: 6px; margin-left: 2px; }
   .fb-txt p { color: rgba(255, 255, 255, 0.92); font-size: 0.8rem; font-weight: 500; margin-top: 0.25rem; }
   .fb-cta { flex: 0 0 auto; background: #fff; color: #7c2d9e; font-weight: 700; font-size: 0.85rem; padding: 0.6rem 1.1rem; border-radius: 999px; white-space: nowrap; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16); }
   @media (max-width: 560px) { .free-ban { gap: 0.6rem; padding: 0.7rem 0.8rem; } .fb-ico { width: 38px; height: 38px; } .fb-txt h2 { font-size: 0.98rem; } .fb-txt p { font-size: 0.7rem; } .fb-cta { font-size: 0.75rem; padding: 0.5rem 0.8rem; } }
@@ -764,7 +764,7 @@ fbq('track', 'PageView');
   .stories { display: flex; gap: 0.85rem; overflow-x: auto; padding: 0.2rem 0 0.5rem; margin-bottom: 1.1rem; scrollbar-width: none; }
   .stories::-webkit-scrollbar { display: none; }
   .story { flex: none; width: 70px; text-align: center; cursor: pointer; }
-  .story .ring { width: 64px; height: 64px; border-radius: 50%; padding: 3px; margin: 0 auto; background: conic-gradient(from 210deg, #ff5e8a, #ff9d5c, #2f6bff, #8a4dff, #ff5e8a); }
+  .story .ring { width: 64px; height: 64px; border-radius: 50%; padding: 3px; margin: 0 auto; background: conic-gradient(from 210deg, #1d9bf0, #1552b8, #2f6bff, #3b6fe0, #1d9bf0); }
   .story.seen .ring { background: var(--surface-3); }
   .story .ring .av { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--surface); display: grid; place-items: center; color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
   .story .nm { font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -789,7 +789,7 @@ fbq('track', 'PageView');
   .fan-status .fs-next b { color: var(--fg); }
 
   /* mystery gift */
-  .gift { border-radius: 16px; padding: 1.3rem 1.2rem; text-align: center; background: linear-gradient(150deg, #f0a53c, #ff5e8a); color: #fff; cursor: pointer; position: relative; overflow: hidden; transition: transform .12s; }
+  .gift { border-radius: 16px; padding: 1.3rem 1.2rem; text-align: center; background: linear-gradient(150deg, #2563eb, #1d9bf0); color: #fff; cursor: pointer; position: relative; overflow: hidden; transition: transform .12s; }
   .gift:active { transform: scale(0.99); }
   .gift.opened { background: var(--surface); color: var(--fg); border: 1px solid var(--line); cursor: default; }
   .gift .g-ic { width: 42px; height: 42px; margin: 0 auto 0.5rem; }
@@ -924,7 +924,7 @@ fbq('track', 'PageView');
       <button data-role="buyer" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Ver criadoras</span></button>
       <button data-role="creator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Me candidatar</span></button>
     </div>
-    <a href="/studio/" id="hdr-signup" style="background:linear-gradient(90deg,#c026d3,#7c3aed);color:#fff;font-weight:800;font-size:0.82rem;padding:0.5rem 0.95rem;border-radius:999px;text-decoration:none;white-space:nowrap;box-shadow:0 4px 14px rgba(124,58,237,.35)">Criar conta</a>
+    <a href="/studio/" id="hdr-signup" style="background:linear-gradient(90deg,#1b74e8,#1552b8);color:#fff;font-weight:800;font-size:0.82rem;padding:0.5rem 0.95rem;border-radius:999px;text-decoration:none;white-space:nowrap;box-shadow:0 4px 14px rgba(124,58,237,.35)">Criar conta</a>
     <div class="top-actions">
       <select data-lang-sel class="lang-sel" aria-label="Idioma"><option value="pt">PT</option><option value="en">EN</option><option value="es">ES</option></select>
       <button class="icon-btn" id="theme-btn" aria-label="Alternar tema"><svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
@@ -1051,8 +1051,8 @@ fbq('track', 'PageView');
   var STACK_TOTAL = STACK_VALS.concat(BONUS_VALS).reduce(function (a, b) { return a + b; }, 0);
 
   var GRAD = [
-    ["#2f6bff", "#7a3cff"], ["#ff5e8a", "#ff9d5c"], ["#12b0a0", "#2f6bff"],
-    ["#8a4dff", "#ff5e8a"], ["#f0a53c", "#ff5e8a"], ["#2f6bff", "#12b0a0"]
+    ["#2f6bff", "#1b4fd1"], ["#1d9bf0", "#1552b8"], ["#12b0a0", "#2f6bff"],
+    ["#3b6fe0", "#1d9bf0"], ["#2563eb", "#1d9bf0"], ["#2f6bff", "#12b0a0"]
   ];
 
   function mkTiles(seed, grad) {
@@ -1245,7 +1245,7 @@ fbq('track', 'PageView');
       d.isNew = isNewC; d.created_at = row.created_at;
       return d;
     }
-    var color = [row.color1 || "#2f6bff", row.color2 || "#7a3cff"];
+    var color = [row.color1 || "#2f6bff", row.color2 || "#1b4fd1"];
     var vs = vanityStats(row.key);
     var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: tg, color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: hook, story: hook, interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: hook || L("Entra no meu mundo.", "Step into my world.", "Entra en mi mundo."), stack: [L("Meu feed completo", "My full feed", "Mi feed completo"), L("Conteúdo novo toda semana", "New content every week", "Contenido nuevo cada semana"), L("Chat direto comigo", "Chat directly with me", "Chat directo conmigo"), L("Desconto em tudo", "Discount on everything", "Descuento en todo")], bonus: [L("Pack de boas-vindas", "Welcome pack", "Pack de bienvenida")], guarantee: L("7 dias de garantia.", "7-day guarantee.", "7 días de garantía."), left: 20, fans: [] };
     if (row.avatar_path) { c.avatarUrl = mediaUrl(row.avatar_path); c.avatarPath = row.avatar_path; }
@@ -1303,7 +1303,7 @@ fbq('track', 'PageView');
     var box = document.getElementById("pf-plans"); if (!box) return;
     if (!sb) { box.innerHTML = '<p class="muted-note">' + L("Entre pra assinar.", "Sign in to subscribe.", "Entra para suscribirte.") + '</p>'; return; }
     if (state.subscribed[c.id]) { box.innerHTML = '<div class="rc-sub on">' + I.check + '<span>' + L("Assinatura ativa · acesso a tudo", "Subscription active · full access", "Suscripción activa · acceso total") + '</span></div>'; return; }
-    var pfc1 = c.color1 || "#c026d3", pfc2 = c.color2 || "#7c3aed";
+    var pfc1 = c.color1 || "#1b74e8", pfc2 = c.color2 || "#1552b8";
     sb.from("plans").select("months,price_cents,label").eq("creator_key", c.id).eq("active", true).order("months", { ascending: true }).then(function (r) {
       var plans = (r.data || []).filter(function (p) { return p.price_cents > 0; });
       if (!plans.length) plans = [{ months: 1, price_cents: Math.round(c.subPrice * 100), label: "1 mês" }];
@@ -1322,7 +1322,7 @@ fbq('track', 'PageView');
   }
   function ensurePixCss() {
     if (document.getElementById("pixcss")) return; var s = document.createElement("style"); s.id = "pixcss";
-    s.textContent = '#pixsub{position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)}#pixsub .sh{width:100%;max-width:520px;background:#15131b;color:#f4f1f8;border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid #241f2e;padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}#pixsub h3{margin:0 0 4px;font-size:1.1rem}#pixsub label{display:block;font-size:.78rem;color:#9a93a8;margin:12px 0 5px}#pixsub input{width:100%;padding:13px;border-radius:12px;border:1px solid #241f2e;background:#0e0c14;color:#f4f1f8;font-size:16px}#pixsub .x{float:right;color:#9a93a8;font-size:22px;cursor:pointer;line-height:1}#pixsub .pbtn{width:100%;margin-top:16px;padding:15px;border:0;border-radius:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#c026d3,#7c3aed);cursor:pointer;font-size:16px}#pixsub .pbox{background:#0e0c14;border:1px solid #241f2e;border-radius:12px;padding:12px;margin-top:10px;word-break:break-all;font-size:12px;max-height:120px;overflow:auto}#pixsub .err{color:#ff7a90;font-size:13px;margin-top:10px;min-height:1px}#pixsub .pane{display:none}#pixsub .pane.on{display:block}';
+    s.textContent = '#pixsub{position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)}#pixsub .sh{width:100%;max-width:520px;background:#15131b;color:#f4f1f8;border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid #241f2e;padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}#pixsub h3{margin:0 0 4px;font-size:1.1rem}#pixsub label{display:block;font-size:.78rem;color:#9a93a8;margin:12px 0 5px}#pixsub input{width:100%;padding:13px;border-radius:12px;border:1px solid #241f2e;background:#0e0c14;color:#f4f1f8;font-size:16px}#pixsub .x{float:right;color:#9a93a8;font-size:22px;cursor:pointer;line-height:1}#pixsub .pbtn{width:100%;margin-top:16px;padding:15px;border:0;border-radius:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#1b74e8,#1552b8);cursor:pointer;font-size:16px}#pixsub .pbox{background:#0e0c14;border:1px solid #241f2e;border-radius:12px;padding:12px;margin-top:10px;word-break:break-all;font-size:12px;max-height:120px;overflow:auto}#pixsub .err{color:#ff7a90;font-size:13px;margin-top:10px;min-height:1px}#pixsub .pane{display:none}#pixsub .pane.on{display:block}';
     document.head.appendChild(s);
   }
   function openPixSub(key, months) {
@@ -1635,7 +1635,7 @@ fbq('track', 'PageView');
     { name: "Bronze", min: 0, color: ["#b08d57", "#d8b27a"], pct: "60%" },
     { name: "Prata", min: 40, color: ["#8894ad", "#cfd8e6"], pct: "25%" },
     { name: "Ouro", min: 120, color: ["#e0952f", "#ffd27a"], pct: "8%" },
-    { name: "Diamante", min: 300, color: ["#4d82ff", "#8a4dff"], pct: "2%" }
+    { name: "Diamante", min: 300, color: ["#4d82ff", "#3b6fe0"], pct: "2%" }
   ];
   function fanLevel(xp) {
     var idx = 0;
@@ -2157,7 +2157,7 @@ fbq('track', 'PageView');
     if (!PACKS || !PACKS.length) return "";
     // identidade própria por card: foto = tons joia frios, vídeo = tons quentes. Lado esquerdo (texto) mais escuro p/ leitura.
     var PAL = {
-      photo: [["#be185d", "#ec4899"], ["#7c3aed", "#a855f7"], ["#4338ca", "#6366f1"]],
+      photo: [["#be185d", "#2563eb"], ["#1552b8", "#3b82f6"], ["#4338ca", "#6366f1"]],
       video: [["#c2410c", "#f59e0b"], ["#be123c", "#f43f5e"], ["#9f1239", "#e11d48"]]
     };
     function cnt(p) { var n = p.item_count || parseInt(String(p.preview_text || "").replace(/[^0-9].*$/, ""), 10); return (n && !isNaN(n)) ? n : 0; }
@@ -2205,7 +2205,7 @@ fbq('track', 'PageView');
     // seções próprias (DESCIDAS pro final — não converteram no topo): guardadas e anexadas depois do grid
     var sectionBanners = '<div style="display:flex;flex-direction:column;gap:.6rem;margin:1.4rem 0 1rem">' +
       '<div style="font-weight:800;font-size:.9rem;opacity:.85;margin:.2rem 2px">' + L("Mais opções", "More options", "Más opciones") + '</div>' +
-      '<button data-quiz="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#4f46e5,#9333ea);border-radius:16px;padding:1.15rem 1.15rem;box-shadow:0 12px 26px -12px rgba(79,70,229,.7);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.9rem;line-height:1">🔮</span><span><span style="display:block;font-weight:800;font-size:1.12rem">' + L("O Retrato Falado", "The Sketch", "El Retrato Hablado") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("15 perguntas e eu desenho a sua mulher ideal — de graça", "15 questions and I'll sketch your ideal woman — free", "15 preguntas y dibujo tu mujer ideal — gratis") + '</span></span></button>' +
+      '<button data-quiz="1" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#4f46e5,#1d4ed8);border-radius:16px;padding:1.15rem 1.15rem;box-shadow:0 12px 26px -12px rgba(79,70,229,.7);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.9rem;line-height:1">🔮</span><span><span style="display:block;font-weight:800;font-size:1.12rem">' + L("O Retrato Falado", "The Sketch", "El Retrato Hablado") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("15 perguntas e eu desenho a sua mulher ideal — de graça", "15 questions and I'll sketch your ideal woman — free", "15 preguntas y dibujo tu mujer ideal — gratis") + '</span></span></button>' +
       '<button data-section="photo_set" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#8b5cf6,#d946ef);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(139,92,246,.6);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📸</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Galeria Secreta", "Secret Gallery", "Galería Secreta") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("fotos que elas não postam em nenhum lugar", "photos they post nowhere else", "fotos que no publican en ningún lado") + '</span></span></button>' +
       '<button data-section="story" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#db2777,#f59e0b);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(219,39,119,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📖</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Contos quentes", "Hot Stories", "Cuentos calientes") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("as fantasias que elas nunca contaram", "the fantasies they never told", "las fantasías que nunca contaron") + '</span></span></button>' +
       '<button data-section="ebook" style="border:0;cursor:pointer;text-align:left;color:#fff;background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:16px;padding:1.1rem 1.15rem;box-shadow:0 10px 24px -12px rgba(14,165,233,.55);display:flex;align-items:center;gap:.9rem"><span style="font-size:1.8rem;line-height:1">📘</span><span><span style="display:block;font-weight:800;font-size:1.08rem">' + L("Códigos da Conquista", "The Codes", "Códigos de la Conquista") + '</span><span style="display:block;font-size:.86rem;opacity:.95">' + L("o que dizer pra conquistar (ou reconquistar) ela", "what to say to win her (or win her back)", "qué decir para conquistar (o reconquistar)") + '</span></span></button>' +
@@ -2496,7 +2496,7 @@ fbq('track', 'PageView');
       var step = quizState.i, Q = QUIZ[step], pct = Math.round((step) / QUIZ.length * 100);
       html += '<div style="max-width:520px;margin:0 auto">' +
         '<div style="font-size:.78rem;color:var(--faint);font-weight:700;margin-bottom:.4rem">🔮 ' + L("O Retrato Falado", "The Sketch", "El Retrato Hablado") + ' · ' + (step + 1) + ' / ' + QUIZ.length + '</div>' +
-        '<div style="height:8px;background:rgba(127,127,127,.18);border-radius:999px;overflow:hidden;margin-bottom:1.1rem"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#4f46e5,#9333ea);transition:width .3s"></div></div>' +
+        '<div style="height:8px;background:rgba(127,127,127,.18);border-radius:999px;overflow:hidden;margin-bottom:1.1rem"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#4f46e5,#1d4ed8);transition:width .3s"></div></div>' +
         '<h1 style="font-size:1.35rem;margin:0 0 1rem">' + escHtml(qT(Q.q)) + '</h1>' +
         '<div style="display:flex;flex-direction:column;gap:.6rem">' +
         Q.o.map(function (op, idx) { return '<button class="btn btn-block" data-qopt="' + idx + '" style="text-align:left;background:var(--surface-2,rgba(127,127,127,.06));color:inherit;border:1px solid var(--line);padding:.9rem 1rem;font-weight:600">' + escHtml(qT(op.t)) + '</button>'; }).join("") +
@@ -2509,15 +2509,15 @@ fbq('track', 'PageView');
     var R = quizCompose(), nm = whoName(R.model) || "ela";
     html += '<div style="max-width:520px;margin:0 auto">' +
       '<div style="text-align:center;margin-bottom:1rem"><div style="font-size:.78rem;color:var(--faint);font-weight:800;letter-spacing:.5px">🔮 ' + L("O RETRATO FALADO", "THE SKETCH", "EL RETRATO HABLADO") + '</div><h1 style="font-size:1.5rem;margin:.2rem 0 .1rem">' + L("A sua mulher ideal", "Your ideal woman", "Tu mujer ideal") + '</h1><p style="color:var(--faint);font-size:.9rem;margin:0">' + L("Montado a partir das suas 15 respostas — não é genérico, é o seu.", "Built from your 15 answers — not generic, it's yours.", "Hecho con tus 15 respuestas — no es genérico, es el tuyo.") + '</p></div>' +
-      '<div style="border:1.5px solid #9333ea;border-radius:18px;padding:1.2rem;background:linear-gradient(135deg,rgba(79,70,229,.08),rgba(147,51,234,.06));box-shadow:0 14px 34px -16px rgba(147,51,234,.5)">' +
+      '<div style="border:1.5px solid #1d4ed8;border-radius:18px;padding:1.2rem;background:linear-gradient(135deg,rgba(79,70,229,.08),rgba(147,51,234,.06));box-shadow:0 14px 34px -16px rgba(147,51,234,.5)">' +
         '<div style="display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem"><span style="font-weight:800;font-size:1.15rem">' + escHtml(R.label) + '</span><span style="color:var(--faint);font-weight:700">· ' + R.idade + ' ' + L("anos", "yrs", "años") + '</span></div>' +
         '<div style="font-size:.95rem;line-height:1.6;margin-bottom:.9rem">' + L("Ela é", "She's", "Ella es") + ' <b>' + R.pers.join(", ") + '</b>. ' + escHtml(cap(R.pensa)) + '.</div>' +
-        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#6d28d9);margin-bottom:.3rem">' + L("OS HÁBITOS DELA", "HER HABITS", "SUS HÁBITOS") + '</div>' +
+        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#1e40af);margin-bottom:.3rem">' + L("OS HÁBITOS DELA", "HER HABITS", "SUS HÁBITOS") + '</div>' +
         '<div style="font-size:.92rem;line-height:1.6;margin-bottom:.9rem">' + R.hab.map(function (h) { return '• ' + escHtml(h); }).join("<br>") + '</div>' +
-        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#6d28d9);margin-bottom:.3rem">' + L("O QUE ELA PROCURA EM VOCÊ", "WHAT SHE'S LOOKING FOR IN YOU", "LO QUE ELLA BUSCA EN TI") + '</div>' +
+        '<div style="font-weight:800;font-size:.82rem;color:var(--accent,#1e40af);margin-bottom:.3rem">' + L("O QUE ELA PROCURA EM VOCÊ", "WHAT SHE'S LOOKING FOR IN YOU", "LO QUE ELLA BUSCA EN TI") + '</div>' +
         '<div style="font-size:.92rem;line-height:1.6">' + escHtml(cap(R.procura)) + '.</div>' +
       '</div>' +
-      '<div style="text-align:center;margin:1.3rem 0 .5rem;font-size:1.02rem;font-weight:700">' + L("E quem mais chega perto dela aqui dentro… é a", "And the one who comes closest to her here is…", "Y la que más se parece a ella aquí es…") + ' <span style="color:#9333ea">' + escHtml(nm) + '</span> 💜</div>' +
+      '<div style="text-align:center;margin:1.3rem 0 .5rem;font-size:1.02rem;font-weight:700">' + L("E quem mais chega perto dela aqui dentro… é a", "And the one who comes closest to her here is…", "Y la que más se parece a ella aquí es…") + ' <span style="color:#1d4ed8">' + escHtml(nm) + '</span> 💜</div>' +
       '<button class="btn btn-primary btn-block" id="q-chat" style="margin-bottom:.5rem">💬 ' + L("Conversar com " + nm + " agora — 1º minuto grátis", "Chat with " + nm + " now — 1st minute free", "Habla con " + nm + " ahora — 1er minuto gratis") + '</button>' +
       '<button class="btn btn-ghost btn-block" id="q-share" style="margin-bottom:.5rem">📲 ' + L("Mandar meu resultado pros amigos", "Send my result to friends", "Enviar mi resultado a los amigos") + '</button>' +
       '<button class="btn btn-ghost btn-block" id="q-again">↻ ' + L("Refazer o teste", "Retake the quiz", "Rehacer el test") + '</button>' +
@@ -2582,12 +2582,12 @@ fbq('track', 'PageView');
       // ações reais: mensagem, live, chamada — tudo dentro do perfil
       hh += '<div class="pf-section" style="display:grid;gap:.5rem">';
       if (c.hasChat !== false) hh += '<button class="btn btn-block" data-chat-open="' + c.id + '" style="background:var(--card2,#1b1824);color:#fff;border:1px solid var(--line)">' + I.chatic + ' ' + L("Mandar mensagem", "Send a message", "Enviar mensaje") + '</button>';
-      if (c.online) hh += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#ff3b5c,#c026d3);color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
-      hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#c026d3,#7c3aed);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
+      if (c.online) hh += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:#e11d2b;color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
+      hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#1b74e8,#1552b8);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       hh += '</div>';
       // barra de contagem de conteúdo (estilo Privacy: Publicações · Mídia)
       hh += '<div class="pf-section" style="padding-top:.2rem"><div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden">' +
-        '<div style="padding:13px;text-align:center;border-bottom:2px solid var(--accent,#c026d3);font-weight:800"><span id="pf-cnt-posts">' + (c.posts || 0) + '</span> ' + L("Publicações", "Posts", "Publicaciones") + '</div>' +
+        '<div style="padding:13px;text-align:center;border-bottom:2px solid var(--accent,#1b74e8);font-weight:800"><span id="pf-cnt-posts">' + (c.posts || 0) + '</span> ' + L("Publicações", "Posts", "Publicaciones") + '</div>' +
         '<div style="padding:13px;text-align:center;color:var(--muted);font-weight:700"><span id="pf-cnt-media">—</span> ' + L("Mídia", "Media", "Media") + '</div>' +
       '</div></div>';
       // galeria de fotos (prévias bloqueadas) — dados reais
@@ -2644,8 +2644,8 @@ fbq('track', 'PageView');
     // ações reais de vídeo (modelos reais, não personas de IA): live + chamada privada, tudo dentro do perfil
     if (!c.ai) {
       html += '<div class="pf-section" style="display:grid;gap:.6rem">';
-      if (c.online) html += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#ff3b5c,#c026d3);color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
-      html += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#c026d3,#7c3aed);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
+      if (c.online) html += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:#e11d2b;color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
+      html += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#1b74e8,#1552b8);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       html += '</div>';
     }
 
@@ -2679,7 +2679,7 @@ fbq('track', 'PageView');
 
     // promessa do chat (modelos de IA): fotos chegam na conversa, conforme ela flui — segura a pessoa no chat
     if (chatOnly) {
-      html += '<div class="pf-section"><div style="background:linear-gradient(135deg,' + (c.color1 || '#a855f7') + ',' + (c.color2 || '#ec4899') + ');color:#fff;border-radius:16px;padding:1.1rem 1.2rem;box-shadow:0 10px 30px rgba(0,0,0,.18)">' +
+      html += '<div class="pf-section"><div style="background:linear-gradient(135deg,' + (c.color1 || '#3b82f6') + ',' + (c.color2 || '#2563eb') + ');color:#fff;border-radius:16px;padding:1.1rem 1.2rem;box-shadow:0 10px 30px rgba(0,0,0,.18)">' +
         '<div style="font-weight:800;font-size:1.02rem;margin-bottom:.35rem">🎁 ' + L("As fotos vêm na conversa", "The photos come in the chat", "Las fotos vienen en la charla") + '</div>' +
         '<p style="margin:0;font-size:.92rem;line-height:1.45;opacity:.96">' + L(
           "Quanto mais real fica a nossa conversa, mais eu me solto 😏 Vou te mandando minhas fotos aqui no chat — no meu tempo, do meu jeito. Não é catálogo: é o que eu escolho te mostrar quando você me ganha.",
@@ -3221,7 +3221,7 @@ fbq('track', 'PageView');
       var nAlb = items.filter(function (i) { return i.kind === "photo_set"; }).length;
       var nCon = items.filter(function (i) { return i.kind === "story"; }).length;
       box.innerHTML = '<div id="gf-panel"></div>' + items.map(acItemHtml).join("") +
-        '<div style="border:2px dashed var(--accent,#6d28d9);border-radius:14px;padding:1rem;margin-top:1rem;background:rgba(109,40,217,.05)">' +
+        '<div style="border:2px dashed var(--accent,#1e40af);border-radius:14px;padding:1rem;margin-top:1rem;background:rgba(109,40,217,.05)">' +
         '<div style="font-weight:800;margin-bottom:.2rem">➕ Adicionar mais conteúdo pra ' + escHtml(whoName(ck) || "ela") + '</div>' +
         '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.7rem">Pode ter vários álbuns e vários contos. Quem comprou um volta pra comprar o próximo — então adicione sempre. (Hoje: ' + nAlb + ' álbum(ns), ' + nCon + ' conto(s).)</div>' +
         '<div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn btn-primary btn-sm" data-ac-new="photo_set">📸 + Álbum de fotos</button><button class="btn btn-primary btn-sm" data-ac-new="story">📖 + Conto erótico</button><button class="btn btn-ghost btn-sm" data-ac-new="reveal">👗 + Vestida/sem roupa</button><button class="btn btn-ghost btn-sm" data-ac-new="game">🎲 + Jogo</button></div></div>';
@@ -4400,7 +4400,7 @@ fbq('track', 'PageView');
           var mid = "crmm" + i; mediaJobs.push({ id: mid, kind: mm[1], src: mm[2] });
           h += '<div style="align-self:' + (mine ? "flex-end" : "flex-start") + ';max-width:80%"><div id="' + mid + '" style="background:rgba(127,127,127,.12);border-radius:12px;padding:.5rem .7rem;font-size:.78rem;color:var(--mut,#999)">📷 carregando…</div></div>';
         } else {
-          h += '<div style="align-self:' + (mine ? "flex-end" : "flex-start") + ';max-width:80%;background:' + (mine ? "#6d28d9" : "rgba(127,127,127,.15)") + ';color:' + (mine ? "#fff" : "inherit") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word">' + escHtml(m.content || "") + '</div>';
+          h += '<div style="align-self:' + (mine ? "flex-end" : "flex-start") + ';max-width:80%;background:' + (mine ? "#1e40af" : "rgba(127,127,127,.15)") + ';color:' + (mine ? "#fff" : "inherit") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word">' + escHtml(m.content || "") + '</div>';
         }
       });
       body.innerHTML = h; body.scrollTop = body.scrollHeight;
@@ -4670,7 +4670,7 @@ fbq('track', 'PageView');
     function retranslateAll() { msgsArr.forEach(fillText); paintCust(); }
     function paintLangs() {
       langsEl.innerHTML = ["pt", "en", "es"].map(function (l) {
-        return '<button data-lg="' + l + '" style="border:0;cursor:pointer;padding:.1rem .45rem;border-radius:6px;font-size:.7rem;font-weight:700;margin-left:.2rem;' + (l === attLang ? 'background:#6d28d9;color:#fff' : 'background:rgba(127,127,127,.15);color:inherit') + '">' + LGS[l] + '</button>';
+        return '<button data-lg="' + l + '" style="border:0;cursor:pointer;padding:.1rem .45rem;border-radius:6px;font-size:.7rem;font-weight:700;margin-left:.2rem;' + (l === attLang ? 'background:#1e40af;color:#fff' : 'background:rgba(127,127,127,.15);color:inherit') + '">' + LGS[l] + '</button>';
       }).join("");
       langsEl.querySelectorAll("[data-lg]").forEach(function (b) {
         b.onclick = function () { attLang = b.getAttribute("data-lg"); try { localStorage.setItem("vez_att_lang", attLang); } catch (e) {} paintLangs(); updatePlaceholder(); retranslateAll(); paintQuick(); };
@@ -4681,9 +4681,9 @@ fbq('track', 'PageView');
       var tag = (!mine && m.by_human) ? '<div style="font-size:.6rem;color:#2563eb;margin-bottom:1px">você</div>' : '';
       var md = mediaOf(m.content);
       if (md) {
-        return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="padding:3px;border-radius:14px;background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + '"><div class="ivmedia"><span style="font-size:.76rem;color:' + (mine ? "var(--mut)" : "#fff") + '">' + (md.kind === "aud" ? "🎤" : "📷") + ' carregando…</span></div></div></div>';
+        return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="padding:3px;border-radius:14px;background:' + (mine ? "rgba(127,127,127,.15)" : "#1e40af") + '"><div class="ivmedia"><span style="font-size:.76rem;color:' + (mine ? "var(--mut)" : "#fff") + '">' + (md.kind === "aud" ? "🎤" : "📷") + ' carregando…</span></div></div></div>';
       }
-      return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="background:' + (mine ? "rgba(127,127,127,.15)" : "#6d28d9") + ';color:' + (mine ? "inherit" : "#fff") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word"><span class="ivtext">' + escHtml(sourceOf(m).txt || "") + '</span></div></div>';
+      return '<div data-mid="' + m.id + '" style="align-self:' + (mine ? "flex-start" : "flex-end") + ';max-width:82%">' + tag + '<div style="background:' + (mine ? "rgba(127,127,127,.15)" : "#1e40af") + ';color:' + (mine ? "inherit" : "#fff") + ';padding:.5rem .75rem;border-radius:14px;font-size:.86rem;white-space:pre-wrap;word-break:break-word"><span class="ivtext">' + escHtml(sourceOf(m).txt || "") + '</span></div></div>';
     }
     function ivRenderMedia(mid, md) {
       var holder = body.querySelector('[data-mid="' + mid + '"] .ivmedia'); if (!holder) return;
@@ -4740,8 +4740,8 @@ fbq('track', 'PageView');
       var baseStyle = 'border:1px solid var(--line,#ddd);background:rgba(109,40,217,.07);color:inherit;font-size:.72rem;padding:.3rem .55rem;border-radius:999px;cursor:pointer;line-height:1.15;text-align:left';
       var html = '<span style="font-size:.64rem;color:var(--mut);width:100%;margin-bottom:.1rem">Respostas rápidas · clique pra preencher, aí você revisa e envia</span>';
       html += QUICK_REPLIES.map(function (r, i) { return '<button data-qr="' + i + '" title="clique pra preencher" style="' + baseStyle + '">' + escHtml(r[attLang] || r.pt) + '</button>'; }).join("");
-      html += custom.map(function (txt, i) { return '<span style="display:inline-flex;align-items:center;border:1px solid #6d28d9;background:rgba(109,40,217,.14);border-radius:999px;overflow:hidden"><button data-qrc="' + i + '" title="clique pra preencher" style="border:0;background:transparent;color:inherit;font-size:.72rem;padding:.3rem .2rem .3rem .55rem;cursor:pointer">' + escHtml(txt) + '</button><button data-qrx="' + i + '" title="remover" style="border:0;background:transparent;color:var(--mut);font-size:.7rem;padding:.3rem .45rem .3rem .25rem;cursor:pointer">✕</button></span>'; }).join("");
-      html += '<span style="display:flex;gap:.25rem;width:100%;margin-top:.25rem"><input id="qr-new" placeholder="+ escreva uma resposta sua e salve…" style="flex:1;min-width:0;font-size:.72rem;padding:.32rem .55rem;border:1px dashed var(--line,#ccc);border-radius:999px;background:transparent;color:inherit" autocomplete="off"><button id="qr-add" style="border:0;background:#6d28d9;color:#fff;font-size:.72rem;font-weight:700;padding:.32rem .7rem;border-radius:999px;cursor:pointer;white-space:nowrap">Salvar</button></span>';
+      html += custom.map(function (txt, i) { return '<span style="display:inline-flex;align-items:center;border:1px solid #1e40af;background:rgba(109,40,217,.14);border-radius:999px;overflow:hidden"><button data-qrc="' + i + '" title="clique pra preencher" style="border:0;background:transparent;color:inherit;font-size:.72rem;padding:.3rem .2rem .3rem .55rem;cursor:pointer">' + escHtml(txt) + '</button><button data-qrx="' + i + '" title="remover" style="border:0;background:transparent;color:var(--mut);font-size:.7rem;padding:.3rem .45rem .3rem .25rem;cursor:pointer">✕</button></span>'; }).join("");
+      html += '<span style="display:flex;gap:.25rem;width:100%;margin-top:.25rem"><input id="qr-new" placeholder="+ escreva uma resposta sua e salve…" style="flex:1;min-width:0;font-size:.72rem;padding:.32rem .55rem;border:1px dashed var(--line,#ccc);border-radius:999px;background:transparent;color:inherit" autocomplete="off"><button id="qr-add" style="border:0;background:#1e40af;color:#fff;font-size:.72rem;font-weight:700;padding:.32rem .7rem;border-radius:999px;cursor:pointer;white-space:nowrap">Salvar</button></span>';
       q.innerHTML = html;
       q.querySelectorAll("[data-qr]").forEach(function (b) { b.onclick = function () { var r = QUICK_REPLIES[+b.getAttribute("data-qr")]; fillInp(r[attLang] || r.pt); }; });
       q.querySelectorAll("[data-qrc]").forEach(function (b) { b.onclick = function () { fillInp(loadCustomQR()[+b.getAttribute("data-qrc")] || ""); }; });
@@ -5063,7 +5063,7 @@ fbq('track', 'PageView');
     return gifts.map(function (g, i) {
       return '<div data-gthumb="' + k + '" data-idx="' + i + '" draggable="true" style="position:relative;display:inline-block;margin:3px 8px 10px 3px;cursor:grab;vertical-align:top">' +
         '<img src="' + mediaUrl(g.path) + '" style="width:58px;height:58px;object-fit:cover;border-radius:9px;border:1px solid var(--line);display:block" draggable="false">' +
-        '<span style="position:absolute;top:-6px;left:-6px;background:var(--accent,#6d28d9);color:#fff;border-radius:50%;width:17px;height:17px;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center">' + (i + 1) + '</span>' +
+        '<span style="position:absolute;top:-6px;left:-6px;background:var(--accent,#1e40af);color:#fff;border-radius:50%;width:17px;height:17px;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center">' + (i + 1) + '</span>' +
         '<button data-giftdel="' + k + '|' + i + '" title="Remover" style="position:absolute;top:-7px;right:-7px;background:#111;color:#fff;border:0;border-radius:50%;width:20px;height:20px;line-height:1;cursor:pointer">×</button>' +
         '<button data-gmv="' + k + '|' + i + '|-1" title="esquerda" ' + (i === 0 ? 'disabled ' : '') + 'style="position:absolute;bottom:-9px;left:2px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;width:20px;height:17px;line-height:1;cursor:pointer;font-size:.74rem;opacity:' + (i === 0 ? '.3' : '1') + '">‹</button>' +
         '<button data-gmv="' + k + '|' + i + '|1" title="direita" ' + (i === gifts.length - 1 ? 'disabled ' : '') + 'style="position:absolute;bottom:-9px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;width:20px;height:17px;line-height:1;cursor:pointer;font-size:.74rem;opacity:' + (i === gifts.length - 1 ? '.3' : '1') + '">›</button>' +
@@ -5630,7 +5630,7 @@ fbq('track', 'PageView');
       var chips = picks.map(function (p, i) {
         var price = "R$ " + ((p.price_cents || 0) / 100).toFixed(2).replace(".", ",");
         var n = cnt(p); var lab = n ? (n + " " + L("fotos", "photos", "fotos")) : escHtml(p.title);
-        return '<button class="chpk" data-pid="' + escHtml(p.id) + '" style="flex:1;min-width:0;border:0;cursor:pointer;color:#fff;background:linear-gradient(100deg,#7c3aed,#db2777);padding:.38rem .2rem;line-height:1.12;' + (i > 0 ? 'border-left:1px solid rgba(255,255,255,.18);' : '') + '">' +
+        return '<button class="chpk" data-pid="' + escHtml(p.id) + '" style="flex:1;min-width:0;border:0;cursor:pointer;color:#fff;background:linear-gradient(100deg,#1552b8,#db2777);padding:.38rem .2rem;line-height:1.12;' + (i > 0 ? 'border-left:1px solid rgba(255,255,255,.18);' : '') + '">' +
           '<div style="font-weight:800;font-size:.8rem;white-space:nowrap">🔥 ' + lab + '</div>' +
           '<div style="font-size:.71rem;opacity:.95;white-space:nowrap">' + price + '</div></button>';
       }).join("");
@@ -6053,7 +6053,7 @@ fbq('track', 'PageView');
     if (document.getElementById("inapp-nudge")) return;
     var bar = document.createElement("div");
     bar.id = "inapp-nudge";
-    bar.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:95;background:linear-gradient(90deg,#7a3cff,#2f6bff);color:#fff;font-size:12.5px;line-height:1.3;padding:8px 36px 8px 12px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.25)";
+    bar.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:95;background:linear-gradient(90deg,#1b4fd1,#2f6bff);color:#fff;font-size:12.5px;line-height:1.3;padding:8px 36px 8px 12px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.25)";
     bar.innerHTML = L("💜 Pra melhor experiência e pagar com segurança, abra no seu navegador: toque em ⋯ e escolha \"Abrir no navegador\".", "💜 For the best experience and to pay securely, open this in your browser: tap ⋯ and choose \"Open in browser\".", "💜 Para una mejor experiencia y pagar seguro, abre esto en tu navegador: toca ⋯ y elige \"Abrir en el navegador\".") + '<button id="inapp-nudge-x" aria-label="close" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:transparent;border:0;color:#fff;font-size:18px;line-height:1;padding:2px 6px">×</button>';
     document.body.appendChild(bar);
     var x = document.getElementById("inapp-nudge-x");
@@ -7281,12 +7281,12 @@ fbq('track', 'PageView');
   }
   function subCardHtml(ck, active) {
     if (active) {
-      return '<div style="border:1.5px solid #6d28d9;border-radius:16px;padding:1rem;background:linear-gradient(135deg,rgba(109,40,217,.14),rgba(219,39,119,.1))">' +
+      return '<div style="border:1.5px solid #1e40af;border-radius:16px;padding:1rem;background:linear-gradient(135deg,rgba(109,40,217,.14),rgba(219,39,119,.1))">' +
         '<div style="font-weight:800;font-size:1rem">💜 ' + L("Linha Privada ativa", "Private Line active", "Línea Privada activa") + '</div>' +
         '<div style="font-size:.84rem;opacity:.9;margin-top:.2rem">' + L("Conversa liberada e álbum destravado. Aproveita 😏", "Chat open and album unlocked. Enjoy 😏", "Chat libre y álbum desbloqueado. Disfruta 😏") + '</div></div>';
     }
     var items = subStack().map(function (t) { return '<div style="margin:.12rem 0">✓ ' + escHtml(t) + '</div>'; }).join("");
-    return '<div style="border:1.5px solid #6d28d9;border-radius:16px;padding:1rem;background:linear-gradient(135deg,rgba(109,40,217,.1),rgba(219,39,119,.08))">' +
+    return '<div style="border:1.5px solid #1e40af;border-radius:16px;padding:1rem;background:linear-gradient(135deg,rgba(109,40,217,.1),rgba(219,39,119,.08))">' +
       '<div style="font-weight:800;font-size:1.05rem;margin-bottom:.1rem">💜 ' + L("A Linha Privada dela", "Her Private Line", "Su Línea Privada") + '</div>' +
       '<div style="font-size:.8rem;opacity:.75;margin-bottom:.55rem">' + L("o jeito mais barato de ter ela — 30 dias inteiros", "the cheapest way to have her — a full 30 days", "la forma más barata de tenerla — 30 días completos") + '</div>' +
       '<div style="text-align:left;font-size:.85rem;line-height:1.5;margin-bottom:.7rem">' + items + '</div>' +
@@ -7423,13 +7423,13 @@ fbq('track', 'PageView');
       var hk = pdPreview(it);
       media = '<div style="margin-top:.55rem;border-radius:12px;overflow:hidden;border:1px solid var(--line,#eee)">' +
         '<div style="padding:.9rem;font-size:.95rem;line-height:1.6;color:var(--ink,#1a1430);font-weight:500;max-height:108px;overflow:hidden;background:var(--surface-2,rgba(127,127,127,.05))">' + (hk ? escHtml(hk) + '…' : escHtml(pdTeaser(it))) + '</div>' +
-        '<div style="padding:.55rem;text-align:center;font-size:.82rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#6d28d9,#db2777)">🔒 ' + L("continua ao desbloquear", "unlock to keep reading", "sigue al desbloquear") + '</div></div>';
+        '<div style="padding:.55rem;text-align:center;font-size:.82rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#1e40af,#db2777)">🔒 ' + L("continua ao desbloquear", "unlock to keep reading", "sigue al desbloquear") + '</div></div>';
     } else if (it.kind === "photo_set" && it.cover_url) {
       // álbum: 1ª foto NÍTIDA (a pessoa vê o que compra) + quantas fotos vem
       media = '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem"><img src="' + it.cover_url + '" alt="" style="width:100%;display:block">' + countTag + lockBadge + '</div>';
     } else {
       // vídeo / outros: capa borrada
-      media = '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem">' + (it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(16px);transform:scale(1.1)">' : '<div style="height:150px;background:linear-gradient(135deg,#6d28d9,#db2777)"></div>') + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem">' + (it.coming_soon ? "⏳" : "🔒") + '</div></div>';
+      media = '<div style="position:relative;border-radius:12px;overflow:hidden;margin-top:.55rem">' + (it.cover_url ? '<img src="' + it.cover_url + '" alt="" style="width:100%;display:block;filter:blur(16px);transform:scale(1.1)">' : '<div style="height:150px;background:linear-gradient(135deg,#1e40af,#db2777)"></div>') + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem">' + (it.coming_soon ? "⏳" : "🔒") + '</div></div>';
     }
     var unlockLabel = (it.kind === "photo_set" && nph)
       ? L("Desbloquear as " + nph + " fotos por ", "Unlock all " + nph + " photos for ", "Desbloquear las " + nph + " fotos por ")
@@ -7450,7 +7450,7 @@ fbq('track', 'PageView');
           ? '<button class="btn btn-ghost btn-block" disabled style="margin-top:.55rem">' + L("Esgotado", "Sold out", "Agotado") + '</button>'
           : '<button class="btn btn-primary btn-block" data-unlock="' + it.id + '" style="margin-top:.55rem">🪙 ' + unlockLabel + it.unlock_cost_coins + '</button>';
     var star = it.featured ? ' <span style="background:linear-gradient(135deg,#f59e0b,#db2777);color:#fff;padding:.05rem .4rem;border-radius:999px;font-size:.64rem;margin-left:.2rem">⭐ ' + L("Destaque", "Featured", "Destacado") + '</span>' : '';
-    var who = (it._who || it.featured) ? '<div style="font-size:.72rem;color:var(--accent,#6d28d9);font-weight:800;margin-bottom:.1rem">' + escHtml(it._who || "") + star + '</div>' : '';
+    var who = (it._who || it.featured) ? '<div style="font-size:.72rem;color:var(--accent,#1e40af);font-weight:800;margin-bottom:.1rem">' + escHtml(it._who || "") + star + '</div>' : '';
     var fborder = it.featured ? 'border:1.5px solid #f59e0b;box-shadow:0 6px 18px -10px rgba(245,158,11,.5)' : 'border:1px solid var(--line,#eee)';
     var tap = (!owned && !it.coming_soon) ? 'cursor:pointer;' : '';
     return '<div data-pdcard="' + it.id + '" style="' + fborder + ';' + tap + 'border-radius:14px;padding:.85rem;margin-bottom:.85rem">' + who + '<div style="font-weight:700">' + pdIcon(it.kind) + ' ' + escHtml(pdTitle(it)) + '</div><div style="font-size:.84rem;color:var(--mut,#888);margin-top:.15rem">' + escHtml(pdTeaser(it)) + '</div>' + media + edition + btn + '</div>';
