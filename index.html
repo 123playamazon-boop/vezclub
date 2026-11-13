@@ -1314,7 +1314,7 @@ fbq('track', 'PageView');
         var lbl = p.label || (p.months + " " + (p.months > 1 ? L("meses", "months", "meses") : L("mês", "mo", "mes")));
         var badge = off > 0 ? '<span style="font-weight:800;font-size:.72rem;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:999px;margin-left:6px">-' + off + '%</span>' : '';
         var sub = p.months > 1 ? ('<div style="font-size:.78rem;opacity:.85;margin-top:2px">' + brlc(perMonth) + '/' + L("mês", "mo", "mes") + '</div>') : '';
-        return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;margin-bottom:10px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(90deg,' + pfc1 + ',' + pfc2 + ');color:#fff">' +
+        return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;margin-bottom:10px;border:0;border-radius:14px;cursor:pointer;background:#1b6fe3;color:#fff">' +
           '<span style="text-align:left"><span style="font-weight:800">' + lbl + '</span>' + badge + sub + '</span>' +
           '<span style="font-weight:900;font-size:1.05rem">' + brlc(p.price_cents) + '</span></button>';
       }).join("") + '<p class="muted-note" style="margin-top:.3rem;font-size:.8rem">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</p>';
@@ -2579,11 +2579,10 @@ fbq('track', 'PageView');
       if (c.hasSub !== false) {
         hh += '<div class="pf-section"><div class="pf-h">' + L("Assinaturas", "Subscriptions", "Suscripciones") + '</div><div id="pf-plans"><p class="muted-note">' + L("Carregando planos…", "Loading plans…", "Cargando planes…") + '</p></div></div>';
       }
-      // ações reais: mensagem, live, chamada — tudo dentro do perfil
+      // ações: mensagem (verde WhatsApp) e chamada — vídeo ao vivo desligado até testar real
       hh += '<div class="pf-section" style="display:grid;gap:.5rem">';
-      if (c.hasChat !== false) hh += '<button class="btn btn-block" data-chat-open="' + c.id + '" style="background:var(--card2,#1b1824);color:#fff;border:1px solid var(--line)">' + I.chatic + ' ' + L("Mandar mensagem", "Send a message", "Enviar mensaje") + '</button>';
-      if (c.online) hh += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:#e11d2b;color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
-      hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#1b74e8,#1552b8);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
+      if (c.hasChat !== false) hh += '<button class="btn btn-block" data-chat-open="' + c.id + '" style="background:#25c35e;color:#fff">' + I.chatic + ' ' + L("Mandar mensagem", "Send a message", "Enviar mensaje") + '</button>';
+      hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:#1b6fe3;color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       hh += '</div>';
       // barra de contagem de conteúdo (estilo Privacy: Publicações · Mídia)
       hh += '<div class="pf-section" style="padding-top:.2rem"><div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden">' +
@@ -2641,11 +2640,10 @@ fbq('track', 'PageView');
       html += '<div class="pf-status"><span class="live-dot"></span>' + L("Online · conteúdo novo toda semana", "Online · new content every week", "Online · contenido nuevo cada semana") + '</div>';
     }
 
-    // ações reais de vídeo (modelos reais, não personas de IA): live + chamada privada, tudo dentro do perfil
+    // ação de chamada privada (vídeo ao vivo desligado até testar real)
     if (!c.ai) {
       html += '<div class="pf-section" style="display:grid;gap:.6rem">';
-      if (c.online) html += '<button class="btn btn-block" data-live="' + escHtml(c.id) + '" style="background:#e11d2b;color:#fff">🔴 ' + L("Entrar na live dela", "Join her live", "Entra a su vivo") + '</button>';
-      html += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:linear-gradient(90deg,#1b74e8,#1552b8);color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
+      html += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:#1b6fe3;color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       html += '</div>';
     }
 
@@ -4092,16 +4090,7 @@ fbq('track', 'PageView');
       var b = document.getElementById("rc-list"); if (!b) return;
       var pr = res[0], ur = res[1], sr = res[2];
       if (pr.error) { b.innerHTML = '<p class="muted-note">Erro: ' + escHtml(pr.error.message) + '</p>'; return; }
-      var chatOnly = !!AI_PERSONAS[creatorKey];
-      if (chatOnly) {
-        var freeOnly = (pr.data || []).filter(function (p) { return p.is_free; }).slice(0, 3);
-        if (!freeOnly.length) { b.innerHTML = '<p class="muted-note">' + L("Fala com ela no chat — o resto ela te mostra lá. 😏", "Talk to her in the chat — she shows you the rest there. 😏", "Habla con ella en el chat — el resto te lo muestra ahí. 😏") + '</p>'; return; }
-        b.innerHTML = '<div class="pf-gallery" style="display:grid;grid-template-columns:repeat(' + Math.min(freeOnly.length, 3) + ',1fr);gap:.4rem">' + freeOnly.map(function (p) {
-          return '<div class="rc-media" id="rc-' + p.id + '" style="aspect-ratio:1;border-radius:10px;overflow:hidden"></div>';
-        }).join("") + '</div><p class="muted-note" style="margin-top:.55rem;font-size:.82rem">' + L("Só uma amostra. As fotos de verdade ela manda na conversa. 😏", "Just a taste. The real photos she sends in the chat. 😏", "Solo una muestra. Las fotos de verdad las manda en la charla. 😏") + '</p>';
-        freeOnly.forEach(showFree);
-        return;
-      }
+      // regra única pra todas (reais e IA): 3 prévias grátis, o resto é pago
       var now = Date.now();
       var subUntil = 0; if (sr.data) sr.data.forEach(function (s) { var t = new Date(s.expires_at).getTime(); if (t > subUntil) subUntil = t; if (t > now && s.tier) state.subscribedTier[creatorKey] = s.tier; });
       var subActive = subUntil > now;
