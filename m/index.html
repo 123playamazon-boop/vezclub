@@ -178,6 +178,7 @@ a{color:inherit}
         '<button class="btn sec" id="chatBtn">💬 Conversar</button>'+
         '<button class="btn sec" id="tipBtn">🎁 Mandar gorjeta</button>'+
       '</div>'+
+      (m.available?('<div style="padding:12px 16px 0"><button class="btn" id="callBtn">📞 Chamada de vídeo privada'+(m.call_price>0?' · '+BRL(m.call_price):'')+'</button></div>'):'')+
       '<div class="tabs"><div class="tab on">Publicações</div><div class="tab">Mídia</div></div>'+
       '<div class="grid">'+feed+'</div>';
 
@@ -187,6 +188,19 @@ a{color:inherit}
     });
     document.getElementById("chatBtn").onclick=function(){ if(m.key==='demo'){ alert('Perfil de demonstração.'); return; } location.href='/dm/?c='+encodeURIComponent(m.key); };
     document.getElementById("tipBtn").onclick=function(){ alert("Gorjeta — em breve."); };
+    var cb=document.getElementById("callBtn");
+    if(cb) cb.onclick=async function(){
+      if(m.key==='demo'){ alert('Perfil de demonstração.'); return; }
+      var tok=await sessionToken();
+      if(!tok){ location.href='/dm/?c='+encodeURIComponent(m.key); return; }
+      cb.disabled=true; cb.textContent='Chamando…';
+      var r=await fetch(FN+'call',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify({action:'request',creator_key:m.key})});
+      var j=await r.json().catch(function(){return{};});
+      if(j.error==='not_subscriber'){ alert('Assine pra fazer chamadas privadas com ela.'); cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; return; }
+      if(j.error==='offline'){ alert('Ela ficou offline agora. Tente mais tarde.'); cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; return; }
+      if(j.call_id){ location.href='/call/?id='+encodeURIComponent(j.call_id); }
+      else { alert('Não consegui iniciar a chamada agora.'); cb.disabled=false; cb.textContent='📞 Chamada de vídeo privada'; }
+    };
     Array.prototype.forEach.call(document.querySelectorAll(".cell.lock"),function(el){
       el.onclick=function(){ goSub(m, m.plans[0]); };
     });
@@ -371,6 +385,7 @@ a{color:inherit}
         render({
           key:c.key, handle:(c.handle||handle).replace(/^@/,""), display_name:c.display_name, verified:true, online:c.online,
           hook:c.hook||"", avatar:base+(c.avatar_path||""), cover:base+(c.cover_path||c.avatar_path||""),
+          available:c.available_for_calls, call_price:c.call_price_cents||0,
           photos:(counts.photos!=null?counts.photos:"—"), videos:(counts.videos!=null?counts.videos:"—"), likes:"—",
           plans:plans.length?plans.map(function(p){return {months:p.months,price_cents:p.price_cents,label:p.label||((p.months)+" mês"+(p.months>1?"es":"")),off:(p.months>1?"":"")};}):DEMO.plans,
           posts:fdPosts?fdPosts.map(function(p){return {id:p.id,locked:p.locked,is_free:!p.locked,price_cents:p.price_cents,media_type:p.media_type,media:p.url||""};}):DEMO.posts
