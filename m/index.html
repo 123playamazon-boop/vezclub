@@ -163,7 +163,7 @@ a{color:inherit}
       '<div class="hero">'+
         '<img class="cover" src="'+esc(m.cover)+'" alt="">'+
         '<div class="cover-grad"></div>'+
-        (m.online?'<div class="live"><span class="dot"></span> ONLINE AGORA</div>':'')+
+        (m.online?(m.key!=='demo'?'<a class="live" href="/live/?c='+encodeURIComponent(m.key)+'" style="text-decoration:none;color:inherit"><span class="dot"></span> AO VIVO · ENTRAR</a>':'<div class="live"><span class="dot"></span> ONLINE AGORA</div>'):'')+
         '<div class="plus18">+18</div>'+
         '<div class="counts"><span><b>'+m.photos+'</b> fotos</span><span><b>'+m.videos+'</b> vídeos</span><span>♡ <b>'+m.likes+'</b></span></div>'+
       '</div>'+

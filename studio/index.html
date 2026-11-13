@@ -67,6 +67,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       <div class="stat"><b id="st-earn">—</b><span>ganhos</span></div>
       <div class="stat"><b id="st-posts">—</b><span>posts</span></div>
     </div>
+    <a href="/live/" id="go-live" class="btn" style="text-decoration:none;margin-bottom:10px">🔴 Ir ao vivo</a>
     <a href="/dm/" class="btn sec" style="text-decoration:none;margin-bottom:14px">💬 Mensagens dos assinantes</a>
 
     <div class="card">
@@ -174,6 +175,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     var me=await api('me',{});
     if(me.error==='auth'){ show('login'); return; }
     if(!me.creator){ show('nocreator'); return; }
+    var gl=$('go-live'); if(gl) gl.href='/live/?c='+encodeURIComponent(me.creator.key);
     show('panel'); refresh();
   }
   // start
