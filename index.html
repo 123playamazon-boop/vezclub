@@ -8133,8 +8133,14 @@ fbq('track', 'PageView');
     account = acctFrom(session);
     account.creatorKey = account.id;
     account.isAdmin = false;
-    if (account.role === "creator" && sb) {
-      sb.from("creators").select("key").eq("account_id", account.id).limit(1).then(function (r) { if (r.data && r.data[0]) account.creatorKey = r.data[0].key; });
+    // reconhece criadora pela tabela creators (não só pelo metadata) — assim o menu mostra "Minha área de criadora"
+    if (sb) {
+      sb.from("creators").select("key").eq("account_id", account.id).limit(1).then(function (r) {
+        if (r.data && r.data[0]) {
+          account.role = "creator"; account.creatorKey = r.data[0].key;
+          try { if (state.view === "account" && state.role === "buyer") render(); } catch (e) {}
+        }
+      });
     }
     if (sb) sb.from("profiles").select("is_admin").eq("id", account.id).limit(1).then(function (r) {
       account.isAdmin = !!(r.data && r.data[0] && r.data[0].is_admin);
