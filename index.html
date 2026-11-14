@@ -1258,7 +1258,7 @@ fbq('track', 'PageView');
     }
     var color = [row.color1 || "#2f6bff", row.color2 || "#1b4fd1"];
     var vs = vanityStats(row.key);
-    var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: tg, color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: hook, story: hook, interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: hook || L("Entra no meu mundo.", "Step into my world.", "Entra en mi mundo."), stack: [L("Meu feed completo", "My full feed", "Mi feed completo"), L("Conteúdo novo toda semana", "New content every week", "Contenido nuevo cada semana"), L("Chat direto comigo", "Chat directly with me", "Chat directo conmigo"), L("Desconto em tudo", "Discount on everything", "Descuento en todo")], bonus: [L("Pack de boas-vindas", "Welcome pack", "Pack de bienvenida")], guarantee: L("7 dias de garantia.", "7-day guarantee.", "7 días de garantía."), left: 20, fans: [] };
+    var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: tg, color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), subPriceCents: (row.sub_price_cents || 1900), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: hook, story: hook, interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: hook || L("Entra no meu mundo.", "Step into my world.", "Entra en mi mundo."), stack: [L("Meu feed completo", "My full feed", "Mi feed completo"), L("Conteúdo novo toda semana", "New content every week", "Contenido nuevo cada semana"), L("Chat direto comigo", "Chat directly with me", "Chat directo conmigo"), L("Desconto em tudo", "Discount on everything", "Descuento en todo")], bonus: [L("Pack de boas-vindas", "Welcome pack", "Pack de bienvenida")], guarantee: L("7 dias de garantia.", "7-day guarantee.", "7 días de garantía."), left: 20, fans: [] };
     if (row.avatar_path) { c.avatarUrl = mediaUrl(row.avatar_path); c.avatarPath = row.avatar_path; }
     if (row.cover_path) { c.coverUrl = mediaUrl(row.cover_path); c.coverPath = row.cover_path; }
     c.hasChat = (row.has_chat !== false);
@@ -2645,7 +2645,7 @@ fbq('track', 'PageView');
       hh += '<div id="pf-packs" hidden></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
-        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brlc(Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pix · acesso na hora · cancela quando quiser", "Pix · instant access · cancel anytime", "Pix · acceso al instante · cancela cuando quieras") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
+        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brlc(c.subPriceCents || Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pix · acesso na hora · cancela quando quiser", "Pix · instant access · cancel anytime", "Pix · acceso al instante · cancela cuando quieras") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
       }
       app.innerHTML = hh;
       try { window.scrollTo(0, 0); } catch (e) {}
@@ -4075,7 +4075,7 @@ fbq('track', 'PageView');
     var cObj = CREATORS.find(function (x) { return x.id === creatorKey; });
     var hasSub = !(cObj && cObj.hasSub === false);
     var subPrice = cObj ? cObj.subPrice : 19;
-    var subCents = Math.round(subPrice * 100);
+    var subCents = (cObj && cObj.subPriceCents) || Math.round(subPrice * 100);
     var likes = (cObj && cObj.likes) || 0;
     Promise.all([
       sb.from("posts").select("id,caption,media_path,media_type,is_free").eq("creator_key", creatorKey).eq("status", "approved").eq("is_free", true).order("created_at", { ascending: false }).limit(3),
@@ -4176,7 +4176,7 @@ fbq('track', 'PageView');
       // regra da plataforma: no máximo 3 prévias grátis — o resto é só pra assinante
       var FREE_CAP = 3, freeShown = 0, freeOkSet = {};
       pr.data.forEach(function (p) { if (p.is_free && freeShown < FREE_CAP) { freeOkSet[p.id] = true; freeShown++; } });
-      var subCents = Math.round(subPrice * 100);
+      var subCents = (cObj && cObj.subPriceCents) || Math.round(subPrice * 100);
       // ASSINANTE: tudo liberado
       if (subActive) {
         b.innerHTML = '<div class="rc-grid">' + pr.data.map(function (p) {
