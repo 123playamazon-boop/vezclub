@@ -1389,6 +1389,94 @@ fbq('track', 'PageView');
       applyDynTranslation();
     }, function () { box.innerHTML = '<p class="muted-note">' + L("Não consegui carregar os planos.", "Couldn't load plans.", "No pude cargar los planes.") + '</p>'; });
   }
+  function loadStoriesInto(c) {
+    var box = document.getElementById("pf-stories"); if (!box) return;
+    if (!sb) { box.hidden = true; return; }
+    sb.from("audio_stories").select("id,title,teaser,price_cents,duration_sec").eq("creator_key", c.id).eq("active", true).order("sort", { ascending: true }).order("created_at", { ascending: false }).then(function (r) {
+      var stories = (r.data || []);
+      if (!stories.length) { box.hidden = true; box.innerHTML = ""; return; }
+      box.hidden = false;
+      function doRender(unlockedSet) {
+        var head = '<div class="pf-h" style="margin-bottom:.15rem">🔥 ' + L("Histórias proibidas", "Forbidden stories", "Historias prohibidas") + '</div>' +
+          '<p class="muted-note" style="margin:0 0 .7rem;font-size:.86rem">' + L("O que ela já fez e nunca contou — na voz dela, no seu ouvido.", "What she's done and never told — in her voice, in your ear.", "Lo que ya hizo y nunca contó — en su voz, en tu oído.") + '</p>';
+        var rows = stories.map(function (s) {
+          var unlocked = !!unlockedSet[s.id];
+          var dur = s.duration_sec ? (Math.floor(s.duration_sec / 60) + ":" + ("0" + (s.duration_sec % 60)).slice(-2)) : "";
+          var teaser = s.teaser || L("A história mais suja que eu nunca postei em lugar nenhum.", "The dirtiest story I never posted anywhere.", "La historia más sucia que nunca publiqué en ningún lado.");
+          var body = unlocked
+            ? '<audio id="st-aud-' + s.id + '" controls preload="none" style="width:100%;margin-top:.55rem"></audio><button class="btn btn-ghost btn-sm" data-story-play="' + s.id + '" style="margin-top:.4rem">▶ ' + L("Tocar", "Play", "Reproducir") + '</button>'
+            : '<button class="btn btn-primary btn-block" data-story-buy="' + s.id + '" data-title="' + escHtml(s.title) + '" data-price="' + s.price_cents + '" style="margin-top:.6rem">🔓 ' + L("Ouvir agora · ", "Listen now · ", "Escuchar ahora · ") + brlc(s.price_cents) + '</button>';
+          return '<div style="border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px">' +
+            '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.15rem">🎧</span><div style="font-weight:800">' + escHtml(s.title) + '</div>' + (dur ? '<div style="margin-left:auto;font-size:.8rem;color:var(--muted)">' + dur + '</div>' : '') + '</div>' +
+            '<div style="font-size:.88rem;color:var(--muted);margin-top:5px;line-height:1.35">' + escHtml(teaser) + '</div>' +
+            (unlocked ? '' : '<div style="font-size:.78rem;color:var(--faint);margin-top:7px">🔒 ' + L("Áudio completo · desbloqueia na hora", "Full audio · unlocks instantly", "Audio completo · se desbloquea al instante") + '</div>') +
+            body +
+          '</div>';
+        }).join("");
+        box.innerHTML = head + rows;
+        box.querySelectorAll("[data-story-buy]").forEach(function (b) { b.onclick = function () { openStoryPix(+b.getAttribute("data-story-buy"), b.getAttribute("data-title"), +b.getAttribute("data-price")); }; });
+        box.querySelectorAll("[data-story-play]").forEach(function (b) { b.onclick = function () { playStory(+b.getAttribute("data-story-play"), b); }; });
+        if (typeof applyDynTranslation === "function") applyDynTranslation();
+      }
+      if (!account) { doRender({}); return; }
+      sb.from("story_unlocks").select("story_id").then(function (u) { var set = {}; (u.data || []).forEach(function (x) { set[x.story_id] = true; }); doRender(set); });
+    });
+  }
+  function markStoryUnlocked() { var c = CREATORS.find(function (x) { return x.id === state.creatorId; }); if (c) loadStoriesInto(c); }
+  function playStory(storyId, btn) {
+    var aud = document.getElementById("st-aud-" + storyId); if (!aud) return;
+    if (aud.src) { aud.play(); return; }
+    btn.disabled = true; btn.textContent = "…";
+    sb.functions.invoke("story_audio_url", { body: { story_id: storyId } }).then(function (res) {
+      var d = (res && res.data) || {};
+      btn.disabled = false; btn.textContent = "▶ " + L("Tocar", "Play", "Reproducir");
+      if ((res && res.error) || d.error || !d.url) { if (typeof toast === "function") toast(L("Não deu pra tocar agora.", "Couldn't play now.", "No se pudo reproducir.")); return; }
+      aud.src = d.url; try { aud.play(); } catch (e) {}
+    });
+  }
+  function openStoryPix(storyId, title, priceCents) {
+    if (typeof needLogin === "function" && needLogin()) return;
+    ensurePixCss();
+    var old = document.getElementById("pixsub"); if (old) old.remove();
+    var ov = document.createElement("div"); ov.id = "pixsub";
+    ov.innerHTML = '<div class="sh">' +
+      '<span class="x" id="sp-x">×</span>' +
+      '<h3>' + L("Ouvir a história", "Listen to the story", "Escuchar la historia") + '</h3>' +
+      '<div class="pane on" id="sp-pane">' +
+        '<div style="font-weight:800;margin:.3rem 0 .1rem">🎧 ' + escHtml(title || "") + '</div>' +
+        '<div style="color:#9a93a8;font-size:.85rem">' + L("Pague o Pix e o áudio libera na hora.", "Pay the Pix and the audio unlocks instantly.", "Paga el Pix y el audio se libera al instante.") + '</div>' +
+        '<button class="pbtn" id="sp-gen" style="margin-top:14px">' + L("Gerar Pix · ", "Generate Pix · ", "Generar Pix · ") + brlc(priceCents) + '</button>' +
+        '<div class="pbox" id="sp-code" style="display:none"></div>' +
+        '<button class="pbtn" id="sp-copy" style="display:none;margin-top:8px">' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button>' +
+        '<p id="sp-stat" style="margin-top:12px;color:#9a93a8;font-size:.8rem"></p>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(ov);
+    var pollT = null;
+    function close() { if (pollT) { clearInterval(pollT); pollT = null; } ov.remove(); }
+    ov.querySelector("#sp-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.querySelector("#sp-gen").onclick = function () {
+      var g = ov.querySelector("#sp-gen"); g.disabled = true; g.textContent = L("Gerando…", "Generating…", "Generando…");
+      sb.functions.invoke("story_pix", { body: { story_id: storyId } }).then(function (res) {
+        var d = (res && res.data) || {};
+        if (d.already) { close(); markStoryUnlocked(); return; }
+        if ((res && res.error) || d.error || !d.pix_code) { g.disabled = false; g.textContent = L("Gerar Pix · ", "Generate Pix · ", "Generar Pix · ") + brlc(priceCents); ov.querySelector("#sp-stat").textContent = L("Não deu pra gerar o Pix agora.", "Couldn't generate Pix now.", "No se pudo generar el Pix."); return; }
+        g.style.display = "none";
+        var codeEl = ov.querySelector("#sp-code"); codeEl.style.display = "block"; codeEl.textContent = d.pix_code;
+        var copyEl = ov.querySelector("#sp-copy"); copyEl.style.display = "block";
+        copyEl.onclick = function () { try { navigator.clipboard.writeText(d.pix_code); copyEl.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); } catch (e) {} };
+        ov.querySelector("#sp-stat").textContent = L("Assim que o pagamento cair, o áudio libera sozinho.", "As soon as payment lands, the audio unlocks.", "En cuanto caiga el pago, el audio se libera.");
+        var tries = 0;
+        pollT = setInterval(function () {
+          tries++; if (tries > 60) { clearInterval(pollT); pollT = null; return; }
+          sb.from("story_unlocks").select("story_id").eq("story_id", storyId).then(function (u) {
+            if (u.data && u.data.length) { close(); markStoryUnlocked(); if (typeof toast === "function") toast(L("Liberado 🔥 toca aí", "Unlocked 🔥 play it", "Desbloqueado 🔥")); }
+          });
+        }, 3000);
+      });
+    };
+  }
   function ensurePixCss() {
     if (document.getElementById("pixcss")) return; var s = document.createElement("style"); s.id = "pixcss";
     s.textContent = '#pixsub{position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)}#pixsub .sh{width:100%;max-width:520px;background:#15131b;color:#f4f1f8;border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid #241f2e;padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}#pixsub h3{margin:0 0 4px;font-size:1.1rem}#pixsub label{display:block;font-size:.78rem;color:#9a93a8;margin:12px 0 5px}#pixsub input{width:100%;padding:13px;border-radius:12px;border:1px solid #241f2e;background:#0e0c14;color:#f4f1f8;font-size:16px}#pixsub .x{float:right;color:#9a93a8;font-size:22px;cursor:pointer;line-height:1}#pixsub .pbtn{width:100%;margin-top:16px;padding:15px;border:0;border-radius:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#1b74e8,#1552b8);cursor:pointer;font-size:16px}#pixsub .pbox{background:#0e0c14;border:1px solid #241f2e;border-radius:12px;padding:12px;margin-top:10px;word-break:break-all;font-size:12px;max-height:120px;overflow:auto}#pixsub .err{color:#ff7a90;font-size:13px;margin-top:10px;min-height:1px}#pixsub .pane{display:none}#pixsub .pane.on{display:block}';
@@ -2651,6 +2739,7 @@ fbq('track', 'PageView');
       '</div></div>';
       // galeria de fotos (prévias bloqueadas) — dados reais
       hh += '<div class="pf-section" style="padding-top:.6rem"><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+      hh += '<div id="pf-stories" class="pf-section" hidden></div>';
       hh += '<div id="pf-packs" hidden></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
@@ -2669,6 +2758,7 @@ fbq('track', 'PageView');
         if (stEl) { var firstN = stEl.querySelector(".n"); if (firstN) firstN.textContent = total; }
       });
       loadBuyerContent(c.id);
+      loadStoriesInto(c);
       return;
     }
 

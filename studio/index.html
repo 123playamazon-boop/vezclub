@@ -172,6 +172,24 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       <div class="grid" id="posts"></div>
       <p class="hint" id="posts-empty">Nenhum post ainda. Publique o primeiro acima.</p>
     </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 4px">🎧 Histórias proibidas (áudio)</h3>
+      <p class="hint" style="margin-top:0">Áudios seus — algo que você já fez e nunca contou. Vendidos avulsos por história (padrão R$ 14,99). Toca só dentro da plataforma, pra quem comprar.</p>
+      <label>Título da história</label>
+      <input id="s-title" type="text" maxlength="120" placeholder="Ex: A vez que quase fui pega">
+      <label>Teaser (provoca sem entregar) 😏</label>
+      <textarea id="s-teaser" rows="2" maxlength="400" placeholder="A história mais suja que eu nunca postei em lugar nenhum. 4 min no seu ouvido."></textarea>
+      <label>Preço (R$)</label>
+      <input id="s-price" type="number" inputmode="decimal" placeholder="14,99" value="14,99">
+      <input id="s-file" type="file" accept="audio/*" style="display:none">
+      <button type="button" id="s-add" class="btn" style="background:#2a2335;border:1px dashed #4a4160;width:100%;padding:16px;margin-top:10px">➕ Escolher áudio</button>
+      <div id="s-fname" class="hint" style="margin-top:6px"></div>
+      <div class="err" id="s-err"></div>
+      <button class="btn" id="s-btn" style="margin-top:12px">Publicar história</button>
+      <div class="grid" id="stories" style="margin-top:14px"></div>
+      <p class="hint" id="stories-empty">Nenhuma história ainda.</p>
+    </div>
   </div>
 </div>
 
@@ -330,6 +348,50 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     refresh();
   };
 
+  async function storyApi(action,extra){
+    var tok=await token(); if(!tok) return {error:'auth'};
+    var r=await fetch(FN+'story_admin',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify(Object.assign({action:action},extra||{}))});
+    return await r.json().catch(function(){return {error:'net'};});
+  }
+  var sFile=null;
+  $('s-add').onclick=function(){ $('s-file').click(); };
+  $('s-file').onchange=function(e){ sFile=(e.target.files&&e.target.files[0])||null; $('s-fname').textContent=sFile?('Selecionado: '+sFile.name):''; };
+  function audioDuration(file){ return new Promise(function(res){ try{ var a=document.createElement('audio'); a.preload='metadata'; a.onloadedmetadata=function(){ try{URL.revokeObjectURL(a.src);}catch(e){} res(Math.round(a.duration||0)); }; a.onerror=function(){ res(0); }; a.src=URL.createObjectURL(file); }catch(e){ res(0); } }); }
+  $('s-btn').onclick=async function(){
+    err('s-err','');
+    var title=($('s-title').value||'').trim();
+    if(title.length<2){ err('s-err','Dá um título pra história.'); return; }
+    if(!sFile){ err('s-err','Escolha o arquivo de áudio.'); return; }
+    var price=Math.round(parseFloat(($('s-price').value||'14,99').replace(',','.'))*100)||1499;
+    var teaser=($('s-teaser').value||'').trim();
+    var btn=this; btn.disabled=true; btn.textContent='Enviando…';
+    try{
+      var ext=(sFile.name.split('.').pop()||'').toLowerCase();
+      var uu=await storyApi('upload_url',{ext:ext});
+      if(uu.error){ err('s-err', uu.error==='bad_ext'?'Formato não suportado (use mp3, m4a, wav, ogg, aac).':(uu.error==='not_approved'?'Conta ainda não aprovada.':'Falha ao preparar upload.')); btn.disabled=false; btn.textContent='Publicar história'; return; }
+      var up=await sb.storage.from('content').uploadToSignedUrl(uu.path, uu.token, sFile);
+      if(up.error){ err('s-err','Falha ao enviar o áudio.'); btn.disabled=false; btn.textContent='Publicar história'; return; }
+      var dur=await audioDuration(sFile);
+      var ad=await storyApi('add',{audio_path:uu.path, title:title, teaser:teaser, price_cents:price, duration_sec:dur});
+      if(ad.error){ err('s-err','Falha ao salvar a história.'); btn.disabled=false; btn.textContent='Publicar história'; return; }
+      $('s-title').value=''; $('s-teaser').value=''; $('s-price').value='14,99'; sFile=null; $('s-fname').textContent=''; $('s-file').value='';
+      refreshStories();
+    }catch(e){ err('s-err','Erro inesperado.'); }
+    btn.disabled=false; btn.textContent='Publicar história';
+  };
+  async function refreshStories(){
+    var l=await storyApi('list',{});
+    var rows=(l.stories)||[];
+    $('stories-empty').style.display=rows.length?'none':'block';
+    $('stories').innerHTML=rows.map(function(s){
+      return '<div style="border:1px solid #2a2335;border-radius:10px;padding:10px">'+
+        '<div style="font-weight:700">'+String(s.title||'').replace(/</g,'&lt;')+'</div>'+
+        '<div class="muted" style="font-size:12px;margin:3px 0">'+BRL(s.price_cents)+(s.active?'':' · oculta')+'</div>'+
+        '<span class="muted" data-sdel="'+s.id+'" style="cursor:pointer;font-size:12px;color:#ff7a90">remover</span>'+
+      '</div>';
+    }).join('');
+    $('stories').querySelectorAll('[data-sdel]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Remover essa história?')) return; await storyApi('update',{id:+b.getAttribute('data-sdel'),delete:true}); refreshStories(); }; });
+  }
   async function refresh(){
     var s=await api('stats',{});
     if(!s.error){ $('st-subs').textContent=s.subscribers; $('st-earn').textContent=BRL(s.earnings_cents); $('st-posts').textContent=s.posts; }
@@ -344,6 +406,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     Array.prototype.forEach.call(document.querySelectorAll('[data-del]'),function(el){
       el.onclick=async function(){ if(!confirm('Apagar este post?')) return; await api('update',{id:+el.getAttribute('data-del'),delete:true}); refresh(); };
     });
+    refreshStories();
   }
 
   // ---- chamadas de vídeo ----
