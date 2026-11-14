@@ -1829,27 +1829,8 @@ fbq('track', 'PageView');
     violet: L("eu nunca falo com estranhos… mas você é meio fofo 🙈", "I never talk to strangers… but you're kind of cute 🙈", "nunca hablo con extraños… pero eres algo lindo 🙈")
   };
   function ccFoot(c) {
-    if (!c.hasChat) {
-      return '<div class="cc-foot" style="margin-top:0.95rem;display:flex;gap:.4rem"><button class="btn btn-primary btn-sm" data-open="' + c.id + '" style="flex:1">' + L("Ver perfil", "View profile", "Ver perfil") + '</button><button class="btn btn-ghost btn-sm" data-shop="' + c.id + '" style="flex:0 0 auto">🛍 ' + L("Loja", "Shop", "Tienda") + '</button></div>';
-    }
-    var avBg = c.avatarUrl ? ("center/cover no-repeat url('" + avThumb(c, 90) + "')") : grad(c.color);
-    var teaser = c.online
-      ? (CARD_TEASERS[c.id] || L("oi 👀 tô bem aqui… me manda uma mensagem", "hey 👀 I'm right here… send me a message", "hola 👀 estoy aquí… mándame un mensaje"))
-      : L("manda a primeira — respondo quando voltar 💬", "send the first one — I reply when I'm back 💬", "manda el primero — respondo cuando vuelva 💬");
-    var sub = (c.online ? L("online agora", "online now", "en línea ahora") : L("responde quando voltar", "replies when she's back", "responde cuando vuelva"))
-      + ' · <b>' + L("o 1º minuto é grátis", "the 1st minute is free", "el 1er minuto es gratis") + '</b>';
-    return '<div class="cc-chat" data-ccid="' + c.id + '" style="margin-top:0.9rem">' +
-        '<div style="display:flex;gap:.5rem;align-items:center">' +
-          '<div class="ci-av" style="background:' + avBg + '"></div>' +
-          '<div style="flex:1;background:var(--surface-2);border-radius:13px;border-top-left-radius:4px;padding:.5rem .72rem;font-size:.86rem;line-height:1.3">' + escHtml(teaser) + '</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:.4rem;margin-top:.5rem">' +
-          '<input class="cc-chat-inp" data-ccid="' + c.id + '" placeholder="' + escHtml(L("Escreve pra ", "Message ", "Escribe a ") + c.name) + '…" autocomplete="off" style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:.58rem .85rem;color:var(--fg);font-family:inherit;font-size:.88rem">' +
-          '<button class="btn btn-primary cc-chat-send" data-cc-go="' + c.id + '" aria-label="' + L("Enviar", "Send", "Enviar") + '" style="padding:.5rem .72rem;border-radius:999px;flex:none">' + I.send + '</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="cc-invite-sub" style="margin-top:.45rem">' + sub + '</div>' +
-      '<div class="cc-foot" style="margin-top:0.5rem;display:flex;gap:.4rem"><button class="btn btn-ghost btn-sm" data-open="' + c.id + '" style="flex:1">' + L("Ver perfil", "View profile", "Ver perfil") + '</button><button class="btn btn-ghost btn-sm" data-shop="' + c.id + '" style="flex:0 0 auto">🛍 ' + L("Loja", "Shop", "Tienda") + '</button></div>';
+    // chat saiu da entrada — o card só leva pro perfil (onde fica a assinatura e o "Mandar mensagem")
+    return '<div class="cc-foot" style="margin-top:0.95rem"><button class="btn btn-primary btn-block" data-open="' + c.id + '">' + L("Ver perfil", "View profile", "Ver perfil") + '</button></div>';
   }
   function tickerLine() {
     var arr = TICKER_ACTS_I18N[lang] || TICKER_ACTS_I18N.pt;
@@ -2301,11 +2282,9 @@ fbq('track', 'PageView');
         }).join("");
       }
       var ribbon = c.isNew ? '<div class="ribbon" style="background:linear-gradient(135deg,#db2777,#f59e0b);color:#fff">✨ ' + L("NOVA", "NEW", "NUEVA") + '</div>' : (c.left <= 8 ? '<div class="ribbon warn">' + I.bolt + 'Últimas vagas</div>' : (c.subs >= 1700 ? '<div class="ribbon">Em alta</div>' : ""));
-      var status = !c.hasChat
-        ? '<div class="cc-status on"><span class="live-dot"></span>' + L("Online · conteúdo novo", "Online · new content", "Online · contenido nuevo") + '</div>'
-        : c.online
-        ? '<div class="cc-status on"><span class="live-dot"></span>' + L("Online agora · te respondo na hora", "Online now · I reply right away", "En línea ahora · te respondo al instante") + '</div>'
-        : '<div class="cc-status off">' + I.clock + ' ' + L("Volto já · deixa sua mensagem", "Back soon · leave me a message", "Vuelvo pronto · déjame tu mensaje") + '</div>';
+      var status = c.online
+        ? '<div class="cc-status on"><span class="live-dot"></span>' + L("Online agora · conteúdo novo", "Online now · new content", "En línea ahora · contenido nuevo") + '</div>'
+        : '<div class="cc-status on"><span class="live-dot"></span>' + L("Online · conteúdo novo toda semana", "Online · new content every week", "Online · contenido nuevo cada semana") + '</div>';
       html += '<div class="creator-card" data-creator="' + c.id + '" data-online="' + (c.online ? "1" : "0") + '" data-tags="' + escHtml((c.tag || "").toLowerCase()) + '" data-s="' + escHtml((c.name + " " + c.handle + " " + (c.tag || "") + " " + (c.hook || "")).toLowerCase()) + '">' +
         '<div class="cc-cover" style="background:' + grad(c.color) + '">' + coverImg(c) + ribbon + (c.online ? '<div class="pf-online" style="top:10px;right:10px;font-size:0.66rem;padding:0.22rem 0.52rem"><span class="live"></span>online</div>' : '') + '</div>' +
         '<div class="cc-body">' +
@@ -6367,9 +6346,8 @@ fbq('track', 'PageView');
       if (t && !state.purchased[t.id]) purchaseModal({ id: t.id, title: "Conteúdo exclusivo", price: t.price, icon: "tile", tile: true, creator: c.name });
     } else if (open) {
       var id = open.getAttribute("data-open") || open.getAttribute("data-creator");
-      // 1 toque: clicar no card de uma persona de IA abre o chat direto. O botao "Ver perfil" (data-open) ainda vai pro perfil.
-      if (!open.hasAttribute("data-open") && AI_PERSONAS[id]) { openAiChat(id); }
-      else { state.creatorId = id; state.view = "store"; render(); }
+      // chat saiu da entrada: clicar no card/foto sempre abre o perfil (o chat fica só dentro do perfil)
+      state.creatorId = id; state.view = "store"; render();
     } else if (sub) {
       if (needLogin()) return;
       var cid = sub.getAttribute("data-sub");
