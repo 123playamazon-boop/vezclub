@@ -5684,6 +5684,8 @@ fbq('track', 'PageView');
 
   function openChatThread(cid) {
     var c = CREATORS.find(function (x) { return x.id === cid; });
+    if (!c) return;
+    if (!requireSub(cid)) return; // chat é benefício da assinatura — tem que assinar antes
     var wel = L("Oi 👀 te vi passando no meu perfil… não some agora não, eu tava doida pra falar com você. Fica comigo? 🔥", "Hey 👀 saw you creeping on my profile… don't disappear now, I was dying to talk to you. Stay with me? 🔥", "Hola 👀 te vi pasando por mi perfil… no desaparezcas ahora, me moría por hablarte. ¿Te quedas conmigo? 🔥");
     if (!sb || !account) { renderThread("", c.name.split(" ")[0], avatar(c), "offline", openChatList, wel); return; }
     sb.rpc("open_conversation", { p_creator_key: cid }).then(function (r) {
@@ -5833,6 +5835,7 @@ fbq('track', 'PageView');
     if (!ageOk()) { ageGate(function () { openAiChat(cid, firstMsg); }); return; } // confirma 18+ antes do chat
     if (!sb) return;
     if (!account) { ensureSessionThen(function () { openAiChat(cid, firstMsg); }); return; }
+    if (!requireSub(cid)) return; // chat é benefício da assinatura — tem que assinar antes (fecha o furo do chat grátis)
     var persona = AI_PERSONAS[cid] || {};
     var greeting = persona.greeting || "oi 🌙";
     var first = (c.name || "").split(" ")[0];
