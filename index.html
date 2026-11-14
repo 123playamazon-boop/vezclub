@@ -7605,7 +7605,63 @@ fbq('track', 'PageView');
     el.innerHTML = '<span style="width:20px;height:20px;border-radius:6px;background:linear-gradient(140deg,var(--accent),var(--lock2));color:#fff;display:grid;place-items:center;font-size:.6rem;font-weight:800">' + initials(account.name) + '</span>Sair';
     el.onclick = function () { if (sb) sb.auth.signOut(); };
     ta.insertBefore(el, ta.firstChild);
+    // botão "Minhas assinaturas"
+    var oldS = document.getElementById("mysubs-btn"); if (oldS) oldS.remove();
+    var subsBtn = document.createElement("button");
+    subsBtn.id = "mysubs-btn"; subsBtn.className = "icon-btn"; subsBtn.title = L("Minhas assinaturas", "My subscriptions", "Mis suscripciones");
+    subsBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>';
+    subsBtn.onclick = openMySubs;
+    ta.insertBefore(subsBtn, ta.firstChild);
     loadCoinBal(); renderWalletChip();
+  }
+  function openMySubs() {
+    if (!sb || !account) { if (typeof needLogin === "function") needLogin(); return; }
+    var ov = document.createElement("div"); ov.id = "mysubs";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)";
+    ov.innerHTML = '<div style="width:100%;max-width:520px;background:var(--panel,#fff);color:var(--ink,#111);border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid var(--line);padding:18px 16px calc(20px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-family:var(--font-display);font-weight:800;font-size:1.15rem">' + L("Minhas assinaturas", "My subscriptions", "Mis suscripciones") + '</div><span id="ms-x" style="cursor:pointer;font-size:24px;opacity:.6;line-height:1">×</span></div>' +
+        '<div id="ms-body" style="margin-top:8px"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    function close() { ov.remove(); }
+    ov.querySelector("#ms-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    function msRender() {
+      var body = ov.querySelector("#ms-body"); if (!body) return;
+      var now = Date.now();
+      sb.from("subscriptions").select("creator_key,expires_at,status,auto_renew").then(function (r) {
+        if (!document.body.contains(ov)) return;
+        if (r.error) { body.innerHTML = '<p class="muted-note">' + L("Erro ao carregar.", "Error loading.", "Error al cargar.") + '</p>'; return; }
+        var rows = (r.data || []).filter(function (s) { return new Date(s.expires_at).getTime() > now; }).sort(function (a, b) { return new Date(a.expires_at) - new Date(b.expires_at); });
+        if (!rows.length) { body.innerHTML = '<p class="muted-note">' + L("Você ainda não tem assinaturas ativas.", "No active subscriptions yet.", "Aún no tienes suscripciones activas.") + '</p>'; return; }
+        body.innerHTML = rows.map(function (s) {
+          var c = CREATORS.find(function (x) { return x.id === s.creator_key; });
+          var nm = c ? c.name : s.creator_key;
+          var canceled = (s.auto_renew === false) || (s.status === "canceled");
+          var d = fmtDate(new Date(s.expires_at).getTime());
+          var line = canceled
+            ? '<span style="color:var(--muted)">' + L("Cancelada · acesso até ", "Canceled · access until ", "Cancelada · acceso hasta ") + d + '</span>'
+            : '<span style="color:var(--good)">' + L("Renova em ", "Renews on ", "Renueva el ") + d + '</span>';
+          var btn = canceled ? '' : '<button class="btn btn-ghost btn-sm" data-cancel-sub="' + escHtml(s.creator_key) + '">' + L("Cancelar renovação", "Cancel renewal", "Cancelar renovación") + '</button>';
+          return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)"><div><div style="font-weight:800">' + escHtml(nm) + '</div><div style="font-size:.82rem;margin-top:3px">' + line + '</div></div>' + btn + '</div>';
+        }).join("");
+        body.querySelectorAll("[data-cancel-sub]").forEach(function (b) {
+          b.onclick = function () {
+            var ck = b.getAttribute("data-cancel-sub");
+            if (!confirm(L("Cancelar a renovação? Você mantém o acesso até o fim do período já pago.", "Cancel renewal? You keep access until the paid period ends.", "¿Cancelar la renovación? Mantienes el acceso hasta el fin del período pagado."))) return;
+            b.disabled = true; b.textContent = L("Cancelando…", "Canceling…", "Cancelando…");
+            sb.functions.invoke("sub_cancel", { body: { creator_key: ck } }).then(function (res) {
+              var dd = (res && res.data) || {};
+              if ((res && res.error) || dd.error) { b.disabled = false; b.textContent = L("Cancelar renovação", "Cancel renewal", "Cancelar renovación"); if (typeof toast === "function") toast(L("Não deu pra cancelar agora.", "Couldn't cancel now.", "No se pudo cancelar.")); return; }
+              if (typeof toast === "function") toast(L("Renovação cancelada · acesso mantido até o fim do período", "Renewal canceled · access kept until period ends", "Renovación cancelada · acceso hasta el fin del período"));
+              msRender();
+            }, function () { b.disabled = false; b.textContent = L("Cancelar renovação", "Cancel renewal", "Cancelar renovación"); });
+          };
+        });
+        if (typeof applyDynTranslation === "function") applyDynTranslation();
+      });
+    }
+    msRender();
   }
 
   function needLogin() { if (sb && !account) { showAuthGate("signup", "buyer"); return true; } return false; }
