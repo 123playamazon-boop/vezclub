@@ -6315,6 +6315,7 @@ fbq('track', 'PageView');
           if (d.gift.caption) { var tgtLang = gLang(d.reply) || gLang(v) || lang || "pt"; var capL = gLang(d.gift.caption); if (capL && capL !== tgtLang) { translateOne(d.gift.caption, tgtLang, function (t) { her(t || d.gift.caption); showGiftImg(); }); } else { her(d.gift.caption); showGiftImg(); } } else { showGiftImg(); }
         }, 800); }
         if (typeof d.coins === "number") { setBal(d.coins); if (d.free === false && d.coins > 0 && d.coins <= 9) note(L("teus coins tão acabando 😳", "your coins are running low 😳", "tus coins se están acabando 😳")); }
+        if (d.ppv) { setTimeout(function () { try { herPpv(d.ppv); } catch (e) {} }, d.gift && d.gift.url ? 1700 : 900); } // IA ofereceu conteúdo pago (PPV)
         try { document.getElementById("chat-text").focus(); } catch (_) {}
       }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
     }
