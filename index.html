@@ -1328,7 +1328,7 @@ fbq('track', 'PageView');
         var anchor = brlc(p.price_cents * 2); // preço cheio ancorado (2×), cortado
         return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;margin-bottom:11px;border:0;border-radius:14px;cursor:pointer;background:#1b6fe3;color:#fff">' +
           '<span style="text-align:left"><span style="font-weight:800;font-size:1.05rem">' + lbl + '</span>' + badge + sub + '</span>' +
-          '<span style="display:flex;align-items:center;gap:9px"><span style="text-decoration:line-through;text-decoration-color:#ff4d5e;text-decoration-thickness:2px;color:#ff6b7a;opacity:1;font-weight:800;font-size:1.02rem">' + anchor + '</span><span style="font-weight:900;font-size:1.25rem">' + brlc(p.price_cents) + '</span></span></button>';
+          '<span style="display:flex;align-items:center;gap:10px"><span style="background:#fff;color:#e11d2b;text-decoration:line-through;text-decoration-color:#e11d2b;text-decoration-thickness:2px;font-weight:800;font-size:.95rem;padding:3px 9px;border-radius:9px;white-space:nowrap">' + anchor + '</span><span style="font-weight:900;font-size:1.25rem">' + brlc(p.price_cents) + '</span></span></button>';
       }).join("") + '<p class="muted-note" style="margin-top:.3rem;font-size:.8rem">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</p>';
     }, function () { box.innerHTML = '<p class="muted-note">' + L("Não consegui carregar os planos.", "Couldn't load plans.", "No pude cargar los planes.") + '</p>'; });
   }
