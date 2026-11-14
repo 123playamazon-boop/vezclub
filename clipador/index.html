@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Vezclub · Clipador</title>
+<link rel="icon" href="/favicon-32.png">
+<style>
+:root{
+  --bg:#09080f; --bg2:#0e0c17; --card:#15111f; --card2:#1b1626; --line:#271f36;
+  --txt:#f3eefb; --mut:#9f98b8; --mut2:#6f6886;
+  --p1:#a855f7; --p2:#ec4899; --blue:#3b82f6; --grn:#34d399; --amber:#fbbf24; --red:#f87171;
+  --grad:linear-gradient(135deg,#a855f7,#ec4899);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input{font-family:inherit}
+.hide{display:none!important}
+/* layout */
+.wrap{max-width:720px;margin:0 auto;padding:0 14px 120px}
+.topbar{position:sticky;top:0;z-index:40;background:rgba(9,8,15,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar .in{max-width:720px;margin:0 auto;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}
+.brandname{font-weight:800;font-size:15px;letter-spacing:.2px}
+.brandname span{color:var(--mut);font-weight:600}
+.topbar .sp{flex:1}
+.ic-btn{width:34px;height:34px;border-radius:9px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;color:var(--mut);font-size:15px}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card+.card{margin-top:12px}
+.sect-t{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--mut2);margin:22px 2px 10px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 13px 14px}
+.kpi .l{font-size:11px;color:var(--mut);font-weight:600;letter-spacing:.3px}
+.kpi .v{font-size:21px;font-weight:800;margin-top:5px;line-height:1}
+.kpi .s{font-size:11px;color:var(--mut2);margin-top:4px}
+.wallet3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wc{border-radius:14px;padding:13px;border:1px solid var(--line);background:var(--card)}
+.wc .l{font-size:11px;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:5px}
+.wc .v{font-size:19px;font-weight:800;margin-top:6px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;background:var(--card2);border:1px solid var(--line);color:var(--txt);width:100%}
+.btn.grad{background:var(--grad);border:0;color:#fff;box-shadow:0 8px 24px rgba(168,85,247,.28)}
+.btn.sm{padding:9px 12px;font-size:13px;width:auto}
+.btn.gho{background:transparent}
+.btn:disabled{opacity:.55}
+.row{display:flex;align-items:center;gap:12px}
+.muted{color:var(--mut)}
+.small{font-size:12px}
+.pill{display:inline-block;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.pill.g{background:rgba(52,211,153,.14);color:#6ee7b7}
+.pill.a{background:rgba(251,191,36,.14);color:#fcd34d}
+.pill.b{background:rgba(59,130,246,.16);color:#93c5fd}
+.pill.m{background:rgba(236,72,153,.16);color:#f9a8d4}
+/* vitrine */
+.vgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:560px){.vgrid{grid-template-columns:repeat(3,1fr)}}
+.vcard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.vcard .ph{aspect-ratio:3/4;background:var(--card2) center/cover no-repeat;position:relative}
+.vcard .cm{position:absolute;top:8px;left:8px}
+.vcard .bd{padding:10px 11px 12px}
+.vcard .nm{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vcard .pr{font-size:12px;color:var(--mut);margin-top:2px}
+.vcard .st{font-size:11px;color:var(--mut2);margin-top:7px;display:flex;gap:10px}
+.vcard .act{margin-top:9px}
+/* list rows */
+.lrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.lrow:first-child{border-top:0}
+.av{width:44px;height:44px;border-radius:12px;background:var(--card2) center/cover no-repeat;flex:0 0 auto}
+.lrow .nm{font-weight:700;font-size:14px}
+.lrow .sub{font-size:12px;color:var(--mut);margin-top:2px}
+.lrow .rt{margin-left:auto;text-align:right}
+.lrow .rt .v{font-weight:800;font-size:14px}
+.lrow .rt .s{font-size:11px;color:var(--mut2)}
+/* link box */
+.linkbox{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+.linkbox input{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;font-size:12px;min-width:0}
+.cpbtn{padding:0 14px;border-radius:10px;background:var(--grad);color:#fff;font-weight:700;font-size:13px;flex:0 0 auto}
+/* forms */
+.field{margin-top:12px}
+.field label{display:block;font-size:12px;color:var(--mut);margin-bottom:6px;font-weight:600}
+.field input,.field select{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:11px;color:var(--txt);padding:13px;font-size:15px}
+.seg{display:flex;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:600;color:var(--mut)}
+.seg button.on{background:var(--card2);color:var(--txt)}
+/* kit texts */
+.kt{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
+.kt .kl{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--p2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.kt .kx{font-size:13px;line-height:1.5;color:var(--txt);white-space:pre-wrap}
+.kt .kc{font-size:11px;font-weight:700;color:var(--p1)}
+/* path */
+.path{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.path .p{flex:1;min-width:64px;text-align:center;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 4px}
+.path .p .pl{font-size:10px;color:var(--mut2);font-weight:600}
+.path .p .pv{font-size:12px;font-weight:800;margin-top:3px}
+.path .ar{color:var(--mut2);font-size:12px}
+/* tabbar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(14,12,23,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar .in{max-width:720px;margin:0 auto;display:flex}
+.tab{flex:1;padding:9px 2px 8px;text-align:center;color:var(--mut2)}
+.tab .ti{font-size:19px;line-height:1}
+.tab .tl{font-size:10px;margin-top:3px;font-weight:600}
+.tab.on{color:var(--p1)}
+/* auth */
+.center{min-height:72vh;display:flex;flex-direction:column;justify-content:center}
+.hero-ic{width:56px;height:56px;border-radius:16px;background:var(--grad);display:grid;place-items:center;font-size:28px;margin:0 auto 14px}
+h1.t{font-size:23px;font-weight:800;text-align:center;margin:0 0 6px}
+p.sub{color:var(--mut);text-align:center;margin:0 auto 18px;max-width:420px;font-size:14px;line-height:1.5}
+.msg{font-size:13px;padding:10px 12px;border-radius:10px;margin-top:12px}
+.msg.err{background:rgba(248,113,113,.12);color:#fca5a5}
+.msg.ok{background:rgba(52,211,153,.12);color:#6ee7b7}
+.spin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:var(--p1);margin:40px auto;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:#fff;color:#111;font-weight:700;font-size:13px;padding:11px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:90;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.empty{text-align:center;color:var(--mut);padding:34px 16px;font-size:14px}
+.empty .ei{font-size:30px;margin-bottom:8px}
+.hr{height:1px;background:var(--line);margin:14px 0}
+.badge30{background:var(--grad);color:#fff;font-weight:800;font-size:11px;padding:4px 9px;border-radius:999px;box-shadow:0 4px 12px rgba(168,85,247,.4)}
+</style>
+</head>
+<body>
+<div id="root"><div class="spin"></div></div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/supabase.min.js"></script>
+<script>
+(function(){
+"use strict";
+var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
+var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+var SITE="https://vezclub.com";
+var sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"vez_clip_auth"}});
+var root=document.getElementById("root");
+
+// ---- state ----
+var S={session:null, panel:null, vitrine:null, tab:"home", kitCreator:null, kitData:null};
+
+// ---- helpers ----
+function el(h){var d=document.createElement("div");d.innerHTML=h;return d.firstElementChild;}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function brl(c){c=c||0;return "R$ "+(c/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function avUrl(p){return p?(SB_URL+"/storage/v1/object/public/avatars/"+p):"";}
+function linkFor(ck,code){return SITE+"/?c="+encodeURIComponent(ck)+"&ref="+encodeURIComponent(code);}
+function toast(t){var el=document.getElementById("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove("show");},1700);}
+function copy(txt){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);}else{var t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();}toast("Copiado ✓");}catch(e){toast("Copie manualmente");}}
+function api(action,body){body=body||{};body.action=action;return sb.functions.invoke("affiliate",{body:body}).then(function(r){if(r.error)throw r.error;return r.data;});}
+
+// ---- boot ----
+sb.auth.getSession().then(function(r){S.session=r.data.session||null;route();});
+sb.auth.onAuthStateChange(function(_e,sess){var was=!!S.session;S.session=sess;if(!!sess!==was)route();});
+
+function route(){
+  if(!S.session){return renderAuth();}
+  loadPanel();
+}
+function loadPanel(){
+  root.innerHTML='<div class="spin"></div>';
+  api("me",{}).then(function(d){
+    S.panel=d;
+    if(!d||!d.affiliate){return renderOnboard();}
+    renderApp();
+  }).catch(function(e){ root.innerHTML='<div class="wrap"><div class="empty"><div class="ei">⚠️</div>Erro ao carregar. <a style="color:var(--p1)" href="#" onclick="location.reload();return false">Recarregar</a></div></div>'; });
+}
+
+// ================= AUTH =================
+function renderAuth(){
+  var mode="login";
+  root.innerHTML="";
+  var w=el('<div class="wrap"></div>');
+  w.appendChild(el('<div style="height:26px"></div>'));
+  w.appendChild(el(
+    '<div class="center">'+
+      '<div class="hero-ic">💸</div>'+
+      '<h1 class="t">Programa de Clipador</h1>'+
+      '<p class="sub">Divulgue as modelos da Vezclub e <b>ganhe 30% de cada venda</b> que vier do seu link. Pix na sua conta.</p>'+
+      '<div class="card" style="margin-top:6px">'+
+        '<div class="seg" id="ag-seg"><button data-m="login" class="on">Entrar</button><button data-m="signup">Criar conta</button></div>'+
+        '<div class="field" id="f-name" style="display:none"><label>Seu nome</label><input id="ag-name" placeholder="Como te chamam"></div>'+
+        '<div class="field"><label>E-mail</label><input id="ag-email" type="email" inputmode="email" autocomplete="email" placeholder="voce@email.com"></div>'+
+        '<div class="field"><label>Senha</label><input id="ag-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>'+
+        '<div class="field"><button class="btn grad" id="ag-go">Entrar</button></div>'+
+        '<div id="ag-msg"></div>'+
+      '</div>'+
+      '<p class="small muted" style="text-align:center;margin-top:14px">Já é cliente ou modelo da Vezclub? Entre com o mesmo login.</p>'+
+    '</div>'
+  ));
+  root.appendChild(w);
+  function setMode(m){mode=m;w.querySelectorAll("#ag-seg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-m")===m);});w.querySelector("#f-name").style.display=(m==="signup")?"block":"none";w.querySelector("#ag-go").textContent=(m==="signup")?"Criar minha conta":"Entrar";w.querySelector("#ag-pass").setAttribute("autocomplete",m==="signup"?"new-password":"current-password");}
+  w.querySelectorAll("#ag-seg button").forEach(function(b){b.onclick=function(){setMode(b.getAttribute("data-m"));msg("");};});
+  function msg(t,k){var m=w.querySelector("#ag-msg");if(!t){m.innerHTML="";return;}m.innerHTML='<div class="msg '+(k||"err")+'">'+esc(t)+'</div>';}
+  w.querySelector("#ag-go").onclick=async function(){
+    var email=(w.querySelector("#ag-email").value||"").trim();
+    var pass=(w.querySelector("#ag-pass").value||"").trim();
+    if(!email||pass.length<4){msg("Preencha e-mail e senha (mín. 4).");return;}
+    this.disabled=true;this.textContent="Aguarde…";msg("");
+    try{
+      if(mode==="login"){var r=await sb.auth.signInWithPassword({email:email,password:pass});if(r.error)throw r.error;}
+      else{var name=(w.querySelector("#ag-name").value||"").trim();var s=await sb.auth.signUp({email:email,password:pass,options:{data:{display_name:name||email.split("@")[0],role:"buyer"}}});if(s.error)throw s.error;if(!s.data.session){msg("Conta criada! Confirme seu e-mail pelo link que enviamos e volte pra entrar.","ok");this.disabled=false;setMode("login");return;}}
+    }catch(e){msg(friendly(e.message||""));this.disabled=false;this.textContent=(mode==="signup")?"Criar minha conta":"Entrar";}
+  };
+}
+function friendly(m){m=(m||"").toLowerCase();if(m.indexOf("invalid login")>=0)return "E-mail ou senha incorretos.";if(m.indexOf("already registered")>=0)return "E-mail já cadastrado. Tente entrar.";if(m.indexOf("rate")>=0)return "Muitas tentativas, aguarde um pouco.";if(m.indexOf("password")>=0)return "Senha muito curta.";return "Não consegui agora, tente de novo.";}
+
+// ================= ONBOARD =================
+function renderOnboard(){
+  root.innerHTML="";
+  var w=el('<div class="wrap"></div>');
+  w.appendChild(el('<div style="height:26px"></div>'));
+  w.appendChild(el(
+    '<div class="center">'+
+      '<div class="hero-ic">🚀</div>'+
+      '<h1 class="t">Ative seu painel de clipador</h1>'+
+      '<p class="sub">Você ganha <b>30% de cada venda</b> (assinatura ou coins) que vier do seu link. Cai no seu Pix após 7 dias.</p>'+
+      '<div class="card">'+
+        '<div class="field"><label>Seu nome (aparece nos recibos)</label><input id="ob-name" placeholder="Seu nome"></div>'+
+        '<div class="field"><label>Tipo de chave Pix</label><select id="ob-pt"><option value="cpf">CPF</option><option value="email">E-mail</option><option value="phone">Telefone</option><option value="random">Aleatória</option></select></div>'+
+        '<div class="field"><label>Sua chave Pix (pra receber)</label><input id="ob-pix" placeholder="chave onde você recebe"></div>'+
+        '<div class="field"><button class="btn grad" id="ob-go">Ativar e começar a ganhar</button></div>'+
+        '<div id="ob-msg"></div>'+
+        '<p class="small muted" style="margin:10px 2px 0">Pode cadastrar o Pix depois, na aba Carteira.</p>'+
+      '</div>'+
+      '<button class="btn gho small" style="margin-top:14px;color:var(--mut)" id="ob-out">Sair</button>'+
+    '</div>'
+  ));
+  root.appendChild(w);
+  w.querySelector("#ob-out").onclick=function(){sb.auth.signOut();};
+  w.querySelector("#ob-go").onclick=function(){
+    var name=(w.querySelector("#ob-name").value||"").trim();
+    var pt=w.querySelector("#ob-pt").value;
+    var pix=(w.querySelector("#ob-pix").value||"").trim();
+    this.disabled=true;this.textContent="Ativando…";
+    api("register",{display_name:name,pix_key:pix,pix_key_type:pt}).then(function(){loadPanel();}).catch(function(){w.querySelector("#ob-msg").innerHTML='<div class="msg err">Não consegui ativar, tente de novo.</div>';var b=w.querySelector("#ob-go");b.disabled=false;b.textContent="Ativar e começar a ganhar";});
+  };
+}
+
+// ================= APP SHELL =================
+function shell(inner){
+  var p=S.panel||{}, aff=p.affiliate||{};
+  root.innerHTML="";
+  root.appendChild(el(
+    '<div class="topbar"><div class="in">'+
+      '<div class="logo">V</div><div class="brandname">Clipador <span>· Vezclub</span></div>'+
+      '<div class="sp"></div>'+
+      '<button class="ic-btn" id="tb-out" title="Sair">⎋</button>'+
+    '</div></div>'
+  ));
+  var w=el('<div class="wrap"></div>');w.id="main";w.innerHTML=inner;root.appendChild(w);
+  var tabs=[["home","📊","Visão"],["vitrine","✨","Vitrine"],["links","🔗","Afiliações"],["kit","🎁","Kit"],["wallet","💰","Carteira"]];
+  var tb=el('<div class="tabbar"><div class="in"></div></div>');
+  tabs.forEach(function(t){var b=el('<button class="tab'+(S.tab===t[0]?" on":"")+'"><div class="ti">'+t[1]+'</div><div class="tl">'+t[2]+'</div></button>');b.onclick=function(){S.tab=t[0];renderApp();};tb.querySelector(".in").appendChild(b);});
+  root.appendChild(tb);
+  document.getElementById("tb-out").onclick=function(){sb.auth.signOut();};
+}
+function renderApp(){
+  if(S.tab==="home")return viewHome();
+  if(S.tab==="vitrine")return viewVitrine();
+  if(S.tab==="links")return viewLinks();
+  if(S.tab==="kit")return viewKit();
+  if(S.tab==="wallet")return viewWallet();
+}
+
+// ---------- HOME ----------
+function viewHome(){
+  var p=S.panel, w=p.wallet||{}, aff=p.affiliate||{};
+  var rate=Math.round((p.rate||0.3)*100);
+  var h='';
+  h+='<div style="height:16px"></div>';
+  h+='<div class="kpis">'+
+       kpi("Cliques",(p.clicks||0),"no seu link")+
+       kpi("Vendas",(w.sales||0),"atribuídas a você")+
+       kpi("Comissão",brl(w.total_comm_cents),"total gerada")+
+     '</div>';
+  h+='<div class="sect-t">Sua comissão</div>';
+  h+='<div class="wallet3">'+
+       wc("Em carência",brl(w.carencia_cents),"var(--amber)")+
+       wc("Disponível",brl(w.disponivel_cents),"var(--grn)")+
+       wc("Sacado",brl(w.sacado_cents),"var(--blue)")+
+     '</div>';
+  // CTA
+  if(!(p.links&&p.links.length)){
+    h+='<div class="card" style="margin-top:16px;text-align:center">'+
+        '<div style="font-size:26px">✨</div>'+
+        '<div style="font-weight:800;font-size:16px;margin-top:6px">Pegue seu primeiro link</div>'+
+        '<p class="small muted" style="margin:6px 0 12px">Escolha uma modelo na Vitrine, copie seu link e comece a divulgar. Você ganha '+rate+'% de cada venda.</p>'+
+        '<button class="btn grad" id="go-vit">Ver a Vitrine</button>'+
+       '</div>';
+  }else{
+    h+='<div class="sect-t">Comissões recentes</div><div class="card" id="recent"></div>';
+  }
+  // explainer
+  h+='<div class="card" style="margin-top:16px;background:var(--bg2)">'+
+      '<div class="small" style="font-weight:700;margin-bottom:8px">Como funciona 💡</div>'+
+      '<div class="small muted" style="line-height:1.6">Você ganha <b style="color:var(--txt)">'+rate+'% de cada venda</b> feita pelo seu link — assinatura ou coins. Numa assinatura de R$19,90 você leva <b style="color:var(--grn)">'+brl(Math.round(1990*(p.rate||0.3)))+'</b>. A comissão fica 7 dias em carência (segurança contra estorno) e depois libera pra saque via Pix.</div>'+
+     '</div>';
+  shell(h);
+  var gv=document.getElementById("go-vit");if(gv)gv.onclick=function(){S.tab="vitrine";renderApp();};
+  var rc=document.getElementById("recent");
+  if(rc){
+    var rows=(p.recent||[]).slice(0,8);
+    if(!rows.length){rc.innerHTML='<div class="small muted" style="padding:6px 0">Nenhuma venda ainda. Divulgue seus links 😉</div>';}
+    else{rc.innerHTML=rows.map(function(r){
+      return '<div class="lrow"><div style="flex:1"><div class="nm">'+brl(r.commission_cents)+' <span class="small muted">· '+esc(r.creator_key)+'</span></div>'+
+             '<div class="sub">'+srcLabel(r.source_type)+' · '+timeAgo(r.created_at)+'</div></div>'+
+             '<div class="rt">'+statePill(r.status)+'</div></div>';
+    }).join("");}
+  }
+}
+function kpi(l,v,s){return '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+s+'</div></div>';}
+function wc(l,v,color){return '<div class="wc"><div class="l"><span class="dot" style="background:'+color+'"></span>'+l+'</div><div class="v">'+v+'</div></div>';}
+function srcLabel(s){return s==="sub"?"Assinatura":s==="coins"?"Coins":s==="payment"?"Compra":s;}
+function statePill(s){
+  if(s==="disponivel")return '<span class="pill g">Disponível</span>';
+  if(s==="carencia")return '<span class="pill a">Carência</span>';
+  if(s==="analise")return '<span class="pill b">Análise</span>';
+  if(s==="sacado")return '<span class="pill b">Sacado</span>';
+  if(s==="cancelado")return '<span class="pill m">Cancelado</span>';
+  return '<span class="pill a">'+esc(s)+'</span>';
+}
+function timeAgo(ts){try{var d=(Date.now()-new Date(ts).getTime())/1000;if(d<60)return "agora";if(d<3600)return Math.floor(d/60)+"min";if(d<86400)return Math.floor(d/3600)+"h";return Math.floor(d/86400)+"d";}catch(e){return "";}}
+
+// ---------- VITRINE ----------
+function viewVitrine(){
+  shell('<div style="height:16px"></div><div class="sect-t" style="margin-top:4px">Escolha uma modelo e pegue seu link</div><div id="vit"><div class="spin"></div></div>');
+  api("vitrine",{}).then(function(d){
+    S.vitrine=d;var list=(d&&d.creators)||[];
+    var box=document.getElementById("vit");
+    if(!list.length){box.innerHTML='<div class="empty"><div class="ei">✨</div>Nenhuma modelo disponível agora.</div>';return;}
+    box.innerHTML='<div class="vgrid">'+list.map(vcard).join("")+'</div>';
+    box.querySelectorAll("[data-get]").forEach(function(b){b.onclick=function(){getLink(b.getAttribute("data-get"),b);};});
+    box.querySelectorAll("[data-cp]").forEach(function(b){b.onclick=function(){copy(b.getAttribute("data-cp"));};});
+  }).catch(function(){document.getElementById("vit").innerHTML='<div class="empty">Erro ao carregar.</div>';});
+}
+function vcard(c){
+  var ph=c.avatar_path?('style="background-image:url('+avUrl(c.avatar_path)+')"'):'';
+  var act;
+  if(c.affiliated&&c.code){act='<button class="btn sm grad" style="width:100%" data-cp="'+esc(linkFor(c.creator_key,c.code))+'">Copiar meu link</button>';}
+  else{act='<button class="btn sm" style="width:100%" data-get="'+esc(c.creator_key)+'">Pegar meu link</button>';}
+  var st=c.affiliated?('<div class="st"><span>👆 '+(c.clicks||0)+'</span><span>🛒 '+(c.sales||0)+'</span></div>'):'';
+  return '<div class="vcard"><div class="ph" '+ph+'><div class="cm"><span class="badge30">30%</span></div></div>'+
+    '<div class="bd"><div class="nm">'+esc(c.name||c.creator_key)+'</div>'+
+    '<div class="pr">'+brl(c.sub_price_cents)+'/mês</div>'+st+
+    '<div class="act">'+act+'</div></div></div>';
+}
+function getLink(ck,btn){
+  btn.disabled=true;btn.textContent="Gerando…";
+  api("affiliate_to",{creator_key:ck}).then(function(d){
+    if(d&&d.code){copy(linkFor(ck,d.code));toast("Link pronto e copiado ✓");S.panel=null;loadPanelSilent(function(){S.tab="vitrine";renderApp();});}
+    else{btn.disabled=false;btn.textContent="Pegar meu link";toast("Não consegui agora");}
+  }).catch(function(){btn.disabled=false;btn.textContent="Pegar meu link";toast("Erro, tente de novo");});
+}
+function loadPanelSilent(cb){api("me",{}).then(function(d){S.panel=d;cb&&cb();}).catch(function(){cb&&cb();});}
+
+// ---------- LINKS ----------
+function viewLinks(){
+  var p=S.panel,links=(p&&p.links)||[];
+  var h='<div style="height:16px"></div>';
+  if(!links.length){
+    h+='<div class="empty"><div class="ei">🔗</div>Você ainda não tem afiliações.<br><br><button class="btn grad" id="l-vit" style="width:auto;margin:0 auto">Ver a Vitrine</button></div>';
+    shell(h);var b=document.getElementById("l-vit");if(b)b.onclick=function(){S.tab="vitrine";renderApp();};return;
+  }
+  h+='<div class="sect-t" style="margin-top:4px">Minhas afiliações ('+links.length+')</div>';
+  h+='<div class="card">'+links.map(function(l){
+      return '<div class="lrow"><div class="av" style="'+(l.avatar_path?'background-image:url('+avUrl(l.avatar_path)+')':'')+'"></div>'+
+        '<div style="flex:1;min-width:0"><div class="nm">'+esc(l.creator_name||l.creator_key)+'</div>'+
+        '<div class="sub">👆 '+(l.clicks||0)+' cliques · 🛒 '+(l.sales||0)+' vendas</div></div>'+
+        '<div class="rt"><div class="v">'+brl(l.commission_cents)+'</div><div class="s">comissão</div></div></div>'+
+        '<div class="linkbox"><input readonly value="'+esc(linkFor(l.creator_key,l.code))+'"><button class="cpbtn" data-cp="'+esc(linkFor(l.creator_key,l.code))+'">Copiar</button></div>'+
+        '<div class="hr"></div>';
+    }).join("")+'</div>';
+  shell(h);
+  document.querySelectorAll("#main [data-cp]").forEach(function(b){b.onclick=function(){copy(b.getAttribute("data-cp"));};});
+}
+
+// ---------- KIT ----------
+function viewKit(){
+  var p=S.panel,links=(p&&p.links)||[];
+  var h='<div style="height:16px"></div><div class="sect-t" style="margin-top:4px">Kit de divulgação</div>';
+  if(!links.length){h+='<div class="empty"><div class="ei">🎁</div>Pegue um link na Vitrine pra liberar o kit.</div>';shell(h);return;}
+  var sel=S.kitCreator||links[0].creator_key;S.kitCreator=sel;
+  h+='<div class="card"><div class="field" style="margin-top:0"><label>Escolha a modelo</label><select id="kit-sel">'+
+      links.map(function(l){return '<option value="'+esc(l.creator_key)+'"'+(l.creator_key===sel?' selected':'')+'>'+esc(l.creator_name||l.creator_key)+'</option>';}).join("")+
+     '</select></div></div>';
+  h+='<div id="kit-body"><div class="spin"></div></div>';
+  shell(h);
+  document.getElementById("kit-sel").onchange=function(){S.kitCreator=this.value;renderKitBody();};
+  renderKitBody();
+}
+function renderKitBody(){
+  var box=document.getElementById("kit-body");if(!box)return;box.innerHTML='<div class="spin"></div>';
+  api("kit",{creator_key:S.kitCreator}).then(function(d){
+    if(!d||d.error){box.innerHTML='<div class="empty">Não consegui carregar o kit.</div>';return;}
+    S.kitData=d;var link=linkFor(d.creator_key,d.code||"");
+    var nm=d.name||d.creator_key;
+    var texts=[
+      ["Bio do perfil","🔥 "+nm+" liberou tudo aqui 👇\n"+link],
+      ["Legenda de post","Achei a "+nm+" e não consigo parar 🥵 ela responde no directo... link na minha bio ou aqui 👉 "+link],
+      ["Story","arrasta pra cima que a "+nm+" tá te esperando 💦\n"+link],
+      ["Direct / DM","oi 😏 tô mandando pq a "+nm+" tá com um conteúdo novo que você vai gostar... dá uma olhada 👉 "+link]
+    ];
+    var media='';
+    if(d.cover_path)media+='<a class="btn sm" style="width:auto" href="'+avUrl(d.cover_path)+'" download target="_blank" rel="noopener">⬇️ Capa</a> ';
+    if(d.avatar_path)media+='<a class="btn sm" style="width:auto" href="'+avUrl(d.avatar_path)+'" download target="_blank" rel="noopener">⬇️ Foto de perfil</a>';
+    var h='';
+    h+='<div class="card"><div class="small" style="font-weight:700;margin-bottom:4px">Seu link desta modelo</div>'+
+       '<div class="linkbox"><input readonly value="'+esc(link)+'"><button class="cpbtn" id="kcp">Copiar</button></div>';
+    if(media)h+='<div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">'+media+'</div>';
+    h+='</div>';
+    h+='<div class="sect-t">Textos prontos (toque pra copiar)</div>';
+    texts.forEach(function(t,i){
+      h+='<div class="kt" data-tx="'+esc(t[1])+'"><div class="kl">'+esc(t[0])+'<span class="kc">copiar ⧉</span></div><div class="kx">'+esc(t[1])+'</div></div>';
+    });
+    h+='<p class="small muted" style="margin:12px 2px">Dica: troque as palavras do seu jeito pra não ficar tudo igual. O link já carrega sua comissão.</p>';
+    box.innerHTML=h;
+    document.getElementById("kcp").onclick=function(){copy(link);};
+    box.querySelectorAll("[data-tx]").forEach(function(c){c.onclick=function(){copy(c.getAttribute("data-tx"));};});
+  }).catch(function(){box.innerHTML='<div class="empty">Erro ao carregar o kit.</div>';});
+}
+
+// ---------- WALLET ----------
+function viewWallet(){
+  var p=S.panel,w=p.wallet||{},aff=p.affiliate||{};
+  var avail=w.disponivel_cents||0;
+  var h='<div style="height:16px"></div>';
+  h+='<div class="sect-t" style="margin-top:4px">Caminho da sua comissão</div>';
+  h+='<div class="card"><div class="path">'+
+      pstep("Carência",brl(w.carencia_cents))+ar()+
+      pstep("Análise",brl(w.analise_cents))+ar()+
+      pstep("Disponível",brl(w.disponivel_cents))+ar()+
+      pstep("Sacado",brl(w.sacado_cents))+
+     '</div><p class="small muted" style="margin:10px 2px 0">Toda venda confirmada entra em <b>carência por 7 dias</b> (proteção contra estorno). Depois vira <b style="color:var(--grn)">disponível</b> e você pode sacar via Pix.</p></div>';
+  // saque
+  h+='<div class="card" style="margin-top:12px;text-align:center">'+
+      '<div class="small muted">Disponível pra saque</div>'+
+      '<div style="font-size:30px;font-weight:800;margin:6px 0;color:var(--grn)">'+brl(avail)+'</div>'+
+      '<button class="btn grad" id="wd" '+(avail<2000?'disabled':'')+'>Sacar via Pix</button>'+
+      '<p class="small muted" style="margin:10px 0 0">Saque mínimo R$ 20,00.'+(aff.pix_key?'':' <b style="color:var(--amber)">Cadastre seu Pix abaixo.</b>')+'</p>'+
+      '<div id="wd-msg"></div>'+
+     '</div>';
+  // pix
+  h+='<div class="sect-t">Sua chave Pix</div>';
+  h+='<div class="card">'+
+      '<div class="field" style="margin-top:0"><label>Tipo</label><select id="pix-t">'+
+        ["cpf","email","phone","random"].map(function(x){return '<option value="'+x+'"'+(aff.pix_key_type===x?' selected':'')+'>'+({cpf:"CPF",email:"E-mail",phone:"Telefone",random:"Aleatória"}[x])+'</option>';}).join("")+
+      '</select></div>'+
+      '<div class="field"><label>Chave</label><input id="pix-k" value="'+esc(aff.pix_key||"")+'" placeholder="sua chave Pix"></div>'+
+      '<div class="field"><button class="btn" id="pix-save">Salvar Pix</button></div>'+
+      '<div id="pix-msg"></div>'+
+     '</div>';
+  // extrato
+  h+='<div class="sect-t">Extrato</div><div class="card" id="extrato"></div>';
+  h+='<div style="text-align:center;margin-top:18px"><span class="small muted">Afiliado desde '+fmtDate(aff.created_at)+' · código <b style="color:var(--p1)">'+esc(aff.code||"")+'</b></span></div>';
+  shell(h);
+  var wd=document.getElementById("wd");
+  if(wd)wd.onclick=function(){
+    wd.disabled=true;wd.textContent="Processando…";
+    api("withdraw",{}).then(function(d){
+      if(d&&d.payout_id){document.getElementById("wd-msg").innerHTML='<div class="msg ok">Saque de '+brl(d.amount_cents)+' solicitado! Cai no seu Pix em breve.</div>';loadPanelSilent(function(){});}
+      else{var m=d&&d.error==="no_pix"?"Cadastre sua chave Pix primeiro.":d&&d.error==="min"?("Mínimo R$ 20,00. Você tem "+brl((d&&d.available_cents)||0)+"."):"Nada disponível pra sacar agora.";document.getElementById("wd-msg").innerHTML='<div class="msg err">'+m+'</div>';wd.disabled=false;wd.textContent="Sacar via Pix";}
+    }).catch(function(){document.getElementById("wd-msg").innerHTML='<div class="msg err">Erro, tente de novo.</div>';wd.disabled=false;wd.textContent="Sacar via Pix";});
+  };
+  document.getElementById("pix-save").onclick=function(){
+    var k=(document.getElementById("pix-k").value||"").trim();var t=document.getElementById("pix-t").value;
+    if(!k){document.getElementById("pix-msg").innerHTML='<div class="msg err">Digite sua chave.</div>';return;}
+    this.disabled=true;this.textContent="Salvando…";var self=this;
+    api("set_pix",{pix_key:k,pix_key_type:t}).then(function(){document.getElementById("pix-msg").innerHTML='<div class="msg ok">Pix salvo ✓</div>';loadPanelSilent(function(){});self.disabled=false;self.textContent="Salvar Pix";}).catch(function(){document.getElementById("pix-msg").innerHTML='<div class="msg err">Erro ao salvar.</div>';self.disabled=false;self.textContent="Salvar Pix";});
+  };
+  var ex=document.getElementById("extrato");
+  var rows=(p.recent||[]);
+  if(!rows.length){ex.innerHTML='<div class="small muted" style="padding:6px 0">Sem movimentações ainda.</div>';}
+  else{ex.innerHTML=rows.map(function(r){return '<div class="lrow"><div style="flex:1"><div class="nm">'+brl(r.commission_cents)+'</div><div class="sub">'+srcLabel(r.source_type)+' · '+esc(r.creator_key)+' · '+fmtDate(r.created_at)+'</div></div><div class="rt">'+statePill(r.status)+'</div></div>';}).join("");}
+}
+function pstep(l,v){return '<div class="p"><div class="pl">'+l+'</div><div class="pv">'+v+'</div></div>';}
+function ar(){return '<div class="ar">→</div>';}
+function fmtDate(ts){try{return new Date(ts).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"});}catch(e){return "";}}
+
+})();
+</script>
+</body>
+</html>

@@ -1695,7 +1695,8 @@ fbq('track', 'PageView');
       if (name.length < 3) { err.textContent = L("Digite seu nome completo.", "Enter your full name.", "Escribe tu nombre completo."); return; }
       if (cpf.length !== 11) { err.textContent = L("CPF inválido.", "Invalid CPF.", "CPF inválido."); return; }
       err.textContent = ""; var b = this; b.textContent = L("Gerando…", "Generating…", "Generando…"); b.disabled = true;
-      sb.functions.invoke("sub_enroll", { body: { creator_key: key, months: String(months), name: name, document: cpf } }).then(function (r) {
+      var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+      sb.functions.invoke("sub_enroll", { body: { creator_key: key, months: String(months), name: name, document: cpf, ref: _ref } }).then(function (r) {
         var j = (r && r.data) || {}; b.textContent = L("Gerar Pix", "Generate Pix", "Generar Pix"); b.disabled = false;
         if ((r && r.error) || !j.pix_code) { err.textContent = (j.error === "bad_document") ? L("CPF inválido.", "Invalid CPF.", "CPF inválido.") : L("Não consegui gerar o Pix. Tente de novo.", "Could not generate Pix. Try again.", "No pude generar el Pix."); return; }
         ov.querySelector("#px-amt").textContent = brlc(j.amount_cents) + " · " + (String(months) === "1" ? L("renova todo mês", "renews monthly", "renueva cada mes") : L("renova a cada " + months + " meses", "renews every " + months + " months", "renueva cada " + months + " meses"));
