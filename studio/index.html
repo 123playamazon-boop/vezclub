@@ -492,11 +492,19 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     var l=await orderApi('orders',{});
     var rows=(l.orders)||[];
     $('orders-empty').style.display=rows.length?'none':'block';
+    var now=Date.now();
     $('orders').innerHTML=rows.map(function(o){
-      var st=o.status==='delivered'?'Entregue ✅':'Pago · entregar ⏳';
+      var paid=o.paid_at?new Date(o.paid_at).getTime():0;
+      var due=paid?paid+72*3600*1000:0;
+      var overdue=o.status==='paid'&&due&&now>due;
+      var dueTxt='';
+      if(o.status==='paid'&&due){ var d=new Date(due); var dd=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); dueTxt='<div style="font-size:12px;margin-top:3px;color:'+(overdue?'#ff7a90':'#9a93a8')+'">⏱ entregar até '+dd+(overdue?' · ATRASADO':'')+'</div>'; }
+      var flag=(o.status==='paid'&&o.flagged_at)?'<div style="font-size:12px;margin-top:4px;color:#ff7a90;font-weight:700">⚠️ O admin cobrou esta entrega — entregue agora.</div>':'';
+      var st=o.status==='delivered'?'Entregue ✅':(overdue?'<span style="color:#ff7a90;font-weight:700">ATRASADO ⏰</span>':'Pago · entregar ⏳');
       var brief=o.brief?('<div class="muted" style="font-size:12px;margin:4px 0;white-space:pre-wrap">'+String(o.brief).replace(/</g,'&lt;')+'</div>'):'';
       var act=o.status==='paid'?'<button class="btn" data-odeliver="'+o.id+'" style="font-size:12px;padding:8px 12px;margin-top:4px">📤 Entregar</button>':'';
-      return '<div style="border:1px solid #2a2335;border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between"><b>'+BRL(o.amount_cents)+' · '+(o.kind||'')+'</b><span class="muted" style="font-size:12px">'+st+'</span></div>'+brief+act+'</div>';
+      var bd=(overdue||o.flagged_at)?'#ff7a90':'#2a2335';
+      return '<div style="border:1px solid '+bd+';border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between"><b>'+BRL(o.amount_cents)+' · '+(o.kind||'')+'</b><span class="muted" style="font-size:12px">'+st+'</span></div>'+dueTxt+flag+brief+act+'</div>';
     }).join('');
     $('orders').querySelectorAll('[data-odeliver]').forEach(function(b){ b.onclick=function(){ deliverOrderId=+b.getAttribute('data-odeliver'); $('od-file').click(); }; });
   }

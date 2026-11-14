@@ -63,12 +63,14 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
       <div class="tab on" data-tab="geral">📊 Visão geral</div>
       <div class="tab" data-tab="pendentes">🕒 Pendentes <span class="c" id="tc-pend">0</span></div>
       <div class="tab" data-tab="produtoras">👩 Produtoras <span class="c" id="tc-apr">0</span></div>
+      <div class="tab" data-tab="encomendas">🎬 Encomendas <span class="c" id="tc-ord">0</span></div>
       <div style="margin-left:auto"><button class="btn sec" id="reload">↻</button></div>
     </div>
 
     <div id="pane-geral"></div>
     <div id="pane-pendentes" class="hide"></div>
     <div id="pane-produtoras" class="hide"></div>
+    <div id="pane-encomendas" class="hide"></div>
   </div>
 </div>
 
@@ -96,7 +98,7 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
     t.onclick=function(){
       current=t.getAttribute('data-tab');
       Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.toggle('on',x===t);});
-      ['geral','pendentes','produtoras'].forEach(function(p){ $('pane-'+p).classList.toggle('hide',p!==current); });
+      ['geral','pendentes','produtoras','encomendas'].forEach(function(p){ $('pane-'+p).classList.toggle('hide',p!==current); });
     };
   });
 
@@ -105,6 +107,7 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
     if(r.error==='forbidden'){ try{localStorage.removeItem('vez_admin_key');}catch(e){} KEY=''; showGate(); return false; }
     $('tc-pend').textContent=r.pending||0;
     $('tc-apr').textContent=r.approved||0;
+    $('tc-ord').textContent=r.orders_pending||0;
     $('pane-geral').innerHTML=
       '<div class="stats">'+
       '<div class="stat hl"><div class="v">'+(r.pending||0)+'</div><div class="l">Aguardando aprovação</div></div>'+
@@ -179,7 +182,39 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
     box.innerHTML=''; box.appendChild(card);
   }
 
-  async function loadAll(){ var ok=await loadOverview(); if(ok===false) return; loadPending(); loadProdutoras(); }
+  async function loadOrders(){
+    var box=$('pane-encomendas');
+    box.innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
+    var r=await api('orders');
+    if(r.error){ box.innerHTML='<div class="card muted" style="text-align:center;padding:30px">Não foi possível carregar.</div>'; return; }
+    var rows=r.orders||[];
+    if(!rows.length){ box.innerHTML='<div class="card muted" style="text-align:center;padding:40px 10px">Nenhuma encomenda ainda.</div>'; return; }
+    var now=Date.now();
+    var card=document.createElement('div'); card.className='card';
+    var pend=rows.filter(function(o){return o.status==='paid';});
+    var over=pend.filter(function(o){ var p=o.paid_at?new Date(o.paid_at).getTime():0; return p && now>p+72*3600*1000; });
+    card.innerHTML='<div class="card-head" style="margin-bottom:8px"><b>Encomendas</b> <span class="muted">('+pend.length+' a entregar'+(over.length?' · '+over.length+' ATRASADA(s)':'')+')</span></div>';
+    rows.forEach(function(o){
+      var paid=o.paid_at?new Date(o.paid_at).getTime():0;
+      var due=paid?paid+72*3600*1000:0;
+      var overdue=o.status==='paid'&&due&&now>due;
+      function fmt(ts){ if(!ts) return '—'; var d=new Date(ts); return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+      var st=o.status==='delivered'?'<span style="color:var(--ok);font-weight:700">Entregue ✅</span>':(overdue?'<span style="color:var(--bad);font-weight:800">ATRASADO ⏰</span>':'<span style="color:var(--ac);font-weight:700">A entregar ⏳</span>');
+      var flagged=o.flagged_at?' · <span class="muted">cobrada '+fmt(new Date(o.flagged_at).getTime())+'</span>':'';
+      var brief=o.brief?('<div class="muted" style="font-size:12px;margin:5px 0;white-space:pre-wrap;border-left:2px solid #2a2335;padding-left:8px">'+esc(o.brief)+'</div>'):'';
+      var el=document.createElement('div');
+      el.style.cssText='border:1px solid '+(overdue?'var(--bad)':'#2a2335')+';border-radius:10px;padding:11px;margin-bottom:9px';
+      var canFlag=o.status==='paid';
+      el.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div><b>'+esc(o.display_name||o.creator_key)+'</b> <span class="muted" style="font-size:12px">'+esc(o.handle||'')+'</span></div>'+st+'</div>'+
+        '<div class="muted" style="font-size:12px;margin-top:3px">'+brl(o.amount_cents)+' · '+(o.kind||'')+' · pago '+fmt(paid)+(o.status==='paid'?(' · prazo '+fmt(due)):'' )+flagged+'</div>'+
+        brief+
+        (canFlag?'<button class="btn" data-flag="'+o.id+'" style="font-size:12px;padding:7px 12px;margin-top:5px;background:'+(o.flagged_at?'#2a2335':'')+'">'+(o.flagged_at?'Cobrar de novo':'⚠️ Cobrar entrega')+'</button>':'');
+      card.appendChild(el);
+    });
+    box.innerHTML=''; box.appendChild(card);
+    box.querySelectorAll('[data-flag]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Cobrar a entrega dessa encomenda? A modelo vai ver o aviso no painel dela.')) return; b.disabled=true; b.textContent='Cobrando…'; var rr=await api('flag_order',{order_id:+b.getAttribute('data-flag')}); if(rr.ok){ loadOrders(); } else { alert('Erro.'); b.disabled=false; b.textContent='⚠️ Cobrar entrega'; } }; });
+  }
+  async function loadAll(){ var ok=await loadOverview(); if(ok===false) return; loadPending(); loadProdutoras(); loadOrders(); }
   function start(){ if(!KEY){ showGate(); return; } showMain(); loadAll(); }
   start();
 })();
