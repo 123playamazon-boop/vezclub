@@ -1567,12 +1567,12 @@ fbq('track', 'PageView');
         box.hidden = false;
         var kindIc = { audio: "🎧", video: "🎬", message: "💌", photo: "🖼️" };
         var head = '<div class="pf-h">🎬 ' + L("Peça um conteúdo só seu", "Order custom content", "Pide contenido solo tuyo") + '</div>' +
-          '<p class="muted-note" style="margin:.1rem 0 .7rem;font-size:.86rem">' + L("Feito sob medida pra você — ela grava e entrega aqui dentro.", "Made just for you — she records and delivers it here.", "Hecho a tu medida — ella graba y lo entrega aquí.") + '</p>';
+          '<p class="muted-note" style="margin:.1rem 0 .7rem;font-size:.86rem">' + L("Ela grava do zero, só pra você — o que ninguém mais vai ter. Entrega em até 72h, aqui dentro.", "She records from scratch, just for you — what no one else gets. Delivered within 72h, right here.", "Graba desde cero, solo para ti — lo que nadie más tendrá. Entrega en hasta 72h, aquí dentro.") + '</p>';
         var offHtml = offers.map(function (o) {
           return '<div style="border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px">' +
             '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.1rem">' + (kindIc[o.kind] || "🎬") + '</span><div style="font-weight:800">' + escHtml(o.title) + '</div><div style="margin-left:auto;font-weight:900">' + brlc(o.price_cents) + '</div></div>' +
             (o.description ? '<div style="font-size:.86rem;color:var(--muted);margin-top:5px;line-height:1.35">' + escHtml(o.description) + '</div>' : '') +
-            '<div style="font-size:.78rem;color:var(--faint);margin-top:6px">⏱ ' + L("entrega em até ", "delivery in up to ", "entrega en hasta ") + (o.delivery_days || 3) + L(" dias", " days", " días") + '</div>' +
+            '<div style="font-size:.78rem;color:var(--faint);margin-top:6px">🎬 ' + L("2 a 4 min · entrega em até ", "2–4 min · delivered within ", "2 a 4 min · entrega en hasta ") + ((o.delivery_days || 3) * 24) + 'h</div>' +
             '<button class="btn btn-primary btn-block" data-order-offer="' + o.id + '" data-title="' + escHtml(o.title) + '" data-price="' + o.price_cents + '" style="margin-top:.55rem">' + L("Pedir agora · ", "Order now · ", "Pedir ahora · ") + brlc(o.price_cents) + '</button>' +
           '</div>';
         }).join("");
