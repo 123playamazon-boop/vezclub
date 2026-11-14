@@ -1310,26 +1310,74 @@ fbq('track', 'PageView');
 
   // ===== assinatura real em R$ via Pix (SyncPay) =====
   function brlc(cents) { return "R$ " + (((cents || 0) / 100).toFixed(2)).replace(".", ","); }
+  function ensurePlanCss() {
+    if (document.getElementById("plancss")) return; var s = document.createElement("style"); s.id = "plancss";
+    s.textContent =
+      '.vp-wrap{margin-top:12px;display:flex;flex-direction:column;gap:12px}' +
+      '.vp-card{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border:1.5px solid var(--line,#e3e7ef);border-radius:16px;background:var(--panel,#fff);cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}' +
+      '.vp-card.sel{border-color:#1b6fe3;box-shadow:0 0 0 3px rgba(27,111,227,.16);background:rgba(27,111,227,.04)}' +
+      '.vp-card.best{border-color:#1b6fe3}' +
+      '.vp-l{display:flex;align-items:center;gap:13px;min-width:0}' +
+      '.vp-radio{width:22px;height:22px;border-radius:50%;border:2px solid #c6ccd8;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#fff}' +
+      '.vp-card.sel .vp-radio{border-color:#1b6fe3}' +
+      '.vp-card.sel .vp-radio::after{content:"";width:11px;height:11px;border-radius:50%;background:#1b6fe3}' +
+      '.vp-name{font-family:var(--font-display);font-weight:800;font-size:1.12rem;line-height:1.1}' +
+      '.vp-permo{font-size:.84rem;color:var(--muted);margin-top:3px;font-weight:600}' +
+      '.vp-r{text-align:right;flex:0 0 auto}' +
+      '.vp-anchor{font-size:.84rem;color:var(--faint,#99a1b3);text-decoration:line-through;font-weight:600;line-height:1}' +
+      '.vp-price{font-family:var(--font-display);font-weight:900;font-size:1.42rem;line-height:1.1;margin-top:1px}' +
+      '.vp-save{position:absolute;top:-11px;right:14px;background:#16a34a;color:#fff;font-weight:800;font-size:.74rem;padding:3px 10px;border-radius:999px;letter-spacing:.02em;box-shadow:0 2px 6px rgba(22,163,74,.3)}' +
+      '.vp-ribbon{position:absolute;top:-11px;left:14px;background:#1b6fe3;color:#fff;font-weight:800;font-size:.7rem;padding:3px 11px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}' +
+      '.vp-cta{width:100%;margin-top:4px;padding:17px;border:0;border-radius:15px;background:#1b6fe3;color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.08rem;cursor:pointer;box-shadow:0 6px 18px rgba(27,111,227,.3)}' +
+      '.vp-cta:active{transform:translateY(1px)}' +
+      '.vp-note{text-align:center;color:var(--muted);font-size:.82rem;margin-top:10px}' +
+      '.vp-note svg{width:13px;height:13px;vertical-align:-2px;opacity:.7}';
+    document.head.appendChild(s);
+  }
   function loadPlansInto(c) {
     var box = document.getElementById("pf-plans"); if (!box) return;
     if (!sb) { box.innerHTML = '<p class="muted-note">' + L("Entre pra assinar.", "Sign in to subscribe.", "Entra para suscribirte.") + '</p>'; return; }
     if (state.subscribed[c.id]) { box.innerHTML = '<div class="rc-sub on">' + I.check + '<span>' + L("Assinatura ativa · acesso a tudo", "Subscription active · full access", "Suscripción activa · acceso total") + '</span></div>'; return; }
-    var pfc1 = c.color1 || "#1b74e8", pfc2 = c.color2 || "#1552b8";
+    ensurePlanCss();
     sb.from("plans").select("months,price_cents,label").eq("creator_key", c.id).eq("active", true).order("months", { ascending: true }).then(function (r) {
       var plans = (r.data || []).filter(function (p) { return p.price_cents > 0; });
       if (!plans.length) plans = [{ months: 1, price_cents: Math.round(c.subPrice * 100), label: "1 mês" }];
       var base = plans[0], baseMonthly = base.price_cents / base.months;
-      box.innerHTML = plans.map(function (p) {
+      // melhor oferta = maior desconto (geralmente o plano mais longo) → já vem pré-selecionado
+      var bestIdx = 0, bestOff = -1;
+      plans.forEach(function (p, i) { var o = Math.round((1 - (p.price_cents / p.months) / baseMonthly) * 100); if (o > bestOff) { bestOff = o; bestIdx = i; } });
+      var cards = plans.map(function (p, i) {
         var perMonth = p.price_cents / p.months;
         var off = (p.months > 1) ? Math.round((1 - perMonth / baseMonthly) * 100) : 0;
         var lbl = p.label || (p.months + " " + (p.months > 1 ? L("meses", "months", "meses") : L("mês", "mo", "mes")));
-        var badge = off > 0 ? '<span style="font-weight:800;font-size:.82rem;background:rgba(255,255,255,.26);padding:3px 10px;border-radius:999px;margin-left:7px">-' + off + '%</span>' : '';
-        var sub = p.months > 1 ? ('<div style="font-size:.9rem;opacity:.95;margin-top:3px;font-weight:600">' + brlc(perMonth) + '/' + L("mês", "mo", "mes") + '</div>') : '';
-        var anchor = brlc(p.price_cents * 2); // preço cheio ancorado (2×), cortado
-        return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;margin-bottom:11px;border:0;border-radius:14px;cursor:pointer;background:#1b6fe3;color:#fff">' +
-          '<span style="text-align:left"><span style="font-weight:800;font-size:1.05rem">' + lbl + '</span>' + badge + sub + '</span>' +
-          '<span style="display:flex;align-items:center;gap:10px"><span style="background:#fff;color:#e11d2b;text-decoration:line-through;text-decoration-color:#e11d2b;text-decoration-thickness:2px;font-weight:800;font-size:.95rem;padding:3px 9px;border-radius:9px;white-space:nowrap">' + anchor + '</span><span style="font-weight:900;font-size:1.25rem">' + brlc(p.price_cents) + '</span></span></button>';
-      }).join("") + '<p class="muted-note" style="margin-top:.3rem;font-size:.8rem">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</p>';
+        var anchor = brlc(p.price_cents * 2); // preço cheio (valor normal) ancorado, cortado
+        var permoTxt = (p.months > 1)
+          ? (brlc(perMonth) + '/' + L("mês", "mo", "mes") + ' · ' + L("acesso total", "full access", "acceso total"))
+          : L("acesso total · cancela quando quiser", "full access · cancel anytime", "acceso total · cancela cuando quieras");
+        var save = off > 0 ? '<div class="vp-save">' + L("Economize ", "Save ", "Ahorra ") + off + '%</div>' : '';
+        var ribbon = (i === bestIdx && off > 0) ? '<div class="vp-ribbon">' + L("Melhor oferta", "Best deal", "Mejor oferta") + '</div>' : '';
+        var isSel = (i === bestIdx);
+        return '<div class="vp-card' + (isSel ? ' sel' : '') + (i === bestIdx ? ' best' : '') + '" data-plan="' + i + '" data-months="' + p.months + '" data-price="' + p.price_cents + '">' +
+          ribbon + save +
+          '<div class="vp-l"><span class="vp-radio"></span><span><span class="vp-name">' + lbl + '</span><div class="vp-permo">' + permoTxt + '</div></span></div>' +
+          '<div class="vp-r"><div class="vp-anchor">' + anchor + '</div><div class="vp-price">' + brlc(p.price_cents) + '</div></div>' +
+        '</div>';
+      }).join("");
+      box.innerHTML = '<div class="vp-wrap">' + cards +
+        '<button class="vp-cta" id="vp-cta" data-pixsub="' + escHtml(c.id) + '" data-months="' + plans[bestIdx].months + '">' + L("Assinar agora", "Subscribe now", "Suscribir ahora") + ' — ' + brlc(plans[bestIdx].price_cents) + '</button>' +
+        '<div class="vp-note">' + I.lock + ' ' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</div>' +
+      '</div>';
+      var cta = box.querySelector("#vp-cta");
+      box.querySelectorAll(".vp-card").forEach(function (card) {
+        card.onclick = function () {
+          box.querySelectorAll(".vp-card").forEach(function (x) { x.classList.remove("sel"); });
+          card.classList.add("sel");
+          var m = card.getAttribute("data-months"), pc = +card.getAttribute("data-price");
+          cta.setAttribute("data-months", m);
+          cta.innerHTML = L("Assinar agora", "Subscribe now", "Suscribir ahora") + ' — ' + brlc(pc);
+        };
+      });
+      applyDynTranslation();
     }, function () { box.innerHTML = '<p class="muted-note">' + L("Não consegui carregar os planos.", "Couldn't load plans.", "No pude cargar los planes.") + '</p>'; });
   }
   function ensurePixCss() {
