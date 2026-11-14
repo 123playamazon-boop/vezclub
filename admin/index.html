@@ -84,6 +84,8 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
   function brl(c){return "R$ "+((c||0)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function initials(n){ n=String(n||'').trim(); return (n[0]||'?').toUpperCase(); }
   var KEY=''; try{ KEY=localStorage.getItem('vez_admin_key')||''; }catch(e){}
+  // link direto pro time: /admin/#k=CHAVE — entra sozinho e limpa a chave da barra de endereço
+  (function(){ try{ var m=/[#&?]k=([^&]+)/.exec(location.hash||'') || /[?&]k=([^&]+)/.exec(location.search||''); if(m&&m[1]){ KEY=decodeURIComponent(m[1]); try{localStorage.setItem('vez_admin_key',KEY);}catch(e){} try{history.replaceState(null,'',location.pathname);}catch(e){} } }catch(e){} })();
   async function api(action,extra){ var r=await fetch(FN+'admin_kyc',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify(Object.assign({k:KEY,action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }
 
   function showGate(){ $('gate').classList.remove('hide'); $('main').classList.add('hide'); }
