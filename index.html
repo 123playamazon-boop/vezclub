@@ -6005,6 +6005,36 @@ fbq('track', 'PageView');
         body.scrollTop = body.scrollHeight;
       }).catch(function () { var el = document.getElementById(id); if (el) el.innerHTML = '<div style="padding:.8rem 1rem;color:var(--faint);font-size:.78rem">(mídia indisponível)</div>'; });
     }
+    // PPV no chat: conteúdo pago (história em áudio) com botão de pagar via Pix real
+    function herPpv(storyId) {
+      var id = "ppv" + Math.random().toString(36).slice(2);
+      body.insertAdjacentHTML("beforeend", '<div class="bub her" id="' + id + '" style="padding:0;max-width:250px"><div style="padding:.9rem 1rem;color:var(--faint);font-size:.8rem">🎧 carregando…</div></div>');
+      body.scrollTop = body.scrollHeight;
+      sb.from("audio_stories").select("id,title,teaser,price_cents").eq("id", storyId).eq("active", true).maybeSingle().then(function (r) {
+        var s = r.data; var el = document.getElementById(id); if (!el) return;
+        if (!s) { el.remove(); return; }
+        function renderPlayer() {
+          sb.functions.invoke("story_audio_url", { body: { story_id: s.id } }).then(function (res) {
+            var d = (res && res.data) || {}; var e2 = document.getElementById(id); if (!e2) return;
+            if (d.url) e2.innerHTML = '<div style="padding:.55rem;max-width:250px"><div style="font-weight:700;font-size:.85rem;margin-bottom:.3rem">🎧 ' + escHtml(s.title) + '</div><audio src="' + d.url + '" controls controlslist="nodownload noplaybackrate noremoteplayback" oncontextmenu="return false" style="width:100%"></audio></div>';
+          });
+        }
+        function renderLocked() {
+          el.innerHTML = '<div style="border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);max-width:250px">' +
+            '<div class="ppv-media" style="height:120px;display:grid;place-items:center;background:linear-gradient(135deg,#1b74e8,#1552b8);color:#fff">' + I.lock + '</div>' +
+            '<div style="padding:.6rem .7rem"><div style="font-weight:800;font-size:.9rem">🎧 ' + escHtml(s.title) + '</div>' +
+            (s.teaser ? '<div style="font-size:.8rem;color:var(--muted);margin-top:3px;line-height:1.3">' + escHtml(s.teaser) + '</div>' : '') +
+            '<button class="btn btn-primary btn-block" style="margin-top:.5rem" data-ppvbuy="' + s.id + '">🔓 ' + L("Liberar por ", "Unlock for ", "Liberar por ") + brlc(s.price_cents) + '</button></div></div>';
+          el.querySelector("[data-ppvbuy]").onclick = function () {
+            openStoryPix(s.id, s.title, s.price_cents);
+            var iv = setInterval(function () { sb.from("story_unlocks").select("story_id").eq("story_id", s.id).then(function (u) { if (u.data && u.data.length) { clearInterval(iv); renderPlayer(); } }); }, 3000);
+            setTimeout(function () { clearInterval(iv); }, 185000);
+          };
+        }
+        if (account) { sb.from("story_unlocks").select("story_id").eq("story_id", s.id).then(function (u) { if (u.data && u.data.length) renderPlayer(); else renderLocked(); }); }
+        else renderLocked();
+      });
+    }
 
     var PKGS = PKG_SETS.A; // precos unificados: exibido == cobrado (payment_packs = set A)
     var PKGS_BRL = { 10: 19.90, 20: 34.90, 30: 49.90, 60: 89.90 }; // precos Pix (Brasil)
@@ -6197,7 +6227,8 @@ fbq('track', 'PageView');
           if (m2.id > lastSeenId) lastSeenId = m2.id;
           if (m2.role === "user") { me(m2.content); return; }
           var mm = /^\[\[media:(img|vid|aud)\]\]([\s\S]+)$/.exec(m2.content || "");
-          if (mm) herMedia(mm[2], mm[1]); else her(m2.content);
+          var pv = /^\[\[ppv:story:(\d+)\]\]/.exec(m2.content || "");
+          if (mm) herMedia(mm[2], mm[1]); else if (pv) herPpv(+pv[1]); else her(m2.content);
         });
         startPoll(); startBalance();
       });
@@ -6210,7 +6241,7 @@ fbq('track', 'PageView');
         if (!document.body.contains(body)) { clearInterval(poll); poll = null; return; }
         if (!threadId) { sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) threadId = tr.data.id; }); return; }
         sb.from("chat_messages").select("id,content,by_human").eq("thread_id", threadId).gt("id", lastSeenId).order("id", { ascending: true }).then(function (r) {
-          (r.data || []).forEach(function (m3) { if (m3.id > lastSeenId) lastSeenId = m3.id; if (m3.by_human) { var mm = /^\[\[media:(img|vid|aud)\]\]([\s\S]+)$/.exec(m3.content || ""); if (mm) herMedia(mm[2], mm[1]); else her(m3.content); } });
+          (r.data || []).forEach(function (m3) { if (m3.id > lastSeenId) lastSeenId = m3.id; if (m3.by_human) { var mm = /^\[\[media:(img|vid|aud)\]\]([\s\S]+)$/.exec(m3.content || ""); var pv = /^\[\[ppv:story:(\d+)\]\]/.exec(m3.content || ""); if (mm) herMedia(mm[2], mm[1]); else if (pv) herPpv(+pv[1]); else her(m3.content); } });
         });
       }, 3000);
     }

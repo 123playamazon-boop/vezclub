@@ -535,9 +535,12 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
   }
   var aiMode='flirty';
   Array.prototype.forEach.call(document.querySelectorAll('#ai-mode button'),function(b){ b.onclick=function(){ aiMode=b.getAttribute('data-mode'); Array.prototype.forEach.call(document.querySelectorAll('#ai-mode button'),function(x){x.classList.toggle('on',x===b);}); }; });
+  var aiStories=[];
+  async function loadAiStories(){ var l=await chatAiApi('stories',{}); aiStories=(l.stories)||[]; }
   async function loadAiAssistant(){
     var g=await chatAiApi('get',{});
     if(g.error) return;
+    loadAiStories();
     $('ai-on').checked=!!g.autopilot;
     aiMode=g.persona_mode||'flirty';
     Array.prototype.forEach.call(document.querySelectorAll('#ai-mode button'),function(x){x.classList.toggle('on',x.getAttribute('data-mode')===aiMode);});
@@ -584,10 +587,12 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       return '<div style="margin:4px 0"><b style="color:'+(mine?'#b9a7ff':'#9a93a8')+'">'+who+':</b> '+c+'</div>';
     }).join('')+'</div>'+
     '<textarea class="ai-reply" rows="2" placeholder="responder como você..." style="margin-top:6px"></textarea>'+
-    '<div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="btn ai-send" style="flex:1;font-size:12px;padding:8px">Enviar (assumir)</button><button type="button" class="btn ai-resume" style="flex:0 0 auto;font-size:12px;padding:8px;background:#2a2335">Devolver pra IA</button></div>';
+    '<div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="btn ai-send" style="flex:1;font-size:12px;padding:8px">Enviar (assumir)</button><button type="button" class="btn ai-resume" style="flex:0 0 auto;font-size:12px;padding:8px;background:#2a2335">Devolver pra IA</button></div>'+
+    (aiStories.length?('<div style="margin-top:8px;border-top:1px solid #2a2335;padding-top:8px"><div class="muted" style="font-size:11px;margin-bottom:4px">💰 Mandar conteúdo pago (PPV)</div><div style="display:flex;gap:6px"><select class="ai-ppv" style="flex:1;padding:8px;border-radius:8px;border:1px solid #2a2335;background:#0e0c14;color:inherit;font-size:12px">'+aiStories.map(function(s){return '<option value="'+s.id+'">'+String(s.title||'').replace(/</g,'&lt;')+' · '+BRL(s.price_cents)+'</option>';}).join('')+'</select><button type="button" class="btn ai-ppvsend" style="flex:0 0 auto;font-size:12px;padding:8px">Enviar 🔒</button></div></div>'):'<div class="muted" style="font-size:11px;margin-top:8px">Dica: suba Histórias (áudio) pra poder vender no chat.</div>');
     panel.innerHTML=html;
     panel.querySelector('.ai-send').onclick=async function(){ var tx=panel.querySelector('.ai-reply').value||''; if(!tx.trim()) return; this.disabled=true; var r=await chatAiApi('reply',{thread_id:id,text:tx}); if(!r.error){ loadAiThreads(); } else { this.disabled=false; alert('Falha ao enviar.'); } };
     panel.querySelector('.ai-resume').onclick=async function(){ await chatAiApi('resume',{thread_id:id}); loadAiThreads(); };
+    var ppvSend=panel.querySelector('.ai-ppvsend'); if(ppvSend){ ppvSend.onclick=async function(){ var sid=panel.querySelector('.ai-ppv').value; this.disabled=true; var r=await chatAiApi('send_ppv',{thread_id:id,story_id:+sid,text:'toma, é só pra você 🔥'}); if(!r.error){ loadAiThreads(); } else { this.disabled=false; alert('Falha ao enviar.'); } }; }
   }
   async function refresh(){
     var s=await api('stats',{});
