@@ -1254,7 +1254,9 @@ fbq('track', 'PageView');
   }
   function pickI18n(row, base) { return (lang === "en" ? (row[base + "_en"] || row[base]) : lang === "es" ? (row[base + "_es"] || row[base]) : row[base]) || ""; }
   function buildCreatorFromDb(row) {
-    var hook = pickI18n(row, "hook"), tg = pickI18n(row, "tag");
+    function clean(s) { return String(s == null ? "" : s).replace(/[<>"`\u0000-\u001F]/g, "").slice(0, 400); }
+    var hook = clean(pickI18n(row, "hook")), tg = clean(pickI18n(row, "tag"));
+    var nmClean = clean(row.display_name);
     var isNewC = !!(row.created_at && (Date.now() - new Date(row.created_at).getTime() < 10 * 24 * 3600 * 1000));
     if (DEMO[row.key]) {
       var d = DEMO[row.key]; d.ai = !!row.is_ai; d.hasChat = (row.has_chat !== false); d.hasSub = (row.has_subscription !== false);
@@ -1267,7 +1269,7 @@ fbq('track', 'PageView');
     }
     var color = [row.color1 || "#2f6bff", row.color2 || "#1b4fd1"];
     var vs = vanityStats(row.key);
-    var c = { id: row.key, name: row.display_name || "Modelo", handle: row.handle || ("@" + row.key), tag: tg, color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), subPriceCents: (row.sub_price_cents || 1900), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: hook, story: hook, interests: [], universes: [], offerName: (row.display_name || "VIP"), offerLine: hook || L("Entra no meu mundo.", "Step into my world.", "Entra en mi mundo."), stack: [L("Meu feed completo", "My full feed", "Mi feed completo"), L("Conteúdo novo toda semana", "New content every week", "Contenido nuevo cada semana"), L("Chat direto comigo", "Chat directly with me", "Chat directo conmigo"), L("Desconto em tudo", "Discount on everything", "Descuento en todo")], bonus: [L("Pack de boas-vindas", "Welcome pack", "Pack de bienvenida")], guarantee: L("7 dias de garantia.", "7-day guarantee.", "7 días de garantía."), left: 20, fans: [] };
+    var c = { id: row.key, name: nmClean || "Modelo", handle: clean(row.handle) || ("@" + row.key), tag: tg, color: color, subs: vs.subs, subPrice: Math.round((row.sub_price_cents || 1900) / 100), subPriceCents: (row.sub_price_cents || 1900), posts: 40 + Math.floor(seedRand(row.key, "p") * 260), ai: !!row.is_ai, age: null, city: "", likes: vs.likes, online: !!row.online, responds: "na hora", hook: hook, story: hook, interests: [], universes: [], offerName: (nmClean || "VIP"), offerLine: hook || L("Entra no meu mundo.", "Step into my world.", "Entra en mi mundo."), stack: [L("Meu feed completo", "My full feed", "Mi feed completo"), L("Conteúdo novo toda semana", "New content every week", "Contenido nuevo cada semana"), L("Chat direto comigo", "Chat directly with me", "Chat directo conmigo"), L("Desconto em tudo", "Discount on everything", "Descuento en todo")], bonus: [L("Pack de boas-vindas", "Welcome pack", "Pack de bienvenida")], guarantee: L("7 dias de garantia.", "7-day guarantee.", "7 días de garantía."), left: 20, fans: [] };
     if (row.avatar_path) { c.avatarUrl = mediaUrl(row.avatar_path); c.avatarPath = row.avatar_path; }
     if (row.cover_path) { c.coverUrl = mediaUrl(row.cover_path); c.coverPath = row.cover_path; }
     c.hasChat = (row.has_chat !== false);
