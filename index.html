@@ -1555,8 +1555,13 @@ fbq('track', 'PageView');
   function loadOrdersInto(c) {
     var box = document.getElementById("pf-orders"); if (!box) return;
     if (!sb) { box.hidden = true; return; }
-    sb.from("custom_offers").select("id,kind,title,description,price_cents,delivery_days").eq("creator_key", c.id).eq("active", true).order("price_cents", { ascending: true }).then(function (r) {
+    sb.from("custom_offers").select("id,kind,title,description,price_cents,delivery_days").eq("creator_key", c.id).eq("active", true).order("price_cents", { ascending: false }).then(function (r) {
       var offers = (r.data || []);
+      var hook = document.getElementById("pf-order-hook");
+      if (hook) {
+        if (offers.length) { hook.hidden = false; hook.style.display = "block"; hook.onclick = function () { var t = document.getElementById("pf-orders"); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }; }
+        else { hook.hidden = true; hook.style.display = "none"; }
+      }
       function render(myOrders) {
         if (!offers.length && !myOrders.length) { box.hidden = true; box.innerHTML = ""; return; }
         box.hidden = false;
@@ -2867,6 +2872,7 @@ fbq('track', 'PageView');
       hh += '<div class="pf-handle">' + (c.handle || ('@' + c.id)) + '</div>';
       if (c.hook) hh += '<div class="pf-hook">' + c.hook + '</div>';
       if (c.story) hh += '<div class="pf-about" style="margin:.5rem 0 0;font-size:.95rem;line-height:1.45">' + c.story + '</div>';
+      hh += '<button id="pf-order-hook" hidden style="display:none;margin-top:.7rem;width:100%;text-align:left;border:1px solid var(--line);background:linear-gradient(135deg,rgba(27,116,232,.07),transparent);border-radius:12px;padding:11px 13px;cursor:pointer;font-weight:700;color:inherit">💌 ' + L("Ela grava um conteúdo só pra você", "She records content just for you", "Ella graba contenido solo para ti") + ' <span style="float:right;opacity:.6">→</span></button>';
       hh += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), L("assinantes", "subscribers", "suscriptores")) + st(nfmt(c.likes), L("curtidas", "likes", "me gusta")) + '</div>';
       if (c.online) hh += '<div class="pf-status"><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + '</div>';
       hh += '<div id="pf-goal" class="pf-section" hidden></div>';
@@ -2899,7 +2905,8 @@ fbq('track', 'PageView');
       '</div></div>';
       // galeria de fotos (prévias bloqueadas) — dados reais
       hh += '<div class="pf-section" style="padding-top:.6rem"><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
-      hh += '<div id="pf-stories" class="pf-section" hidden></div>';
+      // iron quente: logo após o bloco travado vêm as encomendas (R$ alto ancora) e os mimos
+      hh += '<div id="pf-orders" class="pf-section" hidden></div>';
       // mimos (gorjetas)
       hh += '<div class="pf-section"><div class="pf-h">🎁 ' + L("Mandar um mimo", "Send a tip", "Enviar un mimo") + '</div>' +
         '<p class="muted-note" style="margin:.1rem 0 .6rem;font-size:.86rem">' + L("Faz o dia dela — e aparece pra ela na hora.", "Make her day — she sees it instantly.", "Alégrale el día — lo ve al instante.") + '</p>' +
@@ -2909,7 +2916,7 @@ fbq('track', 'PageView');
           '<button class="btn btn-ghost" data-tip="9900" style="flex:1;min-width:92px">🍾 ' + brlc(9900) + '</button>' +
           '<button class="btn btn-ghost" data-tip="custom" style="flex:1;min-width:92px">✨ ' + L("Outro valor", "Other", "Otro") + '</button>' +
         '</div></div>';
-      hh += '<div id="pf-orders" class="pf-section" hidden></div>';
+      hh += '<div id="pf-stories" class="pf-section" hidden></div>';
       hh += '<div id="pf-packs" hidden></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
