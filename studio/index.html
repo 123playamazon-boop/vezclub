@@ -227,6 +227,26 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       <p class="hint" id="orders-empty">Nenhum pedido ainda.</p>
       <input id="od-file" type="file" style="display:none">
     </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 4px">🤖 Assistente de IA do chat</h3>
+      <p class="hint" style="margin-top:0">A IA responde seus fãs 24/7 na sua voz e vende seu conteúdo (áudios, fotos, vídeos, encomendas, mimos). Você assume qualquer conversa quando quiser.</p>
+      <label style="display:flex;align-items:center;gap:8px;margin:8px 0"><input type="checkbox" id="ai-on"> <b>Piloto automático ligado</b></label>
+      <label>Estilo</label>
+      <div class="seg" id="ai-mode">
+        <button type="button" data-mode="flirty" class="on">😈 Safada</button>
+        <button type="button" data-mode="friend">🌻 Amiga</button>
+      </div>
+      <label>Sobre você / como você fala (a IA usa isso)</label>
+      <textarea id="ai-about" rows="3" maxlength="600" placeholder="Ex: Sou a Mia, carioca, adoro provocar, falo solta e direta, chamo de 'amor'..."></textarea>
+      <label>Saudação (1ª mensagem)</label>
+      <input id="ai-greet" type="text" maxlength="300" placeholder="oi 👀 que bom que você veio me ver...">
+      <div class="err" id="ai-err"></div>
+      <button class="btn" id="ai-save" style="margin-top:10px">Salvar assistente</button>
+      <h4 style="margin:16px 0 6px">Conversas <span class="muted" id="ai-tcount"></span></h4>
+      <div id="ai-threads"></div>
+      <p class="hint" id="ai-threads-empty">Nenhuma conversa ainda.</p>
+    </div>
   </div>
 </div>
 
@@ -508,6 +528,67 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     }).join('');
     $('orders').querySelectorAll('[data-odeliver]').forEach(function(b){ b.onclick=function(){ deliverOrderId=+b.getAttribute('data-odeliver'); $('od-file').click(); }; });
   }
+  async function chatAiApi(action,extra){
+    var tok=await token(); if(!tok) return {error:'auth'};
+    var r=await fetch(FN+'chat_ai',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify(Object.assign({action:action},extra||{}))});
+    return await r.json().catch(function(){return {error:'net'};});
+  }
+  var aiMode='flirty';
+  Array.prototype.forEach.call(document.querySelectorAll('#ai-mode button'),function(b){ b.onclick=function(){ aiMode=b.getAttribute('data-mode'); Array.prototype.forEach.call(document.querySelectorAll('#ai-mode button'),function(x){x.classList.toggle('on',x===b);}); }; });
+  async function loadAiAssistant(){
+    var g=await chatAiApi('get',{});
+    if(g.error) return;
+    $('ai-on').checked=!!g.autopilot;
+    aiMode=g.persona_mode||'flirty';
+    Array.prototype.forEach.call(document.querySelectorAll('#ai-mode button'),function(x){x.classList.toggle('on',x.getAttribute('data-mode')===aiMode);});
+    $('ai-about').value=g.about||'';
+    $('ai-greet').value=g.greeting||'';
+  }
+  $('ai-save').onclick=async function(){
+    err('ai-err','');
+    var btn=this; btn.disabled=true; btn.textContent='Salvando…';
+    var r=await chatAiApi('set',{autopilot:$('ai-on').checked, persona_mode:aiMode, about:$('ai-about').value||'', greeting:$('ai-greet').value||''});
+    btn.disabled=false; btn.textContent='Salvar assistente';
+    if(r.error){ err('ai-err', r.error==='not_approved'?'Conta ainda não aprovada.':'Falha ao salvar.'); return; }
+    loadAiThreads();
+  };
+  async function loadAiThreads(){
+    var l=await chatAiApi('threads',{});
+    var rows=(l.threads)||[];
+    var flagged=rows.filter(function(t){return t.flagged;}).length;
+    $('ai-tcount').textContent=rows.length?('· '+rows.length+(flagged?(' · '+flagged+' ⚠️'):'')):'';
+    $('ai-threads-empty').style.display=rows.length?'none':'block';
+    $('ai-threads').innerHTML=rows.map(function(t){
+      var bd=t.flagged?'#ff7a90':'#2a2335';
+      var tag=t.flagged?('<span style="color:#ff7a90;font-weight:700;font-size:11px"> ⚠️ '+String(t.flag_reason||'atenção').replace(/</g,'&lt;')+'</span>'):'';
+      var mode=t.human_mode?'<span style="color:#9effc0;font-size:11px"> · você no comando</span>':'<span class="muted" style="font-size:11px"> · IA respondendo</span>';
+      return '<div class="ai-th" data-th="'+t.id+'" style="border:1px solid '+bd+';border-radius:10px;padding:10px;margin-bottom:8px;cursor:pointer">'+
+        '<div style="display:flex;justify-content:space-between"><b style="font-size:13px">cliente '+t.who+'</b><span class="muted" style="font-size:11px">'+t.msgs+' msgs</span></div>'+
+        '<div class="muted" style="font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+String(t.last||'').replace(/</g,'&lt;')+'</div>'+
+        '<div>'+mode+tag+'</div>'+
+        '<div class="ai-panel" style="display:none;margin-top:8px"></div></div>';
+    }).join('');
+    $('ai-threads').querySelectorAll('.ai-th').forEach(function(el){
+      el.onclick=function(e){ if(e.target.closest('.ai-panel')||e.target.closest('button')||e.target.closest('textarea')) return; openThreadPanel(el,el.getAttribute('data-th')); };
+    });
+  }
+  async function openThreadPanel(el,id){
+    var panel=el.querySelector('.ai-panel');
+    if(panel.style.display==='block'){ panel.style.display='none'; return; }
+    panel.style.display='block'; panel.innerHTML='<p class="hint">Carregando…</p>';
+    var m=await chatAiApi('thread_msgs',{thread_id:id});
+    var msgs=(m.messages)||[];
+    var html='<div style="max-height:220px;overflow:auto;background:#0e0c14;border-radius:8px;padding:8px;font-size:13px">'+msgs.map(function(x){
+      var mine=x.role==='assistant'; var who=mine?(x.by_human?'você':'IA'):'cliente';
+      var c=String(x.content||'').replace(/</g,'&lt;'); if(/\[\[media:/.test(c)) c='📷 (mídia)';
+      return '<div style="margin:4px 0"><b style="color:'+(mine?'#b9a7ff':'#9a93a8')+'">'+who+':</b> '+c+'</div>';
+    }).join('')+'</div>'+
+    '<textarea class="ai-reply" rows="2" placeholder="responder como você..." style="margin-top:6px"></textarea>'+
+    '<div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="btn ai-send" style="flex:1;font-size:12px;padding:8px">Enviar (assumir)</button><button type="button" class="btn ai-resume" style="flex:0 0 auto;font-size:12px;padding:8px;background:#2a2335">Devolver pra IA</button></div>';
+    panel.innerHTML=html;
+    panel.querySelector('.ai-send').onclick=async function(){ var tx=panel.querySelector('.ai-reply').value||''; if(!tx.trim()) return; this.disabled=true; var r=await chatAiApi('reply',{thread_id:id,text:tx}); if(!r.error){ loadAiThreads(); } else { this.disabled=false; alert('Falha ao enviar.'); } };
+    panel.querySelector('.ai-resume').onclick=async function(){ await chatAiApi('resume',{thread_id:id}); loadAiThreads(); };
+  }
   async function refresh(){
     var s=await api('stats',{});
     if(!s.error){ $('st-subs').textContent=s.subscribers; $('st-earn').textContent=BRL(s.earnings_cents); $('st-posts').textContent=s.posts; }
@@ -524,6 +605,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     });
     refreshStories();
     loadGoal(); loadOffers(); loadOrders();
+    loadAiAssistant(); loadAiThreads();
   }
 
   // ---- chamadas de vídeo ----
