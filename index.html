@@ -2651,10 +2651,6 @@ fbq('track', 'PageView');
       // galeria de fotos (prévias bloqueadas) — dados reais
       hh += '<div class="pf-section" style="padding-top:.6rem"><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
       hh += '<div id="pf-packs" hidden></div>';
-      // pacotes (loja dela, por coins)
-      hh += '<div class="pf-section"><div class="pf-h">🛍 ' + L("Pacotes", "Packs", "Paquetes") + ' <span style="font-weight:600;font-size:.8rem;color:var(--faint)">' + L("desbloqueie com coins", "unlock with coins", "desbloquea con coins") + '</span></div><div id="pf-shop"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
-      // sobre mim
-      if (c.story) hh += '<div class="pf-section"><div class="pf-h">' + L("Sobre mim", "About me", "Sobre mí") + '</div><p class="pf-about">' + c.story + '</p></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
         hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brlc(Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
@@ -2672,7 +2668,6 @@ fbq('track', 'PageView');
         if (stEl) { var firstN = stEl.querySelector(".n"); if (firstN) firstN.textContent = total; }
       });
       loadBuyerContent(c.id);
-      renderProductsInto(document.getElementById("pf-shop"), c.id, '<p class="muted-note">' + L("Ela ainda não postou pacotes 💜", "No packs yet 💜", "Aún no hay paquetes 💜") + '</p>');
       return;
     }
 
