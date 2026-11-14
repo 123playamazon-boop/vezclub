@@ -2500,6 +2500,20 @@ fbq('track', 'PageView');
     return '<div style="display:flex;flex-direction:column;gap:.7rem;margin-bottom:1rem">' +
       '<div style="font-weight:800;font-size:.95rem;margin:.2rem 2px;display:flex;align-items:center;gap:.4rem"><span>🔥</span>' + L("Liberado agora", "Unlocked now", "Liberado ahora") + '</div>' + rows + '</div>';
   }
+  // Abre o painel REAL da criadora embutido no app (mesmo domínio, mesma sessão) — não sai da plataforma
+  function openCreatorPanel() {
+    var old = document.getElementById("creator-panel"); if (old) old.remove();
+    var ov = document.createElement("div"); ov.id = "creator-panel";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100002;background:var(--bg,#0b0b0f);display:flex;flex-direction:column";
+    ov.innerHTML = '<div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:max(10px,env(safe-area-inset-top,0px)) 14px 10px;border-bottom:1px solid var(--line);background:var(--panel,#fff)">' +
+        '<button id="cp-back" style="background:none;border:0;font-size:1.4rem;cursor:pointer;color:inherit;line-height:1;padding:0 4px">←</button>' +
+        '<div style="font-weight:800;font-size:1rem">' + L("Minha área de criadora", "My creator area", "Mi área de creadora") + '</div></div>' +
+        '<iframe id="cp-frame" src="/studio/?embed=1" style="flex:1 1 auto;width:100%;border:0;background:var(--bg,#0b0b0f)" allow="clipboard-write"></iframe>';
+    document.body.appendChild(ov);
+    try { document.body.classList.add("modal-open"); } catch (e) {}
+    ov.querySelector("#cp-back").onclick = function () { ov.remove(); try { document.body.classList.remove("modal-open"); } catch (e) {} };
+  }
+
   // ===== Área do cliente (menu estilo Privacy: Conteúdo / Mensagens / Conta) =====
   function renderAccount() {
     if (!account) { showAuthGate("login"); return; }
@@ -2518,9 +2532,10 @@ fbq('track', 'PageView');
       '<span style="width:52px;height:52px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--lock2));color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.2rem">' + initials(account.name) + '</span>' +
       '<div><div style="font-weight:800;font-size:1.25rem">' + L("Olá, ", "Hi, ", "Hola, ") + escHtml(nm) + '</div>' +
       '<div style="color:var(--muted);font-size:.85rem">' + L("Sua conta", "Your account", "Tu cuenta") + '</div></div></div>';
+    var isCreator = account.role === "creator";
     h += '<button id="ac-become" style="width:100%;text-align:left;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b74e8,#7c3aed);border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px">' +
-      '<span style="font-size:1.8rem">💸</span><span style="flex:1"><span style="display:block;font-weight:800;font-size:1.05rem">' + L("Seja modelo", "Become a creator", "Sé modelo") + '</span>' +
-      '<span style="display:block;font-size:.85rem;opacity:.95">' + L("Comece a ganhar hoje", "Start earning today", "Empieza a ganar hoy") + '</span></span><span style="font-size:1.3rem">→</span></button>';
+      '<span style="font-size:1.8rem">' + (isCreator ? "👑" : "💸") + '</span><span style="flex:1"><span style="display:block;font-weight:800;font-size:1.05rem">' + (isCreator ? L("Minha área de criadora", "My creator area", "Mi área de creadora") : L("Seja modelo", "Become a creator", "Sé modelo")) + '</span>' +
+      '<span style="display:block;font-size:.85rem;opacity:.95">' + (isCreator ? L("Publique e gerencie seus ganhos", "Post and manage your earnings", "Publica y gestiona tus ganancias") : L("Comece a ganhar hoje", "Start earning today", "Empieza a ganar hoy")) + '</span></span><span style="font-size:1.3rem">→</span></button>';
     h += sec(L("Conteúdo", "Content", "Contenido")) + '<div style="' + grid + '">' +
       card("💜", L("Minhas assinaturas", "My subscriptions", "Mis suscripciones"), L("Criadoras que você assina", "Creators you subscribe to", "Creadoras que sigues"), 'data-ac="subs"') +
       card("🔥", L("Explorar", "Explore", "Explorar"), L("Veja quem está em alta", "See who's trending", "Mira quién es tendencia"), 'data-ac="explore"') +
@@ -2534,7 +2549,7 @@ fbq('track', 'PageView');
       card("❓", L("Ajuda", "Help", "Ayuda"), L("Suporte e dúvidas", "Support & questions", "Soporte y dudas"), 'data-ac="help"') +
       card("🚪", L("Sair", "Log out", "Salir"), L("Sair da plataforma", "Log out of the platform", "Salir de la plataforma"), 'data-ac="logout"') + '</div>';
     app.innerHTML = h;
-    var bc = document.getElementById("ac-become"); if (bc) bc.onclick = function () { state.role = "creator"; state.view = "feed"; state.creatorTab = "onboarding"; render(); };
+    var bc = document.getElementById("ac-become"); if (bc) bc.onclick = function () { openCreatorPanel(); };
     app.querySelectorAll("[data-ac]").forEach(function (b) {
       b.onclick = function () {
         var a = b.getAttribute("data-ac");
@@ -2621,7 +2636,7 @@ fbq('track', 'PageView');
     if (CREATORS.some(function (x) { return x.hasChat; })) html += '<button class="chat-fab" data-chat-fab="1" aria-label="Mensagens">' + I.chatic + '</button>';
     html += '<div style="text-align:center;margin:2.4rem 0 1.2rem;padding-top:1.3rem;border-top:1px solid var(--line)"><button id="be-model" style="background:none;border:0;color:var(--muted);font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px">' + L("É modelo? Quero ganhar dinheiro na Vezclub →", "Are you a model? I want to earn on Vezclub →", "¿Eres modelo? Quiero ganar en Vezclub →") + '</button></div>';
     app.innerHTML = html;
-    var _bm = document.getElementById("be-model"); if (_bm) _bm.onclick = function () { state.role = "creator"; state.view = "feed"; state.creatorTab = "onboarding"; render(); };
+    var _bm = document.getElementById("be-model"); if (_bm) _bm.onclick = function () { openCreatorPanel(); };
     startTicker();
     refreshFabBadge();
     app.querySelectorAll(".chip[data-cat]").forEach(function (ch) {
@@ -8128,8 +8143,9 @@ fbq('track', 'PageView');
       if (account.isAdmin && isAdminHash()) { state.role = "admin"; state.view = "feed"; render(); }
     });
     hideAuthGate();
-    state.role = account.role === "creator" ? "creator" : "buyer";
-    document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-role") === state.role); });
+    // Modelo Privacy: criadora também navega o app como usuária; o painel dela abre embutido pelo menu "Minha conta".
+    state.role = "buyer";
+    document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-role") === "buyer"); });
     renderAccountBadge();
     startSalesWatch();
     loadCreators(function () {
