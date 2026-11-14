@@ -1404,7 +1404,7 @@ fbq('track', 'PageView');
           var dur = s.duration_sec ? (Math.floor(s.duration_sec / 60) + ":" + ("0" + (s.duration_sec % 60)).slice(-2)) : "";
           var teaser = s.teaser || L("A história mais suja que eu nunca postei em lugar nenhum.", "The dirtiest story I never posted anywhere.", "La historia más sucia que nunca publiqué en ningún lado.");
           var body = unlocked
-            ? '<audio id="st-aud-' + s.id + '" controls preload="none" style="width:100%;margin-top:.55rem"></audio><button class="btn btn-ghost btn-sm" data-story-play="' + s.id + '" style="margin-top:.4rem">▶ ' + L("Tocar", "Play", "Reproducir") + '</button>'
+            ? '<audio id="st-aud-' + s.id + '" controls preload="none" controlslist="nodownload noplaybackrate noremoteplayback" oncontextmenu="return false" disableremoteplayback style="width:100%;margin-top:.55rem"></audio><button class="btn btn-ghost btn-sm" data-story-play="' + s.id + '" style="margin-top:.4rem">▶ ' + L("Tocar", "Play", "Reproducir") + '</button>'
             : '<button class="btn btn-primary btn-block" data-story-buy="' + s.id + '" data-title="' + escHtml(s.title) + '" data-price="' + s.price_cents + '" style="margin-top:.6rem">🔓 ' + L("Ouvir agora · ", "Listen now · ", "Escuchar ahora · ") + brlc(s.price_cents) + '</button>';
           return '<div style="border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px">' +
             '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.15rem">🎧</span><div style="font-weight:800">' + escHtml(s.title) + '</div>' + (dur ? '<div style="margin-left:auto;font-size:.8rem;color:var(--muted)">' + dur + '</div>' : '') + '</div>' +
@@ -1573,7 +1573,7 @@ fbq('track', 'PageView');
         if (myOrders.length) {
           mineHtml = '<div style="font-weight:800;margin:.5rem 0 .5rem">' + L("Seus pedidos", "Your orders", "Tus pedidos") + '</div>' + myOrders.map(function (o) {
             var st = o.status === "delivered" ? L("Entregue ✅", "Delivered ✅", "Entregado ✅") : o.status === "paid" ? L("Pago · em produção ⏳", "Paid · in production ⏳", "Pagado · en producción ⏳") : L("Aguardando pagamento", "Awaiting payment", "Esperando pago");
-            var btn = o.status === "delivered" ? '<button class="btn btn-ghost btn-sm" data-order-get="' + o.id + '">⬇ ' + L("Baixar / ver", "Download / view", "Descargar / ver") + '</button>' : '';
+            var btn = o.status === "delivered" ? '<button class="btn btn-ghost btn-sm" data-order-get="' + o.id + '">👁 ' + L("Ver conteúdo", "View content", "Ver contenido") + '</button>' : '';
             return '<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px"><div><div style="font-size:.88rem;font-weight:700">' + brlc(o.amount_cents) + '</div><div style="font-size:.8rem;color:var(--muted)">' + st + '</div></div>' + btn + '</div>';
           }).join("");
         }
@@ -1614,8 +1614,25 @@ fbq('track', 'PageView');
     sb.functions.invoke("order_delivery_url", { body: { order_id: orderId } }).then(function (res) {
       var d = (res && res.data) || {}; btn.disabled = false; btn.textContent = old;
       if ((res && res.error) || d.error || !d.url) { if (typeof toast === "function") toast(L("Ainda não disponível.", "Not available yet.", "Aún no disponible.")); return; }
-      try { window.open(d.url, "_blank"); } catch (e) { location.href = d.url; }
+      openProtectedViewer(d.url, d.kind || "");
     });
+  }
+  // visualizador protegido: só vê dentro da plataforma (sem aba nova, sem download, com marca d'água)
+  function openProtectedViewer(url, kind) {
+    var ov = document.createElement("div"); ov.id = "pviewer";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100002;display:flex;align-items:center;justify-content:center;background:rgba(5,8,16,.95);padding:16px";
+    var inner;
+    if (kind === "audio") inner = '<audio src="' + escHtml(url) + '" controls autoplay controlslist="nodownload noplaybackrate noremoteplayback" oncontextmenu="return false" disableremoteplayback style="width:92vw;max-width:480px"></audio>';
+    else if (kind === "video") inner = '<video src="' + escHtml(url) + '" controls autoplay playsinline controlslist="nodownload noplaybackrate noremoteplayback" oncontextmenu="return false" disablepictureinpicture disableremoteplayback style="max-width:94vw;max-height:84vh;border-radius:12px;background:#000"></video>';
+    else inner = '<img src="' + escHtml(url) + '" alt="" draggable="false" oncontextmenu="return false" style="max-width:94vw;max-height:84vh;border-radius:12px;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none">';
+    ov.innerHTML = '<button id="pv-x" style="position:fixed;top:14px;right:14px;z-index:3;width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(0,0,0,.7);color:#fff;font-size:22px;cursor:pointer">×</button>' +
+      '<div style="position:relative;display:flex;align-items:center;justify-content:center">' + inner + wmHtml() + '</div>' +
+      '<div style="position:fixed;bottom:12px;left:0;right:0;text-align:center;color:rgba(255,255,255,.6);font-size:.74rem">' + L("Conteúdo protegido · só dentro da plataforma", "Protected content · in-platform only", "Contenido protegido · solo en la plataforma") + '</div>';
+    document.body.appendChild(ov);
+    function close() { ov.remove(); }
+    ov.querySelector("#pv-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.addEventListener("contextmenu", function (e) { e.preventDefault(); });
   }
   function ensurePixCss() {
     if (document.getElementById("pixcss")) return; var s = document.createElement("style"); s.id = "pixcss";
@@ -6697,7 +6714,7 @@ fbq('track', 'PageView');
     var isFree = !!(cont && cont.querySelector(".free-badge"));
     openLightbox(img.getAttribute("src"), !isFree);
   });
-  document.addEventListener("contextmenu", function (e) { if (e.target.closest && e.target.closest(".tile,.post-media,.ppv-media,.mini-tile,.story-view,.cc-cover,.pf-cover,img,video")) e.preventDefault(); });
+  document.addEventListener("contextmenu", function (e) { if (e.target.closest && e.target.closest(".tile,.post-media,.ppv-media,.mini-tile,.story-view,.cc-cover,.pf-cover,#pviewer,.rc-media,img,video,audio")) e.preventDefault(); });
   document.addEventListener("dragstart", function (e) { if (e.target.closest && e.target.closest(".tile,.post-media,.ppv-media,.mini-tile,.story-view,img,video")) e.preventDefault(); });
 
   /* ---------------- real auth (gate to the whole platform) ---------------- */
