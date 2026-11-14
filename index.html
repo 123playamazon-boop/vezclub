@@ -3864,6 +3864,15 @@ fbq('track', 'PageView');
 
   function renderAdmin() {
     if (!(account && account.isAdmin)) { goHome(); return; } // admin console is not public
+    // Painel antigo aposentado: o console real é /admin/. Admin entra como usuário e abre o painel por lá.
+    app.innerHTML = '<div class="page-head"><div class="eyebrow">Admin</div><h1>Painel da plataforma</h1><p>O painel completo agora fica em um endereço próprio.</p></div>' +
+      '<div class="card" style="text-align:center;padding:2rem 1.2rem"><p style="margin:0 0 1rem;color:var(--muted)">Abra o console de administração da Vezclub (BI, clientes, financeiro, moderação e operação).</p>' +
+      '<a href="/admin/" class="btn btn-primary" style="text-decoration:none;display:inline-block">Abrir painel admin →</a>' +
+      '<p class="muted-note" style="margin-top:1rem">Dica: use o link do time com a chave pra entrar direto.</p></div>';
+    state.role = "buyer";
+    try { document.querySelectorAll("#roles button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-role") === "buyer"); }); } catch (e) {}
+    return;
+    /* eslint-disable */
     var demoMonths = [8420, 12940, 9810, 7260, 5600, 4100, 3180];
     var rows = (CREATORS || []).filter(Boolean).map(function (c, i) {
       return { c: c, status: "ok", month: demoMonths[i % demoMonths.length] };
