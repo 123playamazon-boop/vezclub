@@ -61,13 +61,21 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
   <div id="main" class="hide">
     <div class="tabs">
       <div class="tab on" data-tab="geral">📊 Visão geral</div>
+      <div class="tab" data-tab="clientes">👥 Clientes</div>
+      <div class="tab" data-tab="financeiro">💰 Financeiro</div>
+      <div class="tab" data-tab="conteudo">🖼️ Conteúdo</div>
+      <div class="tab" data-tab="assinaturas">💳 Assinaturas</div>
       <div class="tab" data-tab="pendentes">🕒 Pendentes <span class="c" id="tc-pend">0</span></div>
       <div class="tab" data-tab="produtoras">👩 Produtoras <span class="c" id="tc-apr">0</span></div>
       <div class="tab" data-tab="encomendas">🎬 Encomendas <span class="c" id="tc-ord">0</span></div>
-      <div style="margin-left:auto"><button class="btn sec" id="reload">↻</button></div>
+      <div style="margin-left:auto"><button class="btn sec" id="reload">↻ Atualizar</button></div>
     </div>
 
     <div id="pane-geral"></div>
+    <div id="pane-clientes" class="hide"></div>
+    <div id="pane-financeiro" class="hide"></div>
+    <div id="pane-conteudo" class="hide"></div>
+    <div id="pane-assinaturas" class="hide"></div>
     <div id="pane-pendentes" class="hide"></div>
     <div id="pane-produtoras" class="hide"></div>
     <div id="pane-encomendas" class="hide"></div>
@@ -96,12 +104,16 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
   $('reload').onclick=function(){ loadAll(); };
 
   var current='geral';
+  var PANES=['geral','clientes','financeiro','conteudo','assinaturas','pendentes','produtoras','encomendas'];
+  function loaderFor(name){ return ({geral:loadOverview,clientes:loadClientes,financeiro:loadFinanceiro,conteudo:loadConteudo,assinaturas:loadAssinaturas,pendentes:loadPending,produtoras:loadProdutoras,encomendas:loadOrders})[name]; }
+  function showTab(name){
+    current=name;
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.toggle('on',x.getAttribute('data-tab')===name);});
+    PANES.forEach(function(p){ $('pane-'+p).classList.toggle('hide',p!==name); });
+    var fn=loaderFor(name); if(fn) fn();
+  }
   Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
-    t.onclick=function(){
-      current=t.getAttribute('data-tab');
-      Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.toggle('on',x===t);});
-      ['geral','pendentes','produtoras','encomendas'].forEach(function(p){ $('pane-'+p).classList.toggle('hide',p!==current); });
-    };
+    t.onclick=function(){ showTab(t.getAttribute('data-tab')); };
   });
 
   async function loadOverview(){
@@ -113,13 +125,20 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
     $('pane-geral').innerHTML=
       '<div class="stats">'+
       '<div class="stat hl"><div class="v">'+(r.pending||0)+'</div><div class="l">Aguardando aprovação</div></div>'+
+      '<div class="stat"><div class="v">'+(r.users||0)+'</div><div class="l">Clientes</div></div>'+
+      '<div class="stat"><div class="v" style="font-size:20px">'+brl(r.gmv_cents)+'</div><div class="l">Vendas BRL (total)</div></div>'+
+      '<div class="stat"><div class="v">'+(r.subscribers||0)+'</div><div class="l">Assinantes ativos</div></div>'+
       '<div class="stat"><div class="v">'+(r.approved||0)+'</div><div class="l">Produtoras ativas</div></div>'+
       '<div class="stat"><div class="v">'+(r.ai||0)+'</div><div class="l">Modelos IA</div></div>'+
-      '<div class="stat"><div class="v">'+(r.subscribers||0)+'</div><div class="l">Assinantes ativos</div></div>'+
       '<div class="stat"><div class="v">'+(r.posts||0)+'</div><div class="l">Conteúdos publicados</div></div>'+
-      '<div class="stat"><div class="v" style="font-size:20px">'+brl(r.gmv_cents)+'</div><div class="l">Vendas totais (GMV)</div></div>'+
       '</div>'+
-      ((r.pending||0)>0?'<p class="muted" style="margin-top:14px">Você tem <b style="color:var(--ac)">'+r.pending+'</b> produtora(s) esperando. Abra a aba <b>Pendentes</b> para revisar e aprovar.</p>':'<p class="muted" style="margin-top:14px">Nenhuma produtora pendente no momento. 🎉</p>');
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+
+        '<button class="btn sec" data-go="clientes">👥 Ver clientes</button>'+
+        '<button class="btn sec" data-go="financeiro">💰 Ver vendas</button>'+
+        '<button class="btn sec" data-go="conteudo">🖼️ Moderar conteúdo</button>'+
+        ((r.pending||0)>0?'<button class="btn" data-go="pendentes">🕒 Aprovar '+r.pending+' pendente(s)</button>':'')+
+      '</div>';
+    Array.prototype.forEach.call($('pane-geral').querySelectorAll('[data-go]'),function(bt){ bt.onclick=function(){ showTab(bt.getAttribute('data-go')); }; });
     return true;
   }
 
@@ -216,8 +235,114 @@ input,textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(-
     box.innerHTML=''; box.appendChild(card);
     box.querySelectorAll('[data-flag]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Cobrar a entrega dessa encomenda? A modelo vai ver o aviso no painel dela.')) return; b.disabled=true; b.textContent='Cobrando…'; var rr=await api('flag_order',{order_id:+b.getAttribute('data-flag')}); if(rr.ok){ loadOrders(); } else { alert('Erro.'); b.disabled=false; b.textContent='⚠️ Cobrar entrega'; } }; });
   }
-  async function loadAll(){ var ok=await loadOverview(); if(ok===false) return; loadPending(); loadProdutoras(); loadOrders(); }
-  function start(){ if(!KEY){ showGate(); return; } showMain(); loadAll(); }
+  function money(cur,c){ c=c||0; if(String(cur).toUpperCase()==='USD') return '$ '+(c/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); return brl(c); }
+
+  // ===== CLIENTES =====
+  var _cliQ='', _cliOff=0;
+  async function loadClientes(){
+    var box=$('pane-clientes');
+    box.innerHTML='<div class="card"><input id="cli-q" placeholder="Buscar por e-mail ou nome…" value="'+esc(_cliQ)+'"><div style="display:flex;gap:8px;margin-top:8px"><button class="btn" id="cli-search">Buscar</button><button class="btn sec" id="cli-clear">Limpar</button></div></div><div id="cli-list"><p class="muted" style="text-align:center;padding:20px">Carregando…</p></div>';
+    $('cli-search').onclick=function(){ _cliQ=$('cli-q').value.trim(); _cliOff=0; cliFetch(); };
+    $('cli-clear').onclick=function(){ _cliQ=''; _cliOff=0; $('cli-q').value=''; cliFetch(); };
+    $('cli-q').addEventListener('keydown',function(e){ if(e.key==='Enter'){ _cliQ=$('cli-q').value.trim(); _cliOff=0; cliFetch(); } });
+    cliFetch();
+  }
+  async function cliFetch(){
+    var list=$('cli-list'); if(!list) return;
+    list.innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
+    var r=await api('users',{q:_cliQ,offset:_cliOff});
+    if(r.error==='forbidden'){ showGate(); return; }
+    var items=r.items||[];
+    if(!items.length){ list.innerHTML='<div class="card muted" style="text-align:center;padding:30px">Nenhum cliente encontrado.</div>'; return; }
+    var card=document.createElement('div'); card.className='card';
+    items.forEach(function(u){
+      var nm=u.display_name||(u.email||'').split('@')[0]||'—';
+      var when=u.created_at?String(u.created_at).slice(0,10).split('-').reverse().join('/'):'';
+      var row=document.createElement('div'); row.className='prow';
+      row.innerHTML='<div class="av" style="width:38px;height:38px;font-size:15px">'+esc(initials(nm))+'</div>'+
+        '<div style="flex:1;min-width:0"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+(u.banned?' <span class="pill off">banido</span>':'')+'</div><div class="muted" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(u.email||'')+'</div></div>'+
+        '<div style="text-align:right;font-size:12px"><div><b>'+brl(u.spent_cents)+'</b></div><div class="muted">'+(u.coin_balance||0)+' coins · '+when+'</div></div>'+
+        '<button class="btn '+(u.banned?'sec':'bad')+'" style="padding:8px 11px;font-size:12px">'+(u.banned?'Desbanir':'Banir')+'</button>';
+      var btn=row.querySelector('button');
+      btn.onclick=async function(){ var ban=!u.banned; if(!confirm((ban?'Banir':'Desbanir')+' '+(u.email||nm)+'?'+(ban?' Ele perde o acesso.':''))) return; btn.disabled=true; var rr=await api('user_ban',{user_id:u.id,ban:ban}); if(rr.ok){ cliFetch(); } else { alert('Erro ao atualizar.'); btn.disabled=false; } };
+      card.appendChild(row);
+    });
+    list.innerHTML=''; list.appendChild(card);
+    var nav=document.createElement('div'); nav.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-top:10px';
+    nav.innerHTML='<button class="btn sec" '+(_cliOff<=0?'disabled':'')+' id="cli-prev" style="font-size:13px">← Anterior</button><span class="muted" style="font-size:12px">'+(_cliOff+1)+'–'+(_cliOff+items.length)+'</span><button class="btn sec" '+(items.length<50?'disabled':'')+' id="cli-next" style="font-size:13px">Próximo →</button>';
+    list.appendChild(nav);
+    if($('cli-prev')) $('cli-prev').onclick=function(){ _cliOff=Math.max(0,_cliOff-50); cliFetch(); };
+    if($('cli-next')) $('cli-next').onclick=function(){ _cliOff+=50; cliFetch(); };
+  }
+
+  // ===== FINANCEIRO =====
+  async function loadFinanceiro(){
+    var box=$('pane-financeiro');
+    box.innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
+    var r=await api('finance');
+    if(r.error==='forbidden'){ showGate(); return; }
+    if(r.error){ box.innerHTML='<div class="card muted" style="text-align:center;padding:30px">Não foi possível carregar.</div>'; return; }
+    var cur=r.by_currency||[], src=r.by_source||[], day=r.by_day||[], byC=r.by_creator||[], rec=r.recent||[], names=r.names||{};
+    var srcLbl={coins:'Coins',sub:'Assinaturas',chat:'Chat (crédito)'};
+    var h='';
+    cur.forEach(function(c){
+      h+='<div class="card"><div class="card-head" style="margin-bottom:8px"><b>Receita '+esc(c.currency)+'</b> <span class="muted">('+c.n+' vendas)</span></div>'+
+        '<div class="stats"><div class="stat hl"><div class="v" style="font-size:20px">'+money(c.currency,c.cents)+'</div><div class="l">Total</div></div>'+
+        '<div class="stat"><div class="v" style="font-size:17px">'+money(c.currency,c.today)+'</div><div class="l">Hoje</div></div>'+
+        '<div class="stat"><div class="v" style="font-size:17px">'+money(c.currency,c.d7)+'</div><div class="l">7 dias</div></div>'+
+        '<div class="stat"><div class="v" style="font-size:17px">'+money(c.currency,c.d30)+'</div><div class="l">30 dias</div></div></div></div>';
+    });
+    if(src.length){ h+='<div class="card"><div class="card-head" style="margin-bottom:6px"><b>Por tipo de venda</b></div>'+src.map(function(s){ return '<div class="prow"><div style="flex:1">'+esc(srcLbl[s.src]||s.src)+' <span class="muted">('+s.n+')</span></div><b>'+brl(s.cents)+'</b></div>'; }).join('')+'</div>'; }
+    if(day.length){ var max=Math.max.apply(null,day.map(function(d){return d.cents;})); h+='<div class="card"><div class="card-head" style="margin-bottom:8px"><b>Últimos 14 dias</b></div>'+day.map(function(d){ var w=max?Math.round(d.cents/max*100):0; return '<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span class="muted" style="width:40px;font-size:11px">'+d.d.slice(5)+'</span><div style="flex:1;background:#0e0c14;border-radius:5px;height:15px"><div style="height:100%;width:'+w+'%;'+(d.cents?'min-width:3px;':'')+'background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:5px"></div></div><span style="width:74px;text-align:right;font-size:11px">'+brl(d.cents)+'</span></div>'; }).join('')+'</div>'; }
+    if(byC.length){ h+='<div class="card"><div class="card-head" style="margin-bottom:6px"><b>Receita por criadora</b></div>'+byC.map(function(c){ var nm=names[c.creator_key]?names[c.creator_key].name:c.creator_key; return '<div class="prow"><div style="flex:1">'+esc(nm)+' <span class="muted">('+c.n+')</span></div><b>'+brl(c.cents)+'</b></div>'; }).join('')+'</div>'; }
+    if(rec.length){ h+='<div class="card"><div class="card-head" style="margin-bottom:6px"><b>Transações recentes</b></div>'+rec.map(function(t){ var nm=t.creator_key&&names[t.creator_key]?names[t.creator_key].name:(t.creator_key||''); var when=t.paid_at?String(t.paid_at).slice(0,16).replace('T',' '):''; return '<div class="prow"><div style="flex:1;min-width:0"><div style="font-size:13px">'+esc(srcLbl[t.src]||t.src)+(nm?(' · '+esc(nm)):'')+'</div><div class="muted" style="font-size:11px">'+when+'</div></div><b>'+money(t.currency,t.amount_cents)+'</b></div>'; }).join('')+'</div>'; }
+    box.innerHTML=h||'<div class="card muted" style="text-align:center;padding:30px">Sem vendas ainda.</div>';
+  }
+
+  // ===== CONTEÚDO =====
+  var _conStatus='all';
+  async function loadConteudo(){
+    var box=$('pane-conteudo');
+    var filt=[['all','Todos'],['approved','No ar'],['pending','Em análise'],['rejected','Recusados']];
+    box.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+filt.map(function(f){ return '<button class="btn '+(_conStatus===f[0]?'':'sec')+'" data-cs="'+f[0]+'" style="padding:9px 13px;font-size:13px">'+f[1]+'</button>'; }).join('')+'</div><div id="con-list"><p class="muted" style="text-align:center;padding:20px">Carregando…</p></div>';
+    Array.prototype.forEach.call(box.querySelectorAll('[data-cs]'),function(b){ b.onclick=function(){ _conStatus=b.getAttribute('data-cs'); loadConteudo(); }; });
+    var r=await api('content',{status:_conStatus});
+    if(r.error==='forbidden'){ showGate(); return; }
+    var items=r.items||[]; var list=$('con-list'); if(!list) return;
+    if(!items.length){ list.innerHTML='<div class="card muted" style="text-align:center;padding:30px">Nenhum conteúdo aqui.</div>'; return; }
+    list.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>';
+    var grid=list.firstChild;
+    items.forEach(function(p){
+      var stPill=p.status==='approved'?'<span class="pill on">No ar</span>':p.status==='rejected'?'<span class="pill off">Recusado</span>':'<span class="pill" style="background:#3a2f12;color:#ffcf6b">Análise</span>';
+      var media=p.media_type==='video'?('<video src="'+esc(p.url||'')+'" style="width:100%;height:150px;object-fit:cover;border-radius:10px;background:#000" muted playsinline></video>'):('<img src="'+esc(p.url||'')+'" style="width:100%;height:150px;object-fit:cover;border-radius:10px;background:#1b1824">');
+      var el=document.createElement('div'); el.className='card'; el.style.padding='8px';
+      el.innerHTML=media+'<div style="font-size:12px;margin:6px 0 2px;display:flex;justify-content:space-between;align-items:center">'+stPill+'<span class="muted">'+(p.is_free?'grátis':brl(p.price_cents))+'</span></div>'+
+        '<div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.creator_name||'')+'</div>'+
+        '<div style="display:flex;gap:5px;margin-top:6px">'+(p.status!=='approved'?'<button class="btn ok" data-m="approve" style="flex:1;padding:7px;font-size:13px">✓</button>':'')+(p.status!=='rejected'?'<button class="btn" data-m="reject" style="flex:1;padding:7px;font-size:13px;background:#3a2f12;color:#ffcf6b">⚠</button>':'')+'<button class="btn bad" data-m="delete" style="flex:1;padding:7px;font-size:13px">🗑</button></div>';
+      Array.prototype.forEach.call(el.querySelectorAll('[data-m]'),function(bt){ bt.onclick=async function(){ var op=bt.getAttribute('data-m'); if(op==='delete'&&!confirm('Remover esse conteúdo de vez?')) return; bt.disabled=true; var rr=await api('content_moderate',{id:p.id,op:op}); if(rr.ok){ loadConteudo(); } else { alert('Erro.'); bt.disabled=false; } }; });
+      grid.appendChild(el);
+    });
+  }
+
+  // ===== ASSINATURAS =====
+  async function loadAssinaturas(){
+    var box=$('pane-assinaturas');
+    box.innerHTML='<p class="muted" style="text-align:center;padding:20px">Carregando…</p>';
+    var r=await api('subs');
+    if(r.error==='forbidden'){ showGate(); return; }
+    var act=r.active||[], hist=r.history||[];
+    var h='<div class="card"><div class="card-head" style="margin-bottom:6px"><b>Assinaturas ativas</b> <span class="muted">('+act.length+')</span></div>';
+    if(!act.length){ h+='<p class="muted" style="font-size:13px">Nenhuma assinatura ativa.</p>'; }
+    else act.forEach(function(s){ var exp=s.expires_at?String(s.expires_at).slice(0,10).split('-').reverse().join('/'):''; h+='<div class="prow"><div style="flex:1;min-width:0"><div style="font-weight:700">'+esc(s.creator_name||s.creator_key)+'</div><div class="muted" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.email||s.buyer_id||'')+'</div></div><div style="text-align:right;font-size:12px"><div>'+(s.auto_renew===false?'<span style="color:var(--bad)">cancelada</span>':'<span style="color:var(--ok)">renova</span>')+'</div><div class="muted">até '+exp+'</div></div></div>'; });
+    h+='</div><div class="card"><div class="card-head" style="margin-bottom:6px"><b>Compras de assinatura</b> <span class="muted">('+hist.length+')</span></div>';
+    if(!hist.length){ h+='<p class="muted" style="font-size:13px">Nenhuma ainda.</p>'; }
+    else hist.forEach(function(s){ var when=s.paid_at?String(s.paid_at).slice(0,10).split('-').reverse().join('/'):''; h+='<div class="prow"><div style="flex:1">'+esc(s.creator_name||s.creator_key)+' <span class="muted" style="font-size:12px">· '+(s.days||'')+'d</span></div><div style="text-align:right"><b>'+money(s.currency||'BRL',s.amount_cents)+'</b><div class="muted" style="font-size:11px">'+when+'</div></div></div>'; });
+    h+='</div>';
+    box.innerHTML=h;
+  }
+
+  async function loadAll(){ var ok=await loadOverview(); if(ok===false) return; var fn=loaderFor(current); if(fn&&current!=='geral') fn(); }
+  function start(){ if(!KEY){ showGate(); return; } showMain(); loadOverview(); }
   start();
 })();
 </script>
