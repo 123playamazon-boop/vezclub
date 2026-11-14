@@ -1013,7 +1013,7 @@ fbq('track', 'PageView');
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 (function () {
   "use strict";
@@ -1717,10 +1717,11 @@ fbq('track', 'PageView');
     if (!el) return;
     el.innerHTML = "";
     try {
-      if (window.QRCode && typeof window.QRCode.toDataURL === "function" && code) {
-        window.QRCode.toDataURL(code, { width: 212, margin: 1, errorCorrectionLevel: "M" }, function (e, url) {
-          if (!e && url && el) { var img = new Image(); img.src = url; img.alt = "QR Pix"; img.style.cssText = "width:212px;height:212px;border-radius:14px;background:#fff;padding:8px;box-shadow:0 6px 18px rgba(0,0,0,.12)"; el.innerHTML = ""; el.appendChild(img); }
-        });
+      if (window.QRCode && code) {
+        var box = document.createElement("div");
+        box.style.cssText = "background:#fff;padding:10px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:inline-block;line-height:0";
+        el.appendChild(box);
+        new window.QRCode(box, { text: code, width: 196, height: 196, correctLevel: (window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.M : undefined) });
       }
     } catch (e) {}
   }
