@@ -1477,6 +1477,146 @@ fbq('track', 'PageView');
       });
     };
   }
+  function pixOnceModal(title, subtitle, genFn, pollFn, onDone) {
+    if (typeof needLogin === "function" && needLogin()) return;
+    ensurePixCss();
+    var old = document.getElementById("pixsub"); if (old) old.remove();
+    var ov = document.createElement("div"); ov.id = "pixsub";
+    ov.innerHTML = '<div class="sh"><span class="x" id="po-x">×</span><h3>' + escHtml(title) + '</h3><div class="pane on"><div style="color:#9a93a8;font-size:.85rem;margin:.2rem 0 .3rem">' + subtitle + '</div><button class="pbtn" id="po-gen" style="margin-top:12px">' + L("Gerar Pix", "Generate Pix", "Generar Pix") + '</button><div class="pbox" id="po-code" style="display:none"></div><button class="pbtn" id="po-copy" style="display:none;margin-top:8px">' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button><p id="po-stat" style="margin-top:12px;color:#9a93a8;font-size:.8rem"></p></div></div>';
+    document.body.appendChild(ov);
+    var pollT = null;
+    function close() { if (pollT) { clearInterval(pollT); pollT = null; } ov.remove(); }
+    ov.querySelector("#po-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.querySelector("#po-gen").onclick = function () {
+      var g = ov.querySelector("#po-gen"); g.disabled = true; g.textContent = L("Gerando…", "Generating…", "Generando…");
+      genFn().then(function (d) {
+        d = d || {};
+        if (d.already) { close(); if (onDone) onDone(); return; }
+        if (d.error || !d.pix_code) { g.disabled = false; g.textContent = L("Gerar Pix", "Generate Pix", "Generar Pix"); ov.querySelector("#po-stat").textContent = L("Não deu pra gerar o Pix agora.", "Couldn't generate Pix now.", "No se pudo generar el Pix."); return; }
+        g.style.display = "none";
+        var codeEl = ov.querySelector("#po-code"); codeEl.style.display = "block"; codeEl.textContent = d.pix_code;
+        var cp = ov.querySelector("#po-copy"); cp.style.display = "block"; cp.onclick = function () { try { navigator.clipboard.writeText(d.pix_code); cp.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); } catch (e) {} };
+        ov.querySelector("#po-stat").textContent = L("Assim que o pagamento cair, libera sozinho.", "As soon as payment lands, it unlocks.", "En cuanto caiga el pago, se libera.");
+        var tries = 0;
+        pollT = setInterval(function () { tries++; if (tries > 60) { clearInterval(pollT); pollT = null; return; } pollFn(d).then(function (okp) { if (okp) { close(); if (onDone) onDone(); } }); }, 3000);
+      }, function () { var g2 = ov.querySelector("#po-gen"); g2.disabled = false; g2.textContent = L("Gerar Pix", "Generate Pix", "Generar Pix"); });
+    };
+  }
+  function loadGoalInto(c) {
+    var box = document.getElementById("pf-goal"); if (!box) return;
+    if (!sb) { box.hidden = true; return; }
+    sb.rpc("creator_goal", { p_creator: c.id }).then(function (r) {
+      var g = (r.data && r.data[0]) || null;
+      if (!g) { box.hidden = true; box.innerHTML = ""; return; }
+      box.hidden = false;
+      var raised = g.raised_cents || 0, target = g.target_cents || 1, pct = Math.min(100, Math.round(raised / target * 100));
+      box.innerHTML = '<div style="border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:linear-gradient(135deg,rgba(27,116,232,.06),transparent)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="font-weight:800">🎯 ' + escHtml(g.title) + '</div><div style="font-size:.82rem;color:var(--muted);white-space:nowrap">' + brlc(raised) + ' / ' + brlc(target) + '</div></div>' +
+        '<div style="height:10px;border-radius:999px;background:var(--surface-2,#e8ecf5);overflow:hidden;margin-top:9px"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#1b74e8,#16a34a)"></div></div>' +
+        '<div style="font-size:.8rem;color:var(--muted);margin-top:6px">' + (pct >= 100 ? L("Meta batida! 🔥", "Goal reached! 🔥", "¡Meta alcanzada! 🔥") : (L("Faltam ", "Still ", "Faltan ") + brlc(Math.max(0, target - raised)) + L(" pra bater a meta", " to go", " para la meta"))) + '</div>' +
+      '</div>';
+    });
+  }
+  function wireTips(c) {
+    document.querySelectorAll("[data-tip]").forEach(function (b) { b.onclick = function () { var v = b.getAttribute("data-tip"); openTipModal(c.id, v === "custom" ? 0 : +v); }; });
+  }
+  function openTipModal(creatorKey, presetCents) {
+    if (typeof needLogin === "function" && needLogin()) return;
+    var ov = document.createElement("div"); ov.id = "tipmodal";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)";
+    var presetReais = presetCents ? (presetCents / 100).toFixed(2).replace(".", ",") : "";
+    ov.innerHTML = '<div style="width:100%;max-width:480px;background:var(--panel,#fff);color:var(--ink,#111);border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid var(--line);padding:18px 16px calc(20px + env(safe-area-inset-bottom))">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-family:var(--font-display);font-weight:800;font-size:1.12rem">🎁 ' + L("Mandar um mimo", "Send a tip", "Enviar un mimo") + '</div><span id="tm-x" style="cursor:pointer;font-size:24px;opacity:.6">×</span></div>' +
+      '<label style="display:block;font-size:.8rem;color:var(--muted);margin:12px 0 5px">' + L("Valor (R$)", "Amount (R$)", "Valor (R$)") + '</label>' +
+      '<input id="tm-amt" inputmode="decimal" value="' + presetReais + '" placeholder="0,00" style="width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:var(--surface-2);color:inherit">' +
+      '<label style="display:block;font-size:.8rem;color:var(--muted);margin:12px 0 5px">' + L("Recadinho (opcional)", "Note (optional)", "Notita (opcional)") + '</label>' +
+      '<input id="tm-msg" maxlength="240" placeholder="' + escHtml(L("escreve algo 😏", "say something 😏", "escribe algo 😏")) + '" style="width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:var(--surface-2);color:inherit">' +
+      '<button class="btn btn-primary btn-block" id="tm-go" style="margin-top:16px">' + L("Continuar", "Continue", "Continuar") + '</button>' +
+    '</div>';
+    document.body.appendChild(ov);
+    function close() { ov.remove(); }
+    ov.querySelector("#tm-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.querySelector("#tm-go").onclick = function () {
+      var cents = Math.round(parseFloat((ov.querySelector("#tm-amt").value || "0").replace(",", ".")) * 100) || 0;
+      if (cents < 500) { ov.querySelector("#tm-amt").style.borderColor = "#e11d2b"; return; }
+      var msg = ov.querySelector("#tm-msg").value || "";
+      close();
+      pixOnceModal(L("Mimo · ", "Tip · ", "Mimo · ") + brlc(cents), L("Pague o Pix e o mimo chega na hora.", "Pay the Pix and the tip lands instantly.", "Paga el Pix y el mimo llega al instante."),
+        function () { return sb.functions.invoke("tip_pix", { body: { creator_key: creatorKey, amount_cents: cents, message: msg } }).then(function (r) { return (r && r.data) || { error: (r && r.error) || "net" }; }); },
+        function (d) { return sb.from("tips").select("status").eq("provider_ref", d.identifier).eq("status", "paid").then(function (u) { return !!(u.data && u.data.length); }); },
+        function () { if (typeof toast === "function") toast(L("Mimo enviado 🎁 obrigada!", "Tip sent 🎁 thank you!", "¡Mimo enviado 🎁 gracias!")); var cc = CREATORS.find(function (x) { return x.id === creatorKey; }); if (cc) loadGoalInto(cc); }
+      );
+    };
+  }
+  function loadOrdersInto(c) {
+    var box = document.getElementById("pf-orders"); if (!box) return;
+    if (!sb) { box.hidden = true; return; }
+    sb.from("custom_offers").select("id,kind,title,description,price_cents,delivery_days").eq("creator_key", c.id).eq("active", true).order("price_cents", { ascending: true }).then(function (r) {
+      var offers = (r.data || []);
+      function render(myOrders) {
+        if (!offers.length && !myOrders.length) { box.hidden = true; box.innerHTML = ""; return; }
+        box.hidden = false;
+        var kindIc = { audio: "🎧", video: "🎬", message: "💌", photo: "🖼️" };
+        var head = '<div class="pf-h">🎬 ' + L("Peça um conteúdo só seu", "Order custom content", "Pide contenido solo tuyo") + '</div>' +
+          '<p class="muted-note" style="margin:.1rem 0 .7rem;font-size:.86rem">' + L("Feito sob medida pra você — ela grava e entrega aqui dentro.", "Made just for you — she records and delivers it here.", "Hecho a tu medida — ella graba y lo entrega aquí.") + '</p>';
+        var offHtml = offers.map(function (o) {
+          return '<div style="border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px">' +
+            '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.1rem">' + (kindIc[o.kind] || "🎬") + '</span><div style="font-weight:800">' + escHtml(o.title) + '</div><div style="margin-left:auto;font-weight:900">' + brlc(o.price_cents) + '</div></div>' +
+            (o.description ? '<div style="font-size:.86rem;color:var(--muted);margin-top:5px;line-height:1.35">' + escHtml(o.description) + '</div>' : '') +
+            '<div style="font-size:.78rem;color:var(--faint);margin-top:6px">⏱ ' + L("entrega em até ", "delivery in up to ", "entrega en hasta ") + (o.delivery_days || 3) + L(" dias", " days", " días") + '</div>' +
+            '<button class="btn btn-primary btn-block" data-order-offer="' + o.id + '" data-title="' + escHtml(o.title) + '" data-price="' + o.price_cents + '" style="margin-top:.55rem">' + L("Pedir agora · ", "Order now · ", "Pedir ahora · ") + brlc(o.price_cents) + '</button>' +
+          '</div>';
+        }).join("");
+        var mineHtml = "";
+        if (myOrders.length) {
+          mineHtml = '<div style="font-weight:800;margin:.5rem 0 .5rem">' + L("Seus pedidos", "Your orders", "Tus pedidos") + '</div>' + myOrders.map(function (o) {
+            var st = o.status === "delivered" ? L("Entregue ✅", "Delivered ✅", "Entregado ✅") : o.status === "paid" ? L("Pago · em produção ⏳", "Paid · in production ⏳", "Pagado · en producción ⏳") : L("Aguardando pagamento", "Awaiting payment", "Esperando pago");
+            var btn = o.status === "delivered" ? '<button class="btn btn-ghost btn-sm" data-order-get="' + o.id + '">⬇ ' + L("Baixar / ver", "Download / view", "Descargar / ver") + '</button>' : '';
+            return '<div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px"><div><div style="font-size:.88rem;font-weight:700">' + brlc(o.amount_cents) + '</div><div style="font-size:.8rem;color:var(--muted)">' + st + '</div></div>' + btn + '</div>';
+          }).join("");
+        }
+        box.innerHTML = head + offHtml + mineHtml;
+        box.querySelectorAll("[data-order-offer]").forEach(function (b) { b.onclick = function () { openOrderModal(c.id, +b.getAttribute("data-order-offer"), b.getAttribute("data-title"), +b.getAttribute("data-price")); }; });
+        box.querySelectorAll("[data-order-get]").forEach(function (b) { b.onclick = function () { getDelivery(+b.getAttribute("data-order-get"), b); }; });
+      }
+      if (!account) { render([]); return; }
+      sb.from("custom_orders").select("id,amount_cents,status").eq("creator_key", c.id).order("created_at", { ascending: false }).then(function (u) { render((u.data || []).filter(function (o) { return o.status !== "awaiting_payment"; })); });
+    });
+  }
+  function openOrderModal(creatorKey, offerId, title, priceCents) {
+    if (typeof needLogin === "function" && needLogin()) return;
+    var ov = document.createElement("div"); ov.id = "ordermodal";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)";
+    ov.innerHTML = '<div style="width:100%;max-width:480px;background:var(--panel,#fff);color:var(--ink,#111);border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid var(--line);padding:18px 16px calc(20px + env(safe-area-inset-bottom))">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem">' + escHtml(title || "") + '</div><span id="om-x" style="cursor:pointer;font-size:24px;opacity:.6">×</span></div>' +
+      '<label style="display:block;font-size:.8rem;color:var(--muted);margin:12px 0 5px">' + L("O que você quer? (nome, cenário, detalhes)", "What do you want? (name, scenario, details)", "¿Qué quieres? (nombre, escenario, detalles)") + '</label>' +
+      '<textarea id="om-brief" rows="3" maxlength="600" placeholder="' + escHtml(L("Ex: diz meu nome e manda bem safada…", "Ex: say my name and make it naughty…", "Ej: di mi nombre…")) + '" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);font-size:15px;background:var(--surface-2);color:inherit"></textarea>' +
+      '<button class="btn btn-primary btn-block" id="om-go" style="margin-top:14px">' + L("Pedir e pagar · ", "Order & pay · ", "Pedir y pagar · ") + brlc(priceCents) + '</button>' +
+    '</div>';
+    document.body.appendChild(ov);
+    function close() { ov.remove(); }
+    ov.querySelector("#om-x").onclick = close;
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.querySelector("#om-go").onclick = function () {
+      var brief = ov.querySelector("#om-brief").value || "";
+      close();
+      pixOnceModal(L("Encomenda · ", "Order · ", "Encargo · ") + brlc(priceCents), L("Pague o Pix e o pedido vai pra ela.", "Pay the Pix and the order goes to her.", "Paga el Pix y el pedido va a ella."),
+        function () { return sb.functions.invoke("order_pix", { body: { offer_id: offerId, brief: brief } }).then(function (r) { return (r && r.data) || { error: (r && r.error) || "net" }; }); },
+        function (d) { return sb.from("custom_orders").select("status").eq("provider_ref", d.identifier).then(function (u) { return !!(u.data && u.data.length && u.data[0].status !== "awaiting_payment"); }); },
+        function () { if (typeof toast === "function") toast(L("Pedido feito 🔥 ela vai gravar e te entregar aqui", "Order placed 🔥 she'll record and deliver here", "¡Pedido hecho 🔥!")); var cc = CREATORS.find(function (x) { return x.id === creatorKey; }); if (cc) loadOrdersInto(cc); }
+      );
+    };
+  }
+  function getDelivery(orderId, btn) {
+    btn.disabled = true; var old = btn.textContent; btn.textContent = "…";
+    sb.functions.invoke("order_delivery_url", { body: { order_id: orderId } }).then(function (res) {
+      var d = (res && res.data) || {}; btn.disabled = false; btn.textContent = old;
+      if ((res && res.error) || d.error || !d.url) { if (typeof toast === "function") toast(L("Ainda não disponível.", "Not available yet.", "Aún no disponible.")); return; }
+      try { window.open(d.url, "_blank"); } catch (e) { location.href = d.url; }
+    });
+  }
   function ensurePixCss() {
     if (document.getElementById("pixcss")) return; var s = document.createElement("style"); s.id = "pixcss";
     s.textContent = '#pixsub{position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,8,.6)}#pixsub .sh{width:100%;max-width:520px;background:#15131b;color:#f4f1f8;border-top-left-radius:20px;border-top-right-radius:20px;border:1px solid #241f2e;padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}#pixsub h3{margin:0 0 4px;font-size:1.1rem}#pixsub label{display:block;font-size:.78rem;color:#9a93a8;margin:12px 0 5px}#pixsub input{width:100%;padding:13px;border-radius:12px;border:1px solid #241f2e;background:#0e0c14;color:#f4f1f8;font-size:16px}#pixsub .x{float:right;color:#9a93a8;font-size:22px;cursor:pointer;line-height:1}#pixsub .pbtn{width:100%;margin-top:16px;padding:15px;border:0;border-radius:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#1b74e8,#1552b8);cursor:pointer;font-size:16px}#pixsub .pbox{background:#0e0c14;border:1px solid #241f2e;border-radius:12px;padding:12px;margin-top:10px;word-break:break-all;font-size:12px;max-height:120px;overflow:auto}#pixsub .err{color:#ff7a90;font-size:13px;margin-top:10px;min-height:1px}#pixsub .pane{display:none}#pixsub .pane.on{display:block}';
@@ -2710,6 +2850,7 @@ fbq('track', 'PageView');
       if (c.story) hh += '<div class="pf-about" style="margin:.5rem 0 0;font-size:.95rem;line-height:1.45">' + c.story + '</div>';
       hh += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), L("assinantes", "subscribers", "suscriptores")) + st(nfmt(c.likes), L("curtidas", "likes", "me gusta")) + '</div>';
       if (c.online) hh += '<div class="pf-status"><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + '</div>';
+      hh += '<div id="pf-goal" class="pf-section" hidden></div>';
       // ===== Clube VIP: oferta nomeada + stack de valor + planos (R$, Pix) =====
       if (c.hasSub !== false) {
         var firstNm = (c.name || "VIP").split(" ")[0];
@@ -2740,6 +2881,16 @@ fbq('track', 'PageView');
       // galeria de fotos (prévias bloqueadas) — dados reais
       hh += '<div class="pf-section" style="padding-top:.6rem"><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
       hh += '<div id="pf-stories" class="pf-section" hidden></div>';
+      // mimos (gorjetas)
+      hh += '<div class="pf-section"><div class="pf-h">🎁 ' + L("Mandar um mimo", "Send a tip", "Enviar un mimo") + '</div>' +
+        '<p class="muted-note" style="margin:.1rem 0 .6rem;font-size:.86rem">' + L("Faz o dia dela — e aparece pra ela na hora.", "Make her day — she sees it instantly.", "Alégrale el día — lo ve al instante.") + '</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button class="btn btn-ghost" data-tip="900" style="flex:1;min-width:92px">☕ ' + brlc(900) + '</button>' +
+          '<button class="btn btn-ghost" data-tip="2500" style="flex:1;min-width:92px">🌹 ' + brlc(2500) + '</button>' +
+          '<button class="btn btn-ghost" data-tip="9900" style="flex:1;min-width:92px">🍾 ' + brlc(9900) + '</button>' +
+          '<button class="btn btn-ghost" data-tip="custom" style="flex:1;min-width:92px">✨ ' + L("Outro valor", "Other", "Otro") + '</button>' +
+        '</div></div>';
+      hh += '<div id="pf-orders" class="pf-section" hidden></div>';
       hh += '<div id="pf-packs" hidden></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
@@ -2759,6 +2910,9 @@ fbq('track', 'PageView');
       });
       loadBuyerContent(c.id);
       loadStoriesInto(c);
+      loadGoalInto(c);
+      wireTips(c);
+      loadOrdersInto(c);
       return;
     }
 

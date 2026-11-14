@@ -190,6 +190,43 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       <div class="grid" id="stories" style="margin-top:14px"></div>
       <p class="hint" id="stories-empty">Nenhuma história ainda.</p>
     </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 4px">🎯 Meta de gorjeta</h3>
+      <p class="hint" style="margin-top:0">Cria uma meta pública (ex.: "200 pra liberar meu vídeo novo"). Os mimos somam até bater — aparece no seu perfil.</p>
+      <div id="goal-current" class="hint" style="margin-bottom:6px"></div>
+      <label>Título da meta</label>
+      <input id="g-title" type="text" maxlength="120" placeholder="Ex: 200 pra postar o vídeo novo">
+      <label>Valor da meta (R$)</label>
+      <input id="g-target" type="number" inputmode="decimal" placeholder="200,00">
+      <div class="err" id="g-err"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" id="g-set" style="flex:1">Criar / atualizar meta</button>
+        <button class="btn" id="g-clear" style="flex:0 0 auto;background:#2a2335">Encerrar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 4px">🎬 Encomendas (conteúdo sob medida)</h3>
+      <p class="hint" style="margin-top:0">Crie ofertas que o cliente pede sob medida (vídeo/áudio com o nome dele etc.). Ele paga, você grava e entrega aqui dentro.</p>
+      <label>Tipo</label>
+      <select id="o-kind" style="width:100%;padding:12px;border-radius:12px;border:1px solid #2a2335;background:#0e0c14;color:inherit"><option value="video">Vídeo</option><option value="audio">Áudio</option><option value="photo">Foto</option><option value="message">Mensagem</option></select>
+      <label>Título</label>
+      <input id="o-title" type="text" maxlength="120" placeholder="Ex: Vídeo personalizado com seu nome">
+      <label>Descrição</label>
+      <textarea id="o-desc" rows="2" maxlength="500" placeholder="o que entra, duração…"></textarea>
+      <label>Preço (R$)</label>
+      <input id="o-price" type="number" inputmode="decimal" placeholder="50,00" value="50,00">
+      <label>Prazo de entrega (dias)</label>
+      <input id="o-days" type="number" inputmode="numeric" value="3">
+      <div class="err" id="o-err"></div>
+      <button class="btn" id="o-add" style="margin-top:12px">Criar oferta</button>
+      <div id="offers" style="margin-top:12px"></div>
+      <h4 style="margin:16px 0 6px">Pedidos recebidos</h4>
+      <div id="orders"></div>
+      <p class="hint" id="orders-empty">Nenhum pedido ainda.</p>
+      <input id="od-file" type="file" style="display:none">
+    </div>
   </div>
 </div>
 
@@ -392,6 +429,77 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     }).join('');
     $('stories').querySelectorAll('[data-sdel]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Remover essa história?')) return; await storyApi('update',{id:+b.getAttribute('data-sdel'),delete:true}); refreshStories(); }; });
   }
+  async function orderApi(action,extra){
+    var tok=await token(); if(!tok) return {error:'auth'};
+    var r=await fetch(FN+'order_admin',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+tok},body:JSON.stringify(Object.assign({action:action},extra||{}))});
+    return await r.json().catch(function(){return {error:'net'};});
+  }
+  // ---- Meta de gorjeta ----
+  async function loadGoal(){
+    var g=await storyApi('goal_get',{});
+    if(g && g.goal){ var gg=g.goal; $('goal-current').textContent='Meta ativa: "'+gg.title+'" — '+BRL(gg.raised_cents||0)+' / '+BRL(gg.target_cents||0); }
+    else $('goal-current').textContent='Nenhuma meta ativa.';
+  }
+  $('g-set').onclick=async function(){
+    err('g-err','');
+    var title=($('g-title').value||'').trim();
+    var target=Math.round(parseFloat(($('g-target').value||'0').replace(',','.'))*100)||0;
+    if(title.length<2){ err('g-err','Dá um título pra meta.'); return; }
+    if(target<500){ err('g-err','Valor mínimo R$ 5,00.'); return; }
+    var btn=this; btn.disabled=true;
+    var r=await storyApi('goal_set',{title:title,target_cents:target});
+    btn.disabled=false;
+    if(r.error){ err('g-err','Falha ao salvar a meta.'); return; }
+    $('g-title').value=''; $('g-target').value=''; loadGoal();
+  };
+  $('g-clear').onclick=async function(){ if(!confirm('Encerrar a meta ativa?')) return; await storyApi('goal_clear',{}); loadGoal(); };
+  // ---- Encomendas ----
+  async function loadOffers(){
+    var l=await orderApi('offer_list',{});
+    var rows=(l.offers)||[];
+    $('offers').innerHTML=rows.filter(function(o){return o.active;}).map(function(o){
+      return '<div style="border:1px solid #2a2335;border-radius:10px;padding:10px;margin-bottom:8px"><div style="font-weight:700">'+String(o.title||'').replace(/</g,'&lt;')+'</div><div class="muted" style="font-size:12px;margin:3px 0">'+BRL(o.price_cents)+' · '+o.kind+' · até '+o.delivery_days+'d</div><span class="muted" data-odel="'+o.id+'" style="cursor:pointer;font-size:12px;color:#ff7a90">remover</span></div>';
+    }).join('');
+    $('offers').querySelectorAll('[data-odel]').forEach(function(b){ b.onclick=async function(){ if(!confirm('Remover essa oferta?')) return; await orderApi('offer_update',{id:+b.getAttribute('data-odel'),delete:true}); loadOffers(); }; });
+  }
+  $('o-add').onclick=async function(){
+    err('o-err','');
+    var title=($('o-title').value||'').trim();
+    if(title.length<2){ err('o-err','Dá um título pra oferta.'); return; }
+    var price=Math.round(parseFloat(($('o-price').value||'50').replace(',','.'))*100)||5000;
+    var days=parseInt($('o-days').value||'3',10)||3;
+    var btn=this; btn.disabled=true;
+    var r=await orderApi('offer_add',{kind:$('o-kind').value,title:title,description:($('o-desc').value||''),price_cents:price,delivery_days:days});
+    btn.disabled=false;
+    if(r.error){ err('o-err', r.error==='not_approved'?'Conta ainda não aprovada.':'Falha ao criar a oferta.'); return; }
+    $('o-title').value=''; $('o-desc').value=''; $('o-price').value='50,00'; $('o-days').value='3'; loadOffers();
+  };
+  var deliverOrderId=null;
+  $('od-file').onchange=async function(e){
+    var f=(e.target.files&&e.target.files[0])||null; if(!f||!deliverOrderId) return;
+    var oid=deliverOrderId; deliverOrderId=null;
+    var ext=(f.name.split('.').pop()||'').toLowerCase();
+    var uu=await orderApi('deliver_url',{ext:ext});
+    if(uu.error){ alert('Formato não suportado ou falha ao preparar envio.'); return; }
+    var up=await sb.storage.from('content').uploadToSignedUrl(uu.path, uu.token, f);
+    if(up.error){ alert('Falha ao enviar o arquivo.'); return; }
+    var d=await orderApi('deliver',{id:oid, delivery_path:uu.path});
+    $('od-file').value='';
+    if(d.error){ alert('Falha ao marcar como entregue.'); return; }
+    loadOrders();
+  };
+  async function loadOrders(){
+    var l=await orderApi('orders',{});
+    var rows=(l.orders)||[];
+    $('orders-empty').style.display=rows.length?'none':'block';
+    $('orders').innerHTML=rows.map(function(o){
+      var st=o.status==='delivered'?'Entregue ✅':'Pago · entregar ⏳';
+      var brief=o.brief?('<div class="muted" style="font-size:12px;margin:4px 0;white-space:pre-wrap">'+String(o.brief).replace(/</g,'&lt;')+'</div>'):'';
+      var act=o.status==='paid'?'<button class="btn" data-odeliver="'+o.id+'" style="font-size:12px;padding:8px 12px;margin-top:4px">📤 Entregar</button>':'';
+      return '<div style="border:1px solid #2a2335;border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between"><b>'+BRL(o.amount_cents)+' · '+(o.kind||'')+'</b><span class="muted" style="font-size:12px">'+st+'</span></div>'+brief+act+'</div>';
+    }).join('');
+    $('orders').querySelectorAll('[data-odeliver]').forEach(function(b){ b.onclick=function(){ deliverOrderId=+b.getAttribute('data-odeliver'); $('od-file').click(); }; });
+  }
   async function refresh(){
     var s=await api('stats',{});
     if(!s.error){ $('st-subs').textContent=s.subscribers; $('st-earn').textContent=BRL(s.earnings_cents); $('st-posts').textContent=s.posts; }
@@ -407,6 +515,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       el.onclick=async function(){ if(!confirm('Apagar este post?')) return; await api('update',{id:+el.getAttribute('data-del'),delete:true}); refresh(); };
     });
     refreshStories();
+    loadGoal(); loadOffers(); loadOrders();
   }
 
   // ---- chamadas de vídeo ----
