@@ -1323,12 +1323,12 @@ fbq('track', 'PageView');
         var perMonth = p.price_cents / p.months;
         var off = (p.months > 1) ? Math.round((1 - perMonth / baseMonthly) * 100) : 0;
         var lbl = p.label || (p.months + " " + (p.months > 1 ? L("meses", "months", "meses") : L("mês", "mo", "mes")));
-        var badge = off > 0 ? '<span style="font-weight:800;font-size:.72rem;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:999px;margin-left:6px">-' + off + '%</span>' : '';
-        var sub = p.months > 1 ? ('<div style="font-size:.78rem;opacity:.85;margin-top:2px">' + brlc(perMonth) + '/' + L("mês", "mo", "mes") + '</div>') : '';
+        var badge = off > 0 ? '<span style="font-weight:800;font-size:.82rem;background:rgba(255,255,255,.26);padding:3px 10px;border-radius:999px;margin-left:7px">-' + off + '%</span>' : '';
+        var sub = p.months > 1 ? ('<div style="font-size:.9rem;opacity:.95;margin-top:3px;font-weight:600">' + brlc(perMonth) + '/' + L("mês", "mo", "mes") + '</div>') : '';
         var anchor = brlc(p.price_cents * 2); // preço cheio ancorado (2×), cortado
-        return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;margin-bottom:10px;border:0;border-radius:14px;cursor:pointer;background:#1b6fe3;color:#fff">' +
-          '<span style="text-align:left"><span style="font-weight:800">' + lbl + '</span>' + badge + sub + '</span>' +
-          '<span style="display:flex;align-items:center;gap:8px"><span style="text-decoration:line-through;opacity:.55;font-weight:700;font-size:.88rem">' + anchor + '</span><span style="font-weight:900;font-size:1.08rem">' + brlc(p.price_cents) + '</span></span></button>';
+        return '<button data-pixsub="' + escHtml(c.id) + '" data-months="' + p.months + '" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;margin-bottom:11px;border:0;border-radius:14px;cursor:pointer;background:#1b6fe3;color:#fff">' +
+          '<span style="text-align:left"><span style="font-weight:800;font-size:1.05rem">' + lbl + '</span>' + badge + sub + '</span>' +
+          '<span style="display:flex;align-items:center;gap:9px"><span style="text-decoration:line-through;opacity:.72;font-weight:700;font-size:1rem">' + anchor + '</span><span style="font-weight:900;font-size:1.25rem">' + brlc(p.price_cents) + '</span></span></button>';
       }).join("") + '<p class="muted-note" style="margin-top:.3rem;font-size:.8rem">' + L("Pagamento via Pix · acesso na hora", "Pay via Pix · instant access", "Pago vía Pix · acceso al instante") + '</p>';
     }, function () { box.innerHTML = '<p class="muted-note">' + L("Não consegui carregar os planos.", "Couldn't load plans.", "No pude cargar los planes.") + '</p>'; });
   }
