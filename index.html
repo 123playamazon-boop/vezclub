@@ -1013,6 +1013,7 @@ fbq('track', 'PageView');
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script>
 (function () {
   "use strict";
@@ -1452,6 +1453,7 @@ fbq('track', 'PageView');
         '<div style="font-weight:800;margin:.3rem 0 .1rem">🎧 ' + escHtml(title || "") + '</div>' +
         '<div style="color:#9a93a8;font-size:.85rem">' + L("Pague o Pix e o áudio libera na hora.", "Pay the Pix and the audio unlocks instantly.", "Paga el Pix y el audio se libera al instante.") + '</div>' +
         '<button class="pbtn" id="sp-gen" style="margin-top:14px">' + L("Gerar Pix · ", "Generate Pix · ", "Generar Pix · ") + brlc(priceCents) + '</button>' +
+        '<div id="sp-qr" style="display:flex;justify-content:center;margin:.4rem 0 0"></div>' +
         '<div class="pbox" id="sp-code" style="display:none"></div>' +
         '<button class="pbtn" id="sp-copy" style="display:none;margin-top:8px">' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button>' +
         '<p id="sp-stat" style="margin-top:12px;color:#9a93a8;font-size:.8rem"></p>' +
@@ -1470,6 +1472,7 @@ fbq('track', 'PageView');
         if ((res && res.error) || d.error || !d.pix_code) { g.disabled = false; g.textContent = L("Gerar Pix · ", "Generate Pix · ", "Generar Pix · ") + brlc(priceCents); ov.querySelector("#sp-stat").textContent = L("Não deu pra gerar o Pix agora.", "Couldn't generate Pix now.", "No se pudo generar el Pix."); return; }
         g.style.display = "none";
         var codeEl = ov.querySelector("#sp-code"); codeEl.style.display = "block"; codeEl.textContent = d.pix_code;
+        vezRenderQR(ov.querySelector("#sp-qr"), d.pix_code);
         var copyEl = ov.querySelector("#sp-copy"); copyEl.style.display = "block";
         copyEl.onclick = function () { try { navigator.clipboard.writeText(d.pix_code); copyEl.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); } catch (e) {} };
         ov.querySelector("#sp-stat").textContent = L("Assim que o pagamento cair, o áudio libera sozinho.", "As soon as payment lands, the audio unlocks.", "En cuanto caiga el pago, el audio se libera.");
@@ -1488,7 +1491,7 @@ fbq('track', 'PageView');
     ensurePixCss();
     var old = document.getElementById("pixsub"); if (old) old.remove();
     var ov = document.createElement("div"); ov.id = "pixsub";
-    ov.innerHTML = '<div class="sh"><span class="x" id="po-x">×</span><h3>' + escHtml(title) + '</h3><div class="pane on"><div style="color:#9a93a8;font-size:.85rem;margin:.2rem 0 .3rem">' + subtitle + '</div><button class="pbtn" id="po-gen" style="margin-top:12px">' + L("Gerar Pix", "Generate Pix", "Generar Pix") + '</button><div class="pbox" id="po-code" style="display:none"></div><button class="pbtn" id="po-copy" style="display:none;margin-top:8px">' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button><p id="po-stat" style="margin-top:12px;color:#9a93a8;font-size:.8rem"></p></div></div>';
+    ov.innerHTML = '<div class="sh"><span class="x" id="po-x">×</span><h3>' + escHtml(title) + '</h3><div class="pane on"><div style="color:#9a93a8;font-size:.85rem;margin:.2rem 0 .3rem">' + subtitle + '</div><button class="pbtn" id="po-gen" style="margin-top:12px">' + L("Gerar Pix", "Generate Pix", "Generar Pix") + '</button><div id="po-qr" style="display:flex;justify-content:center;margin:.4rem 0 0"></div><div class="pbox" id="po-code" style="display:none"></div><button class="pbtn" id="po-copy" style="display:none;margin-top:8px">' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button><p id="po-stat" style="margin-top:12px;color:#9a93a8;font-size:.8rem"></p></div></div>';
     document.body.appendChild(ov);
     var pollT = null;
     function close() { if (pollT) { clearInterval(pollT); pollT = null; } ov.remove(); }
@@ -1502,6 +1505,7 @@ fbq('track', 'PageView');
         if (d.error || !d.pix_code) { g.disabled = false; g.textContent = L("Gerar Pix", "Generate Pix", "Generar Pix"); ov.querySelector("#po-stat").textContent = L("Não deu pra gerar o Pix agora.", "Couldn't generate Pix now.", "No se pudo generar el Pix."); return; }
         g.style.display = "none";
         var codeEl = ov.querySelector("#po-code"); codeEl.style.display = "block"; codeEl.textContent = d.pix_code;
+        vezRenderQR(ov.querySelector("#po-qr"), d.pix_code);
         var cp = ov.querySelector("#po-copy"); cp.style.display = "block"; cp.onclick = function () { try { navigator.clipboard.writeText(d.pix_code); cp.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); } catch (e) {} };
         ov.querySelector("#po-stat").textContent = L("Assim que o pagamento cair, libera sozinho.", "As soon as payment lands, it unlocks.", "En cuanto caiga el pago, se libera.");
         var tries = 0;
@@ -1667,7 +1671,8 @@ fbq('track', 'PageView');
       '</div>' +
       '<div class="pane" id="px-pix">' +
         '<p id="px-amt" style="font-weight:800;margin:.3rem 0"></p>' +
-        '<div style="font-size:.82rem;color:#9a93a8">' + L("Copie o código e pague no app do seu banco:", "Copy the code and pay in your bank app:", "Copia el código y paga en tu banco:") + '</div>' +
+        '<div id="px-qr" style="display:flex;justify-content:center;margin:.3rem 0 .5rem"></div>' +
+        '<div style="font-size:.82rem;color:#9a93a8;text-align:center">' + L("Escaneie o QR no app do seu banco — ou copie o código abaixo:", "Scan the QR in your bank app — or copy the code below:", "Escanea el QR en tu banco — o copia el código:") + '</div>' +
         '<div class="pbox" id="px-code"></div>' +
         '<button class="pbtn" id="px-copy">' + L("Copiar código Pix", "Copy Pix code", "Copiar código Pix") + '</button>' +
         '<p id="px-stat" style="margin-top:12px;color:#9a93a8;font-size:.8rem">' + L("Assim que o pagamento cair, seu acesso libera sozinho.", "As soon as payment lands, access unlocks automatically.", "En cuanto caiga el pago, el acceso se libera solo.") + '</p>' +
@@ -1695,6 +1700,7 @@ fbq('track', 'PageView');
         if ((r && r.error) || !j.pix_code) { err.textContent = (j.error === "bad_document") ? L("CPF inválido.", "Invalid CPF.", "CPF inválido.") : L("Não consegui gerar o Pix. Tente de novo.", "Could not generate Pix. Try again.", "No pude generar el Pix."); return; }
         ov.querySelector("#px-amt").textContent = brlc(j.amount_cents) + " · " + (String(months) === "1" ? L("renova todo mês", "renews monthly", "renueva cada mes") : L("renova a cada " + months + " meses", "renews every " + months + " months", "renueva cada " + months + " meses"));
         ov.querySelector("#px-code").textContent = j.pix_code;
+        vezRenderQR(ov.querySelector("#px-qr"), j.pix_code);
         showPane("px-pix");
         if (pollT) clearInterval(pollT);
         pollT = setInterval(function () {
@@ -1704,6 +1710,19 @@ fbq('track', 'PageView');
     };
     ov.querySelector("#px-copy").onclick = function () { var t = ov.querySelector("#px-code").textContent; try { navigator.clipboard.writeText(t); } catch (e) {} this.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); };
     ov.querySelector("#px-done").onclick = function () { close(); render(); };
+  }
+
+  // Gera um QR escaneável a partir do código Pix (copia-e-cola). Cai de pé se a lib não carregar.
+  function vezRenderQR(el, code) {
+    if (!el) return;
+    el.innerHTML = "";
+    try {
+      if (window.QRCode && typeof window.QRCode.toDataURL === "function" && code) {
+        window.QRCode.toDataURL(code, { width: 212, margin: 1, errorCorrectionLevel: "M" }, function (e, url) {
+          if (!e && url && el) { var img = new Image(); img.src = url; img.alt = "QR Pix"; img.style.cssText = "width:212px;height:212px;border-radius:14px;background:#fff;padding:8px;box-shadow:0 6px 18px rgba(0,0,0,.12)"; el.innerHTML = ""; el.appendChild(img); }
+        });
+      }
+    } catch (e) {}
   }
 
   function loadCreators(cb) {
