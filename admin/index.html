@@ -319,21 +319,22 @@ input:focus,select:focus{border-color:var(--ac)}
     var sparkVals=byDay.map(function(d){return d.cents;});
     var srcMap={chat:['Chat (minuto)','#ec4899'],coins:['Conteúdo / coins','#a855f7'],sub:['Assinaturas','#3b82f6']};
     var segs=(r.by_source||[]).map(function(s){ var m=srcMap[s.src]||[s.src,'#fbbf24']; return {label:m[0],color:m[1],val:Number(s.cents)||0}; });
-    var evo=(r.user_evo||[]).map(function(x){ var mm=x.m.slice(5)+'/'+x.m.slice(2,4); return {label:mm,val:Number(x.n)||0}; });
+    var MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    var evo=(r.user_evo||[]).map(function(x){ var mm=(MES[parseInt(x.m.slice(5,7),10)-1]||x.m)+'/'+x.m.slice(2,4); return {label:mm,val:Number(x.n)||0}; });
     var act=r.activity||{};
     var names=r.names||{};
     var recent=(r.recent||[]).slice(0,5);
 
-    function kpi(ic,color,label,val,delta){ return '<div class="kpi"><div class="top"><span class="ic" style="background:'+color+'22;color:'+color+'">'+ic+'</span>'+esc(label)+'</div><div class="v">'+val+'</div>'+(delta!=null?deltaHtml(delta):'<span class="muted" style="font-size:12px">total</span>')+spark(sparkVals,color)+'</div>'; }
+    function kpi(ic,color,label,val,delta,sp){ return '<div class="kpi"><div class="top"><span class="ic" style="background:'+color+'22;color:'+color+'">'+ic+'</span>'+esc(label)+'</div><div class="v">'+val+'</div>'+(delta!=null?deltaHtml(delta)+' <span class="muted" style="font-size:11px">30d</span>':'<span class="muted" style="font-size:12px">total</span>')+(sp?spark(sparkVals,color):'')+'</div>'; }
 
     var h='';
-    // KPIs
+    // KPIs (sparkline só no card de Vendas, que é a série real)
     h+='<div class="kpis">'+
       kpi('👥','#a855f7','Clientes',(r.clients||0).toLocaleString('pt-BR'),r.d_cli)+
       kpi('👑','#ec4899','Assinantes ativos',(r.subs_active||0),null)+
       kpi('👩','#3b82f6','Produtoras ativas',(r.produtoras||0),null)+
       kpi('🖼️','#34d399','Conteúdos',(r.posts||0),r.d_post)+
-      kpi('💰','#fbbf24','Vendas (BRL)',brl(r.rev_brl),r.d_rev)+
+      kpi('💰','#fbbf24','Vendas (BRL)',brl(r.rev_brl),r.d_rev,true)+
       '</div>';
 
     // BI row: faturamento + donut
