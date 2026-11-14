@@ -876,6 +876,13 @@ fbq('track', 'PageView');
   /* real content + watermark */
   .rc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
   @media (max-width: 480px) { .rc-grid { grid-template-columns: 1fr; } }
+  /* amostra: 3 fotos sempre lado a lado (inclusive mobile) pra puxar a rolagem até o CTA */
+  .rc-grid.rc-grid-3 { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+  @media (max-width: 480px) { .rc-grid.rc-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+  .rc-grid-3 .rc-cap { display: none; }
+  .rc-grid-3 .rc-media { aspect-ratio: 3 / 4; }
+  .rc-grid-3 .rc-foot { padding: 0.25rem 0.1rem 0; text-align: center; }
+  .rc-grid-3 .rc-until { font-size: 0.68rem; }
   .rc { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
   .rc-media { aspect-ratio: 4/5; position: relative; display: grid; place-items: center; background: var(--surface-3); overflow: hidden; }
   .rc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -4045,7 +4052,7 @@ fbq('track', 'PageView');
       if (!hasSub) fillRealPacks(creatorKey, nPh, nVd, true);
       var previews = (pr && pr.data) || [];
       var prevHtml = previews.length
-        ? '<div class="rc-grid">' + previews.map(function (p) {
+        ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p) {
             return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div></div></div>'; }).join("") + '</div>'
         : '';
       var block = hasSub
@@ -4150,7 +4157,7 @@ fbq('track', 'PageView');
       var nVd = pr.data.filter(function (p) { return p.media_type === "video"; }).length;
       var likes = (cObj && cObj.likes) || 0;
       var prevHtml = previews.length
-        ? '<div class="rc-grid">' + previews.map(function (p) {
+        ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p) {
             return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div></div></div>'; }).join("") + '</div>'
         : '';
       var lockBlock = !hasSub ? '' :
