@@ -4480,18 +4480,8 @@ fbq('track', 'PageView');
         ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p) {
             return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div></div></div>'; }).join("") + '</div>'
         : '';
-      var lockBlock = !hasSub ? '' :
-        '<div class="rc-locked-all">' +
-          '<div class="rla-body">' + I.lock +
-            '<div class="rla-counts">📷 ' + nPh + ' · 🎥 ' + nVd + ' · ♡ ' + nfmt(likes) + '</div>' +
-          '</div>' +
-          '<div class="rla-cta">' +
-            '<div class="rla-h">' + L("Veja tudo que ela esconde", "See everything she hides", "Mira todo lo que ella esconde") + '</div>' +
-            '<div class="rla-s">' + L("Todas as fotos sem censura, os vídeos sem corte e o chat direto com ela — 30 dias de acesso total.", "All her uncensored photos, uncut videos and direct chat with her — 30 days of full access.", "Todas sus fotos sin censura, los videos sin cortes y el chat directo con ella — 30 días de acceso total.") + '</div>' +
-            '<button class="btn btn-primary btn-block" data-subscribe="' + creatorKey + '">' + L("Assinar e ver tudo", "Subscribe & see it all", "Suscríbete y ve todo") + ' · ' + brlc(subCents) + '/' + L("mês", "mo", "mes") + '</button>' +
-          '</div>' +
-        '</div>';
-      b.innerHTML = prevHtml + lockBlock + (hasSub ? '' : cta);
+      // bloco grande "Veja tudo que ela esconde" removido (redundante com o Clube VIP no topo)
+      b.innerHTML = prevHtml + (hasSub ? '' : cta);
       previews.forEach(function (p) { showFree(p); });
       wireSub(b, creatorKey, subPrice);
       if (!hasSub) {
