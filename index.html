@@ -951,9 +951,8 @@ fbq('track', 'PageView');
     <div class="brand" id="brand-home" style="cursor:pointer" title="Início"><span class="dot">V</span>Vezclub<small>.com</small></div>
     <div class="roles" id="roles">
       <button data-role="buyer" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Ver criadoras</span></button>
-      <button data-role="creator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Me candidatar</span></button>
     </div>
-    <a href="/studio/" id="hdr-signup" style="background:linear-gradient(90deg,#1b74e8,#1552b8);color:#fff;font-weight:800;font-size:0.82rem;padding:0.5rem 0.95rem;border-radius:999px;text-decoration:none;white-space:nowrap;box-shadow:0 4px 14px rgba(124,58,237,.35)">Criar conta</a>
+    <button id="hdr-signup" style="background:linear-gradient(90deg,#1b74e8,#1552b8);color:#fff;font-weight:800;font-size:0.82rem;padding:0.5rem 0.95rem;border-radius:999px;border:0;cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px rgba(124,58,237,.35)">Criar conta</button>
     <div class="top-actions">
       <select data-lang-sel class="lang-sel" aria-label="Idioma"><option value="pt">PT</option><option value="en">EN</option><option value="es">ES</option></select>
       <button class="icon-btn" id="theme-btn" aria-label="Alternar tema"><svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
@@ -2320,7 +2319,7 @@ fbq('track', 'PageView');
   }
   function syncLangSel() { document.querySelectorAll("[data-lang-sel]").forEach(function (s) { s.value = lang; }); }
   function paintTopbarPt() {
-    var map = { buyer: "Comprador", creator: "Criadora", admin: "Admin" };
+    var map = { buyer: "Ver criadoras", creator: "Quero ser modelo", admin: "Admin" };
     document.querySelectorAll("#roles button").forEach(function (b) {
       var k = b.getAttribute("data-role"), sp = b.querySelector("span");
       if (sp && map[k]) sp.textContent = map[k];
@@ -2391,7 +2390,7 @@ fbq('track', 'PageView');
   /* ---------------- render: router ---------------- */
   function render() {
     if (window.__tick) { clearInterval(window.__tick); window.__tick = null; }
-    if (state.role === "buyer") { state.view === "store" ? renderStore() : state.view === "collection" ? renderCollection() : state.view === "sec_fotos" ? renderSection("photo_set") : state.view === "sec_contos" ? renderSection("story") : state.view === "sec_guias" ? renderSection("ebook") : state.view === "quiz" ? renderQuiz() : renderFeed(); }
+    if (state.role === "buyer") { state.view === "account" ? renderAccount() : state.view === "store" ? renderStore() : state.view === "collection" ? renderCollection() : state.view === "sec_fotos" ? renderSection("photo_set") : state.view === "sec_contos" ? renderSection("story") : state.view === "sec_guias" ? renderSection("ebook") : state.view === "quiz" ? renderQuiz() : renderFeed(); }
     else if (state.role === "creator") renderCreator();
     else renderAdmin();
     try { app.classList.remove("vin"); void app.offsetWidth; app.classList.add("vin"); } catch (e) {}
@@ -2501,6 +2500,57 @@ fbq('track', 'PageView');
     return '<div style="display:flex;flex-direction:column;gap:.7rem;margin-bottom:1rem">' +
       '<div style="font-weight:800;font-size:.95rem;margin:.2rem 2px;display:flex;align-items:center;gap:.4rem"><span>🔥</span>' + L("Liberado agora", "Unlocked now", "Liberado ahora") + '</div>' + rows + '</div>';
   }
+  // ===== Área do cliente (menu estilo Privacy: Conteúdo / Mensagens / Conta) =====
+  function renderAccount() {
+    if (!account) { showAuthGate("login"); return; }
+    var nm = (account.name || "").split(" ")[0] || L("você", "you", "tú");
+    var isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    var grid = "display:grid;grid-template-columns:1fr 1fr;gap:12px";
+    function card(emoji, title, sub, attr) {
+      return '<button ' + attr + ' style="text-align:left;background:var(--panel,#fff);border:1px solid var(--line);border-radius:18px;padding:16px 15px;cursor:pointer;display:block;width:100%;color:inherit">' +
+        '<div style="font-size:1.5rem;line-height:1">' + emoji + '</div>' +
+        '<div style="font-weight:800;font-size:1rem;margin-top:8px">' + title + '</div>' +
+        '<div style="color:var(--muted);font-size:.82rem;margin-top:2px">' + sub + '</div></button>';
+    }
+    function sec(t) { return '<div style="font-weight:800;font-size:1.05rem;margin:1.5rem 2px .7rem">' + t + '</div>'; }
+    var h = '';
+    h += '<div style="display:flex;align-items:center;gap:12px;margin:.4rem 0 1.1rem">' +
+      '<span style="width:52px;height:52px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--lock2));color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.2rem">' + initials(account.name) + '</span>' +
+      '<div><div style="font-weight:800;font-size:1.25rem">' + L("Olá, ", "Hi, ", "Hola, ") + escHtml(nm) + '</div>' +
+      '<div style="color:var(--muted);font-size:.85rem">' + L("Sua conta", "Your account", "Tu cuenta") + '</div></div></div>';
+    h += '<button id="ac-become" style="width:100%;text-align:left;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b74e8,#7c3aed);border-radius:18px;padding:16px;display:flex;align-items:center;gap:12px">' +
+      '<span style="font-size:1.8rem">💸</span><span style="flex:1"><span style="display:block;font-weight:800;font-size:1.05rem">' + L("Seja modelo", "Become a creator", "Sé modelo") + '</span>' +
+      '<span style="display:block;font-size:.85rem;opacity:.95">' + L("Comece a ganhar hoje", "Start earning today", "Empieza a ganar hoy") + '</span></span><span style="font-size:1.3rem">→</span></button>';
+    h += sec(L("Conteúdo", "Content", "Contenido")) + '<div style="' + grid + '">' +
+      card("💜", L("Minhas assinaturas", "My subscriptions", "Mis suscripciones"), L("Criadoras que você assina", "Creators you subscribe to", "Creadoras que sigues"), 'data-ac="subs"') +
+      card("🔥", L("Explorar", "Explore", "Explorar"), L("Veja quem está em alta", "See who's trending", "Mira quién es tendencia"), 'data-ac="explore"') +
+      card("🔍", L("Buscar", "Search", "Buscar"), L("Ache a criadora que procura", "Find the creator you want", "Encuentra tu creadora"), 'data-ac="search"') +
+      card("⭐", L("Minha coleção", "My collection", "Mi colección"), L("O que você já desbloqueou", "What you've unlocked", "Lo que desbloqueaste"), 'data-ac="coll"') + '</div>';
+    h += sec(L("Mensagens", "Messages", "Mensajes")) + '<div style="' + grid + '">' +
+      card("💬", L("Minhas conversas", "My conversations", "Mis conversaciones"), L("Converse com as criadoras", "Chat with creators", "Habla con las creadoras"), 'data-ac="chat"') + '</div>';
+    h += sec(L("Conta", "Account", "Cuenta")) + '<div style="' + grid + '">' +
+      card(isDark ? "☀️" : "🌙", L("Modo escuro", "Dark mode", "Modo oscuro"), isDark ? L("Ligado", "On", "Activado") : L("Desligado", "Off", "Desactivado"), 'data-ac="theme"') +
+      card("🌎", L("Idioma", "Language", "Idioma"), lang.toUpperCase() + " · " + L("toque pra trocar", "tap to switch", "toca para cambiar"), 'data-ac="lang"') +
+      card("❓", L("Ajuda", "Help", "Ayuda"), L("Suporte e dúvidas", "Support & questions", "Soporte y dudas"), 'data-ac="help"') +
+      card("🚪", L("Sair", "Log out", "Salir"), L("Sair da plataforma", "Log out of the platform", "Salir de la plataforma"), 'data-ac="logout"') + '</div>';
+    app.innerHTML = h;
+    var bc = document.getElementById("ac-become"); if (bc) bc.onclick = function () { state.role = "creator"; state.view = "feed"; state.creatorTab = "onboarding"; render(); };
+    app.querySelectorAll("[data-ac]").forEach(function (b) {
+      b.onclick = function () {
+        var a = b.getAttribute("data-ac");
+        if (a === "subs") openMySubs();
+        else if (a === "explore") { state.view = "feed"; state.feedCat = "alta"; render(); }
+        else if (a === "search") { state.view = "feed"; render(); setTimeout(function () { var s = document.getElementById("feed-search"); if (s) s.focus(); }, 120); }
+        else if (a === "coll") { state.view = "collection"; render(); }
+        else if (a === "chat") openChatList();
+        else if (a === "theme") { var tb = document.getElementById("theme-btn"); if (tb) tb.click(); render(); }
+        else if (a === "lang") { var order = ["pt", "en", "es"], i = order.indexOf(lang); setLang(order[(i + 1) % 3]); }
+        else if (a === "help") { try { location.href = "mailto:suporte@vezclub.com"; } catch (e) {} }
+        else if (a === "logout") { if (sb) sb.auth.signOut(); }
+      };
+    });
+  }
+
   function renderFeed() {
     feedLoaded = true; // sem delay artificial: o feed é estático, pinta imediatamente (melhora o LCP no mobile)
     var CATS = [{ k: "alta", t: "Em alta" }, { k: "online", t: "Online agora" }, { k: "fitness", t: "Fitness" }, { k: "fashion", t: "Fashion" }, { k: "lifestyle", t: "Lifestyle" }];
@@ -2569,7 +2619,9 @@ fbq('track', 'PageView');
     html += sectionBanners; // banners de produto descidos pro final da página
     html += '<p class="muted-note" id="feed-empty" hidden style="text-align:center;padding:2rem">Nenhuma criadora encontrada.</p>';
     if (CREATORS.some(function (x) { return x.hasChat; })) html += '<button class="chat-fab" data-chat-fab="1" aria-label="Mensagens">' + I.chatic + '</button>';
+    html += '<div style="text-align:center;margin:2.4rem 0 1.2rem;padding-top:1.3rem;border-top:1px solid var(--line)"><button id="be-model" style="background:none;border:0;color:var(--muted);font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px">' + L("É modelo? Quero ganhar dinheiro na Vezclub →", "Are you a model? I want to earn on Vezclub →", "¿Eres modelo? Quiero ganar en Vezclub →") + '</button></div>';
     app.innerHTML = html;
+    var _bm = document.getElementById("be-model"); if (_bm) _bm.onclick = function () { state.role = "creator"; state.view = "feed"; state.creatorTab = "onboarding"; render(); };
     startTicker();
     refreshFabBadge();
     app.querySelectorAll(".chip[data-cat]").forEach(function (ch) {
@@ -6514,6 +6566,9 @@ fbq('track', 'PageView');
   }
   var brandHome = document.getElementById("brand-home");
   if (brandHome) brandHome.addEventListener("click", goHome);
+  // "Criar conta" do topo = cadastro de CLIENTE (nunca mais /studio)
+  var hdrSignup = document.getElementById("hdr-signup");
+  if (hdrSignup) hdrSignup.onclick = function () { showAuthGate("signup", "buyer"); };
   // acesso ao painel por link secreto (sem botão exposto): vezclub.com/#painel
   function isAdminHash() { return (location.hash || "").replace("#", "").toLowerCase() === "painel"; }
   function goAdminSecret() {
@@ -6836,7 +6891,6 @@ fbq('track', 'PageView');
         (mode === "signup" ? '<div class="field"><label>Nome de exibição</label><input id="ag-name" placeholder="Como vão te ver"></div>' : "") +
         '<div class="field"><label>E-mail</label><input id="ag-email" type="email" placeholder="voce@email.com"></div>' +
         '<div class="field"><label>Senha</label><input id="ag-pass" type="password" placeholder="mínimo 6 caracteres"></div>' +
-        (mode === "signup" ? '<div class="field"><label>Você é</label><div class="roles" id="ag-roles" style="margin:0"><button data-r="buyer" class="' + (regRole === "buyer" ? "on" : "") + '">Comprador</button><button data-r="creator" class="' + (regRole === "creator" ? "on" : "") + '">Criadora</button></div></div>' : "") +
         '<button class="btn btn-primary btn-block" id="ag-go">' + (mode === "login" ? L("Entrar", "Sign in", "Entrar") : L("Criar conta e entrar", "Create account and enter", "Crear cuenta y entrar")) + '</button>' +
         '<div id="ag-msg"></div>' +
         ((function(){ try { return new URLSearchParams(location.search).has("demo"); } catch(e){ return false; } })() ? '<div style="margin-top:1.4rem;font-size:.72rem;color:var(--faint);text-align:center;border-top:1px solid var(--line);padding-top:.8rem">' + L("Contas de demonstração (teste):", "Demo accounts (test):", "Cuentas de demostración (prueba):") + '<div style="display:flex;gap:.5rem;margin-top:.5rem"><button class="btn btn-ghost btn-sm" data-login="luna@aura.test" style="flex:1">' + L("Criadora", "Creator", "Creadora") + '</button><button class="btn btn-ghost btn-sm" data-login="guest@aura.test" style="flex:1">' + L("Comprador", "Buyer", "Comprador") + '</button></div></div>' : "") +
@@ -7923,18 +7977,12 @@ fbq('track', 'PageView');
     var ta = document.querySelector(".top-actions"); if (!ta || !account) return;
     var old = document.getElementById("acct-badge"); if (old) old.remove();
     var el = document.createElement("button");
-    el.id = "acct-badge"; el.className = "icon-btn"; el.title = account.name + " · sair";
-    el.style.width = "auto"; el.style.padding = "0 .6rem"; el.style.gap = ".4rem"; el.style.fontWeight = "600"; el.style.fontSize = ".8rem";
-    el.innerHTML = '<span style="width:20px;height:20px;border-radius:6px;background:linear-gradient(140deg,var(--accent),var(--lock2));color:#fff;display:grid;place-items:center;font-size:.6rem;font-weight:800">' + initials(account.name) + '</span>Sair';
-    el.onclick = function () { if (sb) sb.auth.signOut(); };
+    el.id = "acct-badge"; el.className = "icon-btn"; el.title = L("Minha conta", "My account", "Mi cuenta");
+    el.style.width = "auto"; el.style.padding = "0 .6rem"; el.style.gap = ".4rem"; el.style.fontWeight = "700"; el.style.fontSize = ".8rem";
+    el.innerHTML = '<span style="width:22px;height:22px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--lock2));color:#fff;display:grid;place-items:center;font-size:.62rem;font-weight:800">' + initials(account.name) + '</span><span style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml((account.name || "").split(" ")[0]) + '</span>';
+    el.onclick = function () { state.role = "buyer"; state.view = "account"; render(); };
     ta.insertBefore(el, ta.firstChild);
-    // botão "Minhas assinaturas"
-    var oldS = document.getElementById("mysubs-btn"); if (oldS) oldS.remove();
-    var subsBtn = document.createElement("button");
-    subsBtn.id = "mysubs-btn"; subsBtn.className = "icon-btn"; subsBtn.title = L("Minhas assinaturas", "My subscriptions", "Mis suscripciones");
-    subsBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>';
-    subsBtn.onclick = openMySubs;
-    ta.insertBefore(subsBtn, ta.firstChild);
+    var hs = document.getElementById("hdr-signup"); if (hs) hs.style.display = "none";
     loadCoinBal(); renderWalletChip();
   }
   function openMySubs() {
@@ -7993,11 +8041,12 @@ fbq('track', 'PageView');
     var ta = document.querySelector(".top-actions"); if (!ta) return;
     var old = document.getElementById("acct-badge"); if (old) old.remove();
     var el = document.createElement("button");
-    el.id = "acct-badge"; el.className = "btn btn-primary btn-sm";
+    el.id = "acct-badge"; el.className = "btn btn-ghost btn-sm";
     el.style.whiteSpace = "nowrap";
     el.textContent = "Entrar";
     el.onclick = function () { showAuthGate("login"); };
     ta.insertBefore(el, ta.firstChild);
+    var hs = document.getElementById("hdr-signup"); if (hs) hs.style.display = "";
   }
 
   function enterGuest() {
