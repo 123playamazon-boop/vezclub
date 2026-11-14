@@ -1708,7 +1708,7 @@ fbq('track', 'PageView');
 
   function loadCreators(cb) {
     if (!sb) { if (cb) cb(); return; }
-    sb.from("creators").select("key,display_name,handle,tag,tag_en,tag_es,sub_price_cents,is_ai,online,hook,hook_en,hook_es,color1,color2,avatar_path,cover_path,has_chat,has_subscription,created_at").then(function (r) {
+    sb.from("creators").select("key,display_name,handle,tag,tag_en,tag_es,sub_price_cents,is_ai,online,hook,hook_en,hook_es,color1,color2,avatar_path,cover_path,has_chat,has_subscription,created_at,approved").eq("approved", true).then(function (r) {
       if (!r.error && r.data && r.data.length) {
         // modelos com fotos em baixa resolução vão pro final do feed até serem atualizadas
         var LOWRES = { nina: 1, sofia: 1, emma: 1, maya: 1 };
@@ -1741,6 +1741,8 @@ fbq('track', 'PageView');
         var map = {};
         r.data.forEach(function (p) { (map[p.creator_key] = map[p.creator_key] || []).push({ path: p.media_path, type: p.media_type }); });
         CREATORS.forEach(function (c) { c.freeTiles = (map[c.id] || []).slice(0, 3); });
+        // só aparece na plataforma com o perfil completo: foto de perfil + capa + 3 fotos grátis (além de já estar aprovada)
+        CREATORS = CREATORS.filter(function (c) { return c.avatarPath && c.coverPath && (c.freeTiles || []).length >= 3; });
       }
       if (cb) cb();
     }).catch(function () { if (cb) cb(); });
