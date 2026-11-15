@@ -125,6 +125,17 @@ p.sub{color:var(--mut);text-align:center;margin:0 auto 18px;max-width:420px;font
 .acard img,.acard video{width:100%;height:100%;object-fit:cover;display:block}
 .acard .adl{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:8px;background:rgba(0,0,0,.62);display:grid;place-items:center;font-size:13px;color:#fff}
 .acard .vtag{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.62);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px}
+.rules{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:2px 14px}
+.rules>summary{cursor:pointer;font-weight:700;font-size:13px;padding:12px 0;list-style:none;display:flex;align-items:center;gap:8px}
+.rules>summary::-webkit-details-marker{display:none}
+.rules>summary::after{content:"▾";margin-left:auto;color:var(--mut2);transition:transform .2s}
+.rules[open]>summary::after{transform:rotate(180deg)}
+.rules ol{margin:0 0 12px;padding-left:18px}
+.rules li{font-size:12.5px;line-height:1.55;color:var(--mut);margin-bottom:9px}
+.rules li b{color:var(--txt)}
+.chk{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--mut);cursor:pointer;line-height:1.4}
+.chk input{margin-top:2px;width:18px;height:18px;accent-color:var(--p1);flex:0 0 auto}
+.chk b{color:var(--txt)}
 </style>
 </head>
 <body>
@@ -154,6 +165,21 @@ function linkFor(ck,code){return SITE+"/?c="+encodeURIComponent(ck)+"&ref="+enco
 function toast(t){var el=document.getElementById("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove("show");},1700);}
 function copy(txt){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);}else{var t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();}toast("Copiado ✓");}catch(e){toast("Copie manualmente");}}
 function api(action,body){body=body||{};body.action=action;return sb.functions.invoke("affiliate",{body:body}).then(function(r){if(r.error)throw r.error;return r.data;});}
+// ---- regras obrigatórias ----
+var RULES=[
+  ["Não altere o conteúdo da modelo.","É proibido editar, cortar de forma enganosa, distorcer, aplicar filtro pesado, colocar logo, marca d'água, texto ou o rosto de outra pessoa nas fotos e vídeos. Poste exatamente como recebeu."],
+  ["Somente maiores de 18 anos.","É proibido divulgar para menores de 18 anos ou em contas, grupos, páginas e públicos voltados a menores. Use apenas plataformas que permitem conteúdo adulto e com público adulto."],
+  ["Uso exclusivo da Vezclub.","As imagens e vídeos são só para divulgar a Vezclub através do seu link. É proibido usar para qualquer outro fim: vender por fora, outro site ou produto, criar perfil se passando pela modelo, ou revender/repassar o conteúdo."],
+  ["Não se passe pela modelo.","Você divulga — não finja ser ela, não prometa o que ela não oferece e nunca peça dados, contato ou dinheiro em nome dela."],
+  ["Use só o seu link oficial.","Venda sem o seu link do painel não gera comissão. É proibido fraudar cliques ou vendas (tráfego falso, autocompra, robôs ou incentivo enganoso)."],
+  ["Respeite as plataformas e a lei.","Siga as regras do Instagram, TikTok, Telegram, etc. Nada de spam. A sua conta e o que você posta são de sua responsabilidade."],
+  ["Quebrou, está fora.","Uso indevido do conteúdo, divulgação para menores ou qualquer fraude cancelam as comissões envolvidas e podem te remover do programa, sem direito a saque dos valores fraudados."]
+];
+function rulesHtml(open){
+  return '<details class="rules"'+(open?' open':'')+'><summary>📋 Regras de divulgação (obrigatórias)</summary><ol>'+
+    RULES.map(function(r){return '<li><b>'+esc(r[0])+'</b> '+esc(r[1])+'</li>';}).join('')+
+    '</ol></details>';
+}
 
 // ---- boot ----
 sb.auth.getSession().then(function(r){S.session=r.data.session||null;route();});
@@ -225,6 +251,8 @@ function renderOnboard(){
         '<div class="field"><label>Seu nome (aparece nos recibos)</label><input id="ob-name" placeholder="Seu nome"></div>'+
         '<div class="field"><label>Tipo de chave Pix</label><select id="ob-pt"><option value="cpf">CPF</option><option value="email">E-mail</option><option value="phone">Telefone</option><option value="random">Aleatória</option></select></div>'+
         '<div class="field"><label>Sua chave Pix (pra receber)</label><input id="ob-pix" placeholder="chave onde você recebe"></div>'+
+        '<div class="field">'+rulesHtml(false)+'</div>'+
+        '<div class="field"><label class="chk"><input type="checkbox" id="ob-rules"> Li e aceito as <b>regras de divulgação</b> acima.</label></div>'+
         '<div class="field"><button class="btn grad" id="ob-go">Ativar e começar a ganhar</button></div>'+
         '<div id="ob-msg"></div>'+
         '<p class="small muted" style="margin:10px 2px 0">Pode cadastrar o Pix depois, na aba Carteira.</p>'+
@@ -235,6 +263,7 @@ function renderOnboard(){
   root.appendChild(w);
   w.querySelector("#ob-out").onclick=function(){sb.auth.signOut();};
   w.querySelector("#ob-go").onclick=function(){
+    if(!w.querySelector("#ob-rules").checked){w.querySelector("#ob-msg").innerHTML='<div class="msg err">Você precisa aceitar as regras de divulgação pra ativar.</div>';return;}
     var name=(w.querySelector("#ob-name").value||"").trim();
     var pt=w.querySelector("#ob-pt").value;
     var pix=(w.querySelector("#ob-pix").value||"").trim();
@@ -387,6 +416,7 @@ function viewKit(){
   var h='<div style="height:16px"></div><div class="sect-t" style="margin-top:4px">Kit de divulgação</div>';
   if(!links.length){h+='<div class="empty"><div class="ei">🎁</div>Pegue um link na Vitrine pra liberar o kit.</div>';shell(h);return;}
   var sel=S.kitCreator||links[0].creator_key;S.kitCreator=sel;
+  h+='<div class="field" style="margin-top:0">'+rulesHtml(false)+'</div>';
   h+='<div class="card"><div class="field" style="margin-top:0"><label>Escolha a modelo</label><select id="kit-sel">'+
       links.map(function(l){return '<option value="'+esc(l.creator_key)+'"'+(l.creator_key===sel?' selected':'')+'>'+esc(l.creator_name||l.creator_key)+'</option>';}).join("")+
      '</select></div></div>';
@@ -418,7 +448,7 @@ function renderKitBody(){
     var assets=(d.assets||[]);
     if(assets.length){
       h+='<div class="sect-t">Conteúdo pra postar ('+assets.length+')</div>';
-      h+='<p class="small muted" style="margin:-4px 2px 10px">Toque pra abrir e salvar. Poste no seu perfil, story ou grupo com seu link junto.</p>';
+      h+='<p class="small muted" style="margin:-4px 2px 10px">Material liberado pela equipe Vezclub. Toque pra abrir e salvar. Poste como está, com seu link junto — <b>sem editar a imagem</b> (veja as regras).</p>';
       h+='<div class="agrid">'+assets.map(function(a){
         var u=pubUrl(a.bucket,a.path);
         var inner=(a.type==="video")?('<video src="'+esc(u)+'" muted playsinline preload="metadata"></video><span class="vtag">▶ vídeo</span>'):('<img src="'+esc(u)+'" loading="lazy" alt="">');
