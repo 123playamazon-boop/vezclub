@@ -110,6 +110,11 @@ input:focus,select:focus{border-color:var(--ac)}
 .qa button{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:15px 8px;color:var(--tx);font-weight:700;font-size:12px;cursor:pointer}
 .qa button:hover{border-color:var(--ac)}
 .qa button .ic{font-size:18px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.pcard{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--line)}
+.pcard img,.pcard video{width:100%;height:100%;object-fit:cover;display:block}
+.pdel{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;border:0;cursor:pointer;font-size:12px;line-height:1;display:grid;place-items:center}
+#promo-cre{background:var(--bg2,#0e0c17);border:1px solid var(--line);border-radius:10px;color:var(--tx);padding:10px 12px;font-size:14px}
 .state{text-align:center;padding:34px 12px;color:var(--mut)}
 .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line2);border-top-color:var(--ac);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -192,11 +197,13 @@ input:focus,select:focus{border-color:var(--ac)}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
   var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
   var FN=SB_URL+"/functions/v1/";
+  var sbjs=null; try{ sbjs=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){}
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c];});}
   function brl(c){return "R$ "+((c||0)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -548,6 +555,7 @@ input:focus,select:focus{border-color:var(--ac)}
     var t=r.totals||{}, affs=r.affiliates||[], pays=r.payouts||[];
     var pend=pays.filter(function(p){return p.status==='requested';});
     var h='';
+    h+='<div class="card" id="promo-mgr" style="margin-bottom:16px"><div class="state"><span class="spin"></span></div></div>';
     h+='<div class="kpis" style="grid-template-columns:repeat(4,1fr)">'+
        '<div class="kpi"><div class="top">Afiliados</div><div class="v">'+(t.affiliates||0)+'</div></div>'+
        '<div class="kpi"><div class="top">Vendas atribuídas</div><div class="v">'+(t.sales||0)+'</div></div>'+
@@ -566,9 +574,58 @@ input:focus,select:focus{border-color:var(--ac)}
     h+='</div>';
     h+='<div class="card" style="margin-top:16px"><div class="ch-head"><h3>Link do programa</h3></div><p class="muted" style="margin-top:0">Divulgue pra quem faz DR/tráfego. Eles entram, pegam o link das modelos e ganham 30% por venda (carência 7 dias).</p><div style="display:flex;gap:8px"><input id="clip-link" readonly value="'+esc(location.origin+'/clipador')+'"><button class="btn" id="clip-copy" style="flex:none">Copiar</button></div></div>';
     v.innerHTML=h;
+    renderPromoMgr();
     Array.prototype.forEach.call(v.querySelectorAll('[data-pay]'),function(b){ b.onclick=async function(){ if(!confirm('Confirmar que você JÁ fez o Pix deste saque? Isso marca como pago.')) return; b.disabled=true;b.textContent='…'; var rr=await apiAff('payout_set',{payout_id:b.getAttribute('data-pay'),status:'paid'}); if(rr&&rr.ok){ render(); } else { alert('Erro.'); b.disabled=false;b.textContent='✓ Marcar pago'; } }; });
     Array.prototype.forEach.call(v.querySelectorAll('[data-fail]'),function(b){ b.onclick=async function(){ if(!confirm('Marcar como falhou? A comissão volta pro saldo disponível do afiliado.')) return; b.disabled=true;b.textContent='…'; var rr=await apiAff('payout_set',{payout_id:b.getAttribute('data-fail'),status:'failed'}); if(rr&&rr.ok){ render(); } else { alert('Erro.'); b.disabled=false;b.textContent='Falhou'; } }; });
     var cc=$('clip-copy'); if(cc) cc.onclick=function(){ try{ navigator.clipboard.writeText(location.origin+'/clipador'); cc.textContent='Copiado ✓'; setTimeout(function(){cc.textContent='Copiar';},1500);}catch(e){} };
+  }
+
+  /* ===== MATERIAL DE DIVULGAÇÃO (clipador) ===== */
+  var promoCreator='';
+  async function renderPromoMgr(){
+    var box=$('promo-mgr'); if(!box) return;
+    var cr=await apiAff('creators'); var cs=(cr&&cr.items)||[];
+    if(!cs.length){ box.innerHTML='<div class="ch-head"><h3>🎬 Material de divulgação</h3></div><p class="muted" style="margin:0">Nenhuma modelo disponível.</p>'; return; }
+    if(!promoCreator || !cs.some(function(c){return c.key===promoCreator;})) promoCreator=cs[0].key;
+    box.innerHTML='<div class="ch-head"><h3>🎬 Material de divulgação</h3><span class="muted" style="font-size:12px">só o clipador vê · não vai pro feed</span></div>'+
+      '<p class="muted" style="margin-top:0;font-size:13px">Suba as fotos e clipes que o clipador vai baixar e postar. Ficam no Kit da modelo escolhida.</p>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="promo-cre" style="flex:1;min-width:180px">'+cs.map(function(c){return '<option value="'+esc(c.key)+'"'+(c.key===promoCreator?' selected':'')+'>'+esc(c.display_name||c.key)+'</option>';}).join('')+'</select>'+
+      '<button class="btn sm" id="promo-add">+ Adicionar fotos/vídeos</button>'+
+      '<input type="file" id="promo-file" accept="image/*,video/*" multiple style="display:none"></div>'+
+      '<div id="promo-up" class="muted" style="font-size:12px;margin-top:8px"></div>'+
+      '<div id="promo-grid" style="margin-top:12px"></div>';
+    $('promo-cre').onchange=function(){ promoCreator=this.value; loadPromoGrid(); };
+    $('promo-add').onclick=function(){ $('promo-file').click(); };
+    $('promo-file').onchange=function(){ uploadPromo(this.files); };
+    loadPromoGrid();
+  }
+  async function loadPromoGrid(){
+    var g=$('promo-grid'); if(!g) return; g.innerHTML='<span class="spin"></span>';
+    var r=await apiAff('promo_list',{creator_key:promoCreator}); var items=(r&&r.items)||[];
+    if(!items.length){ g.innerHTML='<p class="muted" style="font-size:13px;margin:0">Nenhum material ainda pra esta modelo.</p>'; return; }
+    g.innerHTML='<div class="pgrid">'+items.map(function(a){ var u=SB_URL+'/storage/v1/object/public/'+(a.bucket||'promo')+'/'+a.media_path; var inner=(a.media_type==='video')?'<video src="'+esc(u)+'" muted preload="metadata"></video>':'<img src="'+esc(u)+'" loading="lazy">'; return '<div class="pcard">'+inner+'<button class="pdel" data-del="'+esc(a.id)+'">✕</button></div>'; }).join('')+'</div>';
+    Array.prototype.forEach.call(g.querySelectorAll('[data-del]'),function(b){ b.onclick=async function(){ if(!confirm('Remover este material?')) return; b.disabled=true; var rr=await apiAff('promo_delete',{id:b.getAttribute('data-del')}); if(rr&&rr.ok){ loadPromoGrid(); } else { alert('Erro ao remover.'); b.disabled=false; } }; });
+  }
+  async function uploadPromo(files){
+    if(!files||!files.length) return;
+    if(!sbjs){ alert('Upload indisponível. Recarregue a página.'); return; }
+    var up=$('promo-up'); var arr=[].slice.call(files); var done=0,fail=0;
+    for(var i=0;i<arr.length;i++){
+      var f=arr[i]; up.textContent='Enviando '+(i+1)+'/'+arr.length+'…';
+      try{
+        var ext=(f.name.split('.').pop()||'jpg').toLowerCase();
+        var mt=(String(f.type).indexOf('video')===0)?'video':'image';
+        var s=await apiAff('promo_sign',{creator_key:promoCreator,ext:ext});
+        if(!s||!s.path||!s.token){ fail++; continue; }
+        var upr=await sbjs.storage.from(s.bucket).uploadToSignedUrl(s.path,s.token,f);
+        if(upr.error){ fail++; continue; }
+        var c=await apiAff('promo_commit',{creator_key:promoCreator,path:s.path,media_type:mt});
+        if(c&&c.ok){ done++; } else { fail++; }
+      }catch(e){ fail++; }
+    }
+    up.textContent='Enviados: '+done+(fail?(' · falharam: '+fail+' (tipo ou tamanho)'):' ✓');
+    var pf=$('promo-file'); if(pf) pf.value='';
+    loadPromoGrid();
   }
 
   /* ===== PENDENTES ===== */
