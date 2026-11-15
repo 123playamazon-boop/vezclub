@@ -120,6 +120,11 @@ p.sub{color:var(--mut);text-align:center;margin:0 auto 18px;max-width:420px;font
 .empty .ei{font-size:30px;margin-bottom:8px}
 .hr{height:1px;background:var(--line);margin:14px 0}
 .badge30{background:var(--grad);color:#fff;font-weight:800;font-size:11px;padding:4px 9px;border-radius:999px;box-shadow:0 4px 12px rgba(168,85,247,.4)}
+.agrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.acard{position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:var(--card2);display:block}
+.acard img,.acard video{width:100%;height:100%;object-fit:cover;display:block}
+.acard .adl{position:absolute;bottom:6px;right:6px;width:26px;height:26px;border-radius:8px;background:rgba(0,0,0,.62);display:grid;place-items:center;font-size:13px;color:#fff}
+.acard .vtag{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.62);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px}
 </style>
 </head>
 <body>
@@ -144,6 +149,7 @@ function el(h){var d=document.createElement("div");d.innerHTML=h;return d.firstE
 function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function brl(c){c=c||0;return "R$ "+(c/100).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
 function avUrl(p){return p?(SB_URL+"/storage/v1/object/public/avatars/"+p):"";}
+function pubUrl(bucket,p){return p?(SB_URL+"/storage/v1/object/public/"+(bucket||"avatars")+"/"+p):"";}
 function linkFor(ck,code){return SITE+"/?c="+encodeURIComponent(ck)+"&ref="+encodeURIComponent(code);}
 function toast(t){var el=document.getElementById("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove("show");},1700);}
 function copy(txt){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);}else{var t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();}toast("Copiado ✓");}catch(e){toast("Copie manualmente");}}
@@ -409,6 +415,16 @@ function renderKitBody(){
        '<div class="linkbox"><input readonly value="'+esc(link)+'"><button class="cpbtn" id="kcp">Copiar</button></div>';
     if(media)h+='<div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">'+media+'</div>';
     h+='</div>';
+    var assets=(d.assets||[]);
+    if(assets.length){
+      h+='<div class="sect-t">Conteúdo pra postar ('+assets.length+')</div>';
+      h+='<p class="small muted" style="margin:-4px 2px 10px">Toque pra abrir e salvar. Poste no seu perfil, story ou grupo com seu link junto.</p>';
+      h+='<div class="agrid">'+assets.map(function(a){
+        var u=pubUrl(a.bucket,a.path);
+        var inner=(a.type==="video")?('<video src="'+esc(u)+'" muted playsinline preload="metadata"></video><span class="vtag">▶ vídeo</span>'):('<img src="'+esc(u)+'" loading="lazy" alt="">');
+        return '<a class="acard" href="'+esc(u)+'" download target="_blank" rel="noopener">'+inner+'<span class="adl">⬇</span></a>';
+      }).join("")+'</div>';
+    }
     h+='<div class="sect-t">Textos prontos (toque pra copiar)</div>';
     texts.forEach(function(t,i){
       h+='<div class="kt" data-tx="'+esc(t[1])+'"><div class="kl">'+esc(t[0])+'<span class="kc">copiar ⧉</span></div><div class="kx">'+esc(t[1])+'</div></div>';
