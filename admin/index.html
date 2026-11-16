@@ -663,12 +663,14 @@ input:focus,select:focus{border-color:var(--ac)}
     if(!items.length){ box.innerHTML=emptyState('Nenhum contrato ainda. Gere o primeiro acima.'); return; }
     box.innerHTML=items.map(function(c){
       var st=c.status==='signed'?'<span class="pill on">assinado</span>':c.status==='void'?'<span class="pill off">cancelado</span>':'<span class="pill warn">pendente</span>';
-      var right=c.status==='signed'?'<button class="btn sm" data-view="'+c.id+'">Ver / imprimir</button>':(c.status==='pending'?'<button class="btn sec sm" data-copy="'+esc(location.origin+'/contrato/?c='+c.token)+'">Copiar link</button> <button class="btn sec sm" data-void="'+c.id+'">Cancelar</button>':'');
+      var del=c.status!=='pending'?' <button class="btn sec sm" data-del="'+c.id+'" title="Excluir">🗑</button>':'';
+      var right=(c.status==='signed'?'<button class="btn sm" data-view="'+c.id+'">Ver / imprimir</button>':(c.status==='pending'?'<button class="btn sec sm" data-copy="'+esc(location.origin+'/contrato/?c='+c.token)+'">Copiar link</button> <button class="btn sec sm" data-void="'+c.id+'">Cancelar</button>':''))+del;
       return '<div class="prow" style="flex-wrap:wrap"><div style="flex:1;min-width:150px"><b>'+esc(c.model_name||c.signed_name||'(sem nome)')+'</b> '+st+'<div class="muted" style="font-size:12px">'+(c.status==='signed'?('assinado '+dhm(c.signed_at)):('criado '+dhm(c.created_at)))+'</div></div>'+right+'</div>';
     }).join('');
     Array.prototype.forEach.call(box.querySelectorAll('[data-view]'),function(b){ b.onclick=function(){ viewCtr(b.getAttribute('data-view')); }; });
     Array.prototype.forEach.call(box.querySelectorAll('[data-copy]'),function(b){ b.onclick=function(){ try{navigator.clipboard.writeText(b.getAttribute('data-copy'));b.textContent='Copiado ✓';}catch(e){} }; });
     Array.prototype.forEach.call(box.querySelectorAll('[data-void]'),function(b){ b.onclick=async function(){ if(!confirm('Cancelar este contrato? O link para de funcionar.')) return; b.disabled=true; await apiCtr('void',{id:b.getAttribute('data-void')}); loadCtrList(); }; });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-del]'),function(b){ b.onclick=async function(){ if(!confirm('Excluir este contrato de vez? Não dá pra desfazer.')) return; b.disabled=true; await apiCtr('delete',{id:b.getAttribute('data-del')}); loadCtrList(); }; });
   }
   async function viewCtr(id){
     var r=await apiCtr('detail',{id:id}); if(r.error){ alert('Erro ao abrir.'); return; }
