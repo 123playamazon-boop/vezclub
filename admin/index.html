@@ -173,6 +173,7 @@ input:focus,select:focus{border-color:var(--ac)}
       <a data-sec="pedidos"><span class="ic">🎬</span>Pedidos</a>
       <a data-sec="afiliados"><span class="ic">💸</span>Afiliados <span class="cnt" id="n-pay" style="display:none">0</span></a>
       <div class="grp">Gestão</div>
+      <a data-sec="contratos"><span class="ic">📝</span>Contratos <span class="cnt" id="n-ctr" style="display:none">0</span></a>
       <a data-sec="pendentes"><span class="ic">🕒</span>Pendentes <span class="cnt" id="n-pend" style="display:none">0</span></a>
       <a data-sec="relatorios"><span class="ic">📑</span>Relatórios</a>
       <a data-sec="equipe"><span class="ic">🔑</span>Equipe</a>
@@ -219,6 +220,7 @@ input:focus,select:focus{border-color:var(--ac)}
   (function(){ try{ var m=/[#&?]k=([^&]+)/.exec(location.hash||'') || /[?&]k=([^&]+)/.exec(location.search||''); if(m&&m[1]){ KEY=decodeURIComponent(m[1]); try{localStorage.setItem('vez_admin_key',KEY);}catch(e){} try{history.replaceState(null,'',location.pathname);}catch(e){} } }catch(e){} })();
   async function api(action,extra){ try{ var r=await fetch(FN+'admin_kyc',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify(Object.assign({k:KEY,action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }catch(e){ return {error:'net'}; } }
   async function apiAff(action,extra){ try{ var r=await fetch(FN+'admin_affiliate',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify(Object.assign({k:KEY,action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }catch(e){ return {error:'net'}; } }
+  async function apiCtr(action,extra){ try{ var r=await fetch(FN+'contract',{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify(Object.assign({k:KEY,action:action},extra||{}))}); return await r.json().catch(function(){return{error:'net'};}); }catch(e){ return {error:'net'}; } }
 
   function showGate(msg){ $('gate').classList.remove('hide'); $('app').classList.add('hide'); if(msg) $('gate-msg').textContent=msg; }
   function showApp(){ $('gate').classList.add('hide'); $('app').classList.remove('hide'); }
@@ -290,6 +292,7 @@ input:focus,select:focus{border-color:var(--ac)}
     financeiro:['Financeiro','Receita por moeda e por criadora'],
     pedidos:['Pedidos','Encomendas sob medida'],
     afiliados:['Afiliados','Clipadores, comissões e saques'],
+    contratos:['Contratos','Gerar, enviar e receber contratos assinados'],
     pendentes:['Pendentes','Produtoras aguardando aprovação'],
     relatorios:['Relatórios','Exportações e relatórios'],
     equipe:['Equipe','Acesso do time ao painel'],
@@ -307,7 +310,7 @@ input:focus,select:focus{border-color:var(--ac)}
   }
   Array.prototype.forEach.call(document.querySelectorAll('#nav a'),function(a){ a.onclick=function(){ showSection(a.getAttribute('data-sec')); }; });
 
-  var RENDER={geral:renderBI,operacao:renderOperacao,clientes:renderClientes,produtoras:renderProdutoras,modelos:renderModelos,conteudo:renderConteudo,assinaturas:renderAssinaturas,vendas:renderVendas,financeiro:renderFinanceiro,pedidos:renderPedidos,afiliados:renderAfiliados,pendentes:renderPendentes,relatorios:renderRelatorios,equipe:renderEquipe,config:renderConfig};
+  var RENDER={geral:renderBI,operacao:renderOperacao,clientes:renderClientes,produtoras:renderProdutoras,modelos:renderModelos,conteudo:renderConteudo,assinaturas:renderAssinaturas,vendas:renderVendas,financeiro:renderFinanceiro,pedidos:renderPedidos,afiliados:renderAfiliados,contratos:renderContratos,pendentes:renderPendentes,relatorios:renderRelatorios,equipe:renderEquipe,config:renderConfig};
   function render(){ var v=$('view'); v.innerHTML=LOADING; (RENDER[current]||renderBI)(v); refreshBadges(); }
 
   async function refreshBadges(){
@@ -626,6 +629,73 @@ input:focus,select:focus{border-color:var(--ac)}
     up.textContent='Enviados: '+done+(fail?(' · falharam: '+fail+' (tipo ou tamanho)'):' ✓');
     var pf=$('promo-file'); if(pf) pf.value='';
     loadPromoGrid();
+  }
+
+  /* ===== CONTRATOS ===== */
+  async function renderContratos(v){
+    v.innerHTML='<div class="card"><div class="ch-head"><h3>📝 Gerar contrato pra assinar</h3></div>'+
+        '<p class="muted" style="margin-top:0;font-size:13px">Gere um link, mande pra modelo. Ela lê o contrato, preenche os dados e assina — e volta pra você já assinado, com data e IP.</p>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="ctr-nome" placeholder="Nome da modelo (opcional)" style="flex:1;min-width:180px"><button class="btn" id="ctr-gen" style="flex:none">Gerar link</button></div>'+
+        '<div id="ctr-link" style="margin-top:10px"></div>'+
+      '</div>'+
+      '<div class="card" style="margin-top:16px"><div class="ch-head"><h3>Contratos</h3><span class="muted" id="ctr-count"></span></div><div id="ctr-list"><div class="state"><span class="spin"></span></div></div></div>';
+    document.getElementById('ctr-gen').onclick=async function(){
+      var nome=(document.getElementById('ctr-nome').value||'').trim();
+      this.disabled=true;this.textContent='Gerando…';var self=this;
+      var r=await apiCtr('create',{model_name:nome});
+      self.disabled=false;self.textContent='Gerar link';
+      if(r&&r.ok&&r.token){
+        var link=location.origin+'/contrato/?c='+r.token;
+        document.getElementById('ctr-link').innerHTML='<div class="prow" style="flex-wrap:wrap"><div style="flex:1;min-width:160px"><b>Link pronto'+(nome?' · '+esc(nome):'')+'</b><div style="display:flex;gap:8px;margin-top:6px"><input id="ctr-lk" readonly value="'+esc(link)+'"><button class="btn sm" id="ctr-cp" style="flex:none">Copiar</button></div></div></div>';
+        document.getElementById('ctr-cp').onclick=function(){ try{navigator.clipboard.writeText(link);this.textContent='Copiado ✓';var b=this;setTimeout(function(){b.textContent='Copiar';},1500);}catch(e){} };
+        document.getElementById('ctr-nome').value='';
+        loadCtrList();
+      } else { document.getElementById('ctr-link').innerHTML='<div class="muted" style="font-size:13px">Erro ao gerar. Tente de novo.</div>'; }
+    };
+    loadCtrList();
+  }
+  async function loadCtrList(){
+    var box=document.getElementById('ctr-list'); if(!box) return;
+    var r=await apiCtr('list'); if(forbidden(r)) return;
+    if(r.error){ box.innerHTML=errState(); return; }
+    var items=r.items||[];
+    var cc=document.getElementById('ctr-count'); if(cc) cc.textContent=items.length?(items.filter(function(x){return x.status==='signed';}).length+' assinados · '+items.length+' total'):'';
+    if(!items.length){ box.innerHTML=emptyState('Nenhum contrato ainda. Gere o primeiro acima.'); return; }
+    box.innerHTML=items.map(function(c){
+      var st=c.status==='signed'?'<span class="pill on">assinado</span>':c.status==='void'?'<span class="pill off">cancelado</span>':'<span class="pill warn">pendente</span>';
+      var right=c.status==='signed'?'<button class="btn sm" data-view="'+c.id+'">Ver / imprimir</button>':(c.status==='pending'?'<button class="btn sec sm" data-copy="'+esc(location.origin+'/contrato/?c='+c.token)+'">Copiar link</button> <button class="btn sec sm" data-void="'+c.id+'">Cancelar</button>':'');
+      return '<div class="prow" style="flex-wrap:wrap"><div style="flex:1;min-width:150px"><b>'+esc(c.model_name||c.signed_name||'(sem nome)')+'</b> '+st+'<div class="muted" style="font-size:12px">'+(c.status==='signed'?('assinado '+dhm(c.signed_at)):('criado '+dhm(c.created_at)))+'</div></div>'+right+'</div>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('[data-view]'),function(b){ b.onclick=function(){ viewCtr(b.getAttribute('data-view')); }; });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-copy]'),function(b){ b.onclick=function(){ try{navigator.clipboard.writeText(b.getAttribute('data-copy'));b.textContent='Copiado ✓';}catch(e){} }; });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-void]'),function(b){ b.onclick=async function(){ if(!confirm('Cancelar este contrato? O link para de funcionar.')) return; b.disabled=true; await apiCtr('void',{id:b.getAttribute('data-void')}); loadCtrList(); }; });
+  }
+  async function viewCtr(id){
+    var r=await apiCtr('detail',{id:id}); if(r.error){ alert('Erro ao abrir.'); return; }
+    var f=r.fields||{}, cons=r.consent||{}, lim=f.limites||{};
+    function row(k,val){ return '<tr><td style="color:#9b93b4;padding:4px 10px 4px 0;white-space:nowrap">'+esc(k)+'</td><td style="padding:4px 0"><b>'+esc(val||'—')+'</b></td></tr>'; }
+    var lims=[]; if(lim.rosto)lims.push('não mostra rosto'); if(lim.localizacao)lims.push('não revela localização'); if(lim.outras_pessoas)lims.push('sem outras pessoas'); if(lim.chamadas_video)lims.push('sem chamadas ao vivo'); if(lim.outros)lims.push(lim.outros);
+    var win=window.open('','_blank');
+    if(!win){ alert('Permita pop-ups para abrir o contrato.'); return; }
+    var html='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Contrato assinado — '+esc(f.nome_completo||r.signed_name||'')+'</title>'+
+      '<style>body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a1726;max-width:720px;margin:24px auto;padding:0 20px;line-height:1.5}h1{font-size:19px}h2{font-size:15px;border-top:1px solid #e7e3f0;padding-top:14px;margin-top:20px}table{border-collapse:collapse;font-size:13.5px}.sig{border:1px solid #d9d4e6;border-radius:10px;max-width:360px;margin-top:8px}.proof{background:#faf7ff;border:1px solid #e7e3f0;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#4a4360;margin-top:14px}.ok{color:#15803d}@media print{.noprint{display:none}}</style></head><body>'+
+      '<button class="noprint" onclick="window.print()" style="padding:10px 16px;border:0;border-radius:8px;background:linear-gradient(135deg,#8b2fd6,#d6267f);color:#fff;font-weight:700;cursor:pointer;float:right">Imprimir / Salvar PDF</button>'+
+      '<h1>Contrato de Agenciamento, Uso de Imagem e Divisão de Receitas</h1>'+
+      '<p style="color:#7b7391;font-size:13px">IT’S BRAZILIAN LLC (AGÊNCIA) · Vezclub — ficha de assinatura eletrônica.</p>'+
+      '<h2>Dados da MODELO</h2><table>'+
+        row('Nome completo',f.nome_completo)+row('Nome artístico',f.nome_artistico)+row('Nascimento',f.nascimento)+
+        row('Nacionalidade',f.nacionalidade)+row('Estado civil',f.estado_civil)+row('RG/Documento',f.rg)+row('CPF',f.cpf)+
+        row('Endereço',f.endereco)+row('Cidade/UF/CEP',f.cidade)+row('E-mail',f.email)+row('Telefone',f.telefone)+
+        row('Chave Pix',(f.pix_key||'')+(f.pix_type?(' ('+f.pix_type+')'):''))+row('Canal',f.canal)+
+        row('Limites',lims.join('; '))+
+      '</table>'+
+      '<h2>Confirmações</h2><p class="ok">'+(cons.read?'✔':'✘')+' Leu e compreendeu o contrato &nbsp; '+(cons.agree?'✔':'✘')+' Concorda e assina &nbsp; '+(cons.adult?'✔':'✘')+' Declara ser maior de 18 anos</p>'+
+      '<h2>Assinatura</h2><p style="font-size:13px;color:#4a4360">Assinatura digitada: <b>'+esc(r.signed_name||'')+'</b></p>'+
+      (r.signature_png?'<img class="sig" src="'+esc(r.signature_png)+'">':'<p>(sem imagem de assinatura)</p>')+
+      '<div class="proof"><b>Prova de assinatura eletrônica</b><br>Assinado em: '+esc(r.signed_at?new Date(r.signed_at).toLocaleString('pt-BR'):'')+'<br>IP: '+esc(r.ip||'—')+'<br>Dispositivo: '+esc((r.ua||'—').slice(0,160))+'</div>'+
+      '<p style="font-size:11px;color:#9b93b4;margin-top:16px">Esta ficha acompanha o contrato completo (Cláusulas 1ª a 15ª e Anexos I e II) que a MODELO leu e aceitou ao assinar. O texto em português prevalece.</p>'+
+      '</body></html>';
+    win.document.write(html); win.document.close();
   }
 
   /* ===== PENDENTES ===== */

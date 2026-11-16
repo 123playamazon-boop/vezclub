@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Contrato · Vezclub</title>
+<link rel="icon" href="/favicon-32.png">
+<style>
+:root{
+  --ink:#1a1726; --ink2:#4a4360; --mut:#7b7391; --line:#e7e3f0; --line2:#d9d4e6;
+  --bg:#f4f2f9; --paper:#ffffff; --p1:#8b2fd6; --p2:#d6267f; --grn:#16a34a; --red:#dc2626;
+  --grad:linear-gradient(135deg,#8b2fd6,#d6267f);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+.hide{display:none!important}
+.topbar{position:sticky;top:0;z-index:30;background:#120f1c;color:#fff;border-bottom:1px solid #241d33}
+.topbar .in{max-width:760px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}
+.brand{font-weight:800;font-size:15px}
+.brand span{color:#b7aed0;font-weight:600}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 60px}
+.paper{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 20px;box-shadow:0 1px 3px rgba(20,12,40,.04)}
+.paper+.paper{margin-top:16px}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:.2px}
+h2{font-size:16px;margin:22px 0 7px;color:var(--ink)}
+h3{font-size:14px;margin:16px 0 6px}
+p{margin:0 0 10px}
+.doc p,.doc li{color:var(--ink2);font-size:13.5px;line-height:1.6}
+.doc h2{color:var(--ink);font-size:15px;border-top:1px solid var(--line);padding-top:16px}
+.doc h2:first-of-type{border-top:0;padding-top:0}
+.doc ul{margin:0 0 10px;padding-left:20px}
+.doc li{margin-bottom:5px}
+.doc b{color:var(--ink)}
+.sub{color:var(--mut);font-size:13px}
+.tag{display:inline-block;background:rgba(139,47,214,.1);color:var(--p1);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.scrollnote{background:#faf7ff;border:1px dashed var(--line2);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink2);margin-top:14px}
+table.sig{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+table.sig th,table.sig td{border:1px solid var(--line2);padding:7px 9px;text-align:left}
+table.sig th{background:#faf7ff;font-size:12px}
+/* form */
+.field{margin-top:12px}
+.field label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:5px;font-weight:600}
+.field input,.field select{width:100%;background:#fff;border:1.5px solid var(--line2);border-radius:10px;color:var(--ink);padding:12px;font-size:15px}
+.field input:focus,.field select:focus{outline:none;border-color:var(--p1)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink2);cursor:pointer;line-height:1.4;margin-top:12px}
+.chk input{margin-top:2px;width:19px;height:19px;accent-color:var(--p1);flex:0 0 auto}
+.chk b{color:var(--ink)}
+.limits{margin-top:8px}
+.limits .chk{margin-top:8px;font-size:13px}
+/* signature */
+.sigbox{margin-top:8px;border:1.5px dashed var(--line2);border-radius:12px;background:#fff;position:relative;touch-action:none}
+.sigbox canvas{display:block;width:100%;height:180px;border-radius:12px}
+.sigph{position:absolute;inset:0;display:grid;place-items:center;color:#b9b2cc;font-size:14px;pointer-events:none}
+.sigclear{position:absolute;top:8px;right:10px;font-size:12px;color:var(--p1);font-weight:700;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:4px 9px;cursor:pointer}
+.btn{display:block;width:100%;padding:15px;border:0;border-radius:12px;font-weight:800;font-size:16px;background:var(--grad);color:#fff;cursor:pointer;box-shadow:0 8px 24px rgba(139,47,214,.28);margin-top:16px}
+.btn:disabled{opacity:.5}
+.btn.sec{background:#efeaf8;color:var(--ink);box-shadow:none}
+.msg{font-size:13.5px;padding:11px 13px;border-radius:10px;margin-top:12px}
+.msg.err{background:#fde8e8;color:#b91c1c}
+.msg.ok{background:#e7f7ec;color:#15803d}
+.spin{width:30px;height:30px;border-radius:50%;border:3px solid #e7e3f0;border-top-color:var(--p1);margin:60px auto;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.center{text-align:center;padding:40px 16px}
+.center .ic{font-size:44px;margin-bottom:10px}
+.center h1{font-size:22px}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin-top:22px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="in"><div class="logo">V</div><div class="brand">Contrato <span>· Vezclub</span></div></div></div>
+<div id="root"><div class="spin"></div></div>
+
+<script>
+(function(){
+"use strict";
+var SB_URL="https://mfxyavlpbofcdiylnnjm.supabase.co";
+var SB_KEY="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+var FN=SB_URL+"/functions/v1/contract";
+var root=document.getElementById("root");
+var TOKEN="";
+try{ var m=/[?&]c=([^&]+)/.exec(location.search||""); if(m) TOKEN=decodeURIComponent(m[1]); }catch(e){}
+
+function api(action,extra){
+  return fetch(FN,{method:"POST",headers:{"Content-Type":"application/json","apikey":SB_KEY},
+    body:JSON.stringify(Object.assign({action:action,token:TOKEN},extra||{}))})
+    .then(function(r){return r.json().catch(function(){return{error:"net"};});})
+    .catch(function(){return{error:"net"};});
+}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+// ---------- CONTRACT TEXT (PT) ----------
+function contractHtml(){
+  return '<div class="doc">'+
+  '<h1>Contrato de Agenciamento, Uso de Imagem e Divisão de Receitas</h1>'+
+  '<p class="sub">Leia com atenção todas as cláusulas. Ao final, preencha seus dados e assine.</p>'+
+
+  '<h2>Cláusula 1ª — Partes, Considerandos e Objeto</h2>'+
+  '<p><b>1.1. Das partes.</b> De um lado, <b>IT’S BRAZILIAN LLC</b>, com sede em 3131 NE 188 ST, e-mail itsbraziliamllc@gmail.com, telefone +1 (305) 684-9224, representada por <b>Bruno Degasperi Silva</b>, doravante <b>AGÊNCIA</b>; de outro, a <b>MODELO</b>, qualificada no formulário e na assinatura ao final deste contrato, maior de 18 anos. Em conjunto, as “Partes”.</p>'+
+  '<p><b>1.2. Considerandos.</b> (a) a MODELO cria e comercializa conteúdo adulto; (b) a AGÊNCIA presta serviços de gestão de carreira, marketing e comercialização desse conteúdo; (c) as Partes desejam formalizar o agenciamento pelo prazo e condições deste contrato.</p>'+
+  '<p><b>1.3. Objeto.</b> A MODELO contrata a AGÊNCIA para, com exclusividade (Cláusula 6ª), prestar serviços de agenciamento, gestão e comercialização de sua imagem e conteúdo, incluindo:</p>'+
+  '<ul><li>gestão das contas de Instagram, OnlyFans e demais plataformas de conteúdo adulto (perfis, publicações, legendas, agenda);</li>'+
+  '<li>impulsionamento e tráfego pago (Meta/Instagram/Facebook Ads e outras mídias), criativos e campanhas;</li>'+
+  '<li>produção, edição e curadoria de fotos e vídeos a partir do material da MODELO;</li>'+
+  '<li>estratégia de monetização, precificação, promoções e funis de venda;</li>'+
+  '<li>atendimento e chat com assinantes/clientes, vendas e pós-venda, por equipe ou ferramentas da AGÊNCIA;</li>'+
+  '<li>gestão de recebimentos e repasses (Cláusula 7ª).</li></ul>'+
+  '<p><b>1.4.</b> Os serviços podem ser prestados pela AGÊNCIA ou por terceiros por ela contratados, permanecendo a AGÊNCIA responsável perante a MODELO.</p>'+
+
+  '<h2>Cláusula 2ª — Definições</h2>'+
+  '<ul><li><b>Plataformas:</b> Instagram, OnlyFans, Privacy, Vezclub e quaisquer sites, apps ou redes indicados pela AGÊNCIA e geridos sob este contrato.</li>'+
+  '<li><b>Conteúdo:</b> todas as fotos, vídeos, áudios, textos, lives e materiais produzidos pela MODELO ou pela AGÊNCIA a partir da imagem, voz e nome da MODELO, inclusive o material explícito e de nudez.</li>'+
+  '<li><b>Receita Bruta:</b> o valor total gerado pela exploração do Conteúdo e das Plataformas antes das taxas das plataformas e gateways.</li>'+
+  '<li><b>Receita Líquida (base do rateio):</b> o valor efetivamente recebido e confirmado nos gateways e plataformas, descontadas apenas as taxas das próprias plataformas/gateways e os estornos/chargebacks. Custos de equipe, produção e tráfego pago são da AGÊNCIA e saem da parte dela; a parte da MODELO é limpa. Cada Parte responde pelos tributos sobre a sua parcela.</li>'+
+  '<li><b>Vigência:</b> o período definido na Cláusula 5ª.</li></ul>'+
+
+  '<h2>Cláusula 3ª — Declarações e Garantias da Modelo</h2>'+
+  '<p>A MODELO declara e garante, sob as penas da lei, que:</p>'+
+  '<p><b>3.1.</b> é maior de 18 anos e plenamente capaz, e fornecerá à AGÊNCIA cópia de documento oficial de identidade com foto para comprovação de idade e identidade, mantida em arquivo;</p>'+
+  '<p><b>3.2.</b> é a única titular dos direitos sobre a própria imagem, voz e nome, podendo cedê-los e autorizá-los nos termos deste contrato;</p>'+
+  '<p><b>3.3.</b> todo o Conteúdo que fornecer é de sua autoria ou devidamente autorizado, não viola direitos de terceiros e não contém imagem de menores de 18 anos nem material ilícito;</p>'+
+  '<p><b>3.4.</b> não possui contrato de exclusividade, agenciamento ou cessão vigente que conflite com este; e</p>'+
+  '<p><b>3.5.</b> os dados cadastrais e bancários que fornecer são verdadeiros.</p>'+
+  '<p><b>3.6. Livre e espontânea vontade.</b> A MODELO declara que celebra este contrato por livre e espontânea vontade, que leu, compreendeu e concordou com todas as regras e obrigações aqui previstas, e que nada foi obtido mediante pressão, intimidação, ameaça, coação, fraude ou abuso de qualquer espécie. Participa de forma consciente e voluntária e teve a oportunidade de esclarecer dúvidas e de buscar orientação jurídica própria antes de assinar.</p>'+
+  '<p><b>3.7. Natureza lícita do objeto.</b> O objeto deste contrato é a criação, divulgação e venda de conteúdo e de imagem adultos, de pessoa maior de 18 anos, produzidos de forma consensual. Este contrato não constitui, não autoriza e não envolve exploração sexual, aliciância ou induzimento à prostituição, tráfico de pessoas, trabalho forçado, nem qualquer ato de prostituição ou serviço sexual presencial. A relação se limita à gestão e comercialização de conteúdo digital que a MODELO concorda livremente em produzir, preservadas a sua dignidade e a sua autonomia.</p>'+
+  '<p><b>3.8. Assunção de risco quanto a terceiros e exposição.</b> A MODELO reconhece que o conteúdo adulto é publicado e comercializado e que pode tornar-se conhecido de ou impactar terceiros — pais, familiares, filhos, amigos, parceiros — bem como gerar exposição social, repercussão pública, perda de emprego ou de oportunidades. Declara estar ciente desses riscos e que os assume de forma livre, consciente, voluntária e exclusiva, por sua própria escolha, e que não responsabilizará a AGÊNCIA por tais consequências. A decisão sobre o que produzir e divulgar é exclusivamente da MODELO, resguardados os seus limites (Anexo II).</p>'+
+
+  '<h2>Cláusula 4ª — Uso de Imagem, Voz e Nome; Propriedade do Conteúdo</h2>'+
+  '<p><b>4.1. Autorização.</b> A MODELO autoriza a AGÊNCIA, durante a Vigência, a captar, produzir, editar, reproduzir, publicar, distribuir e comercializar sua imagem, voz, nome artístico e semelhança, no Brasil e no exterior, nas Plataformas, em peças publicitárias e em campanhas de tráfego pago (inclusive Meta Ads), exclusivamente para divulgar e vender o Conteúdo objeto deste contrato.</p>'+
+  '<p><b>4.2. Edição.</b> Inclui recortes, montagens, legendas, marca d’água e ajustes, sem desvirtuar a imagem da MODELO nem associá-la a contexto ofensivo, político ou que ela recuse por escrito.</p>'+
+  '<p><b>4.3. Limites.</b> Não abrange a criação de conteúdo íntimo novo sem a participação/consentimento da MODELO, nem uso para finalidade estranha a este contrato.</p>'+
+  '<p><b>4.4. Propriedade.</b> O Conteúdo poderá ser explorado pela AGÊNCIA durante a Vigência. Encerrado o contrato, a titularidade do Conteúdo permanece/retorna à MODELO, ressalvado o item 4.5.</p>'+
+  '<p><b>4.5. Uso após o término.</b> Encerrado o contrato por qualquer motivo, a AGÊNCIA poderá continuar usando a imagem da MODELO em peças e campanhas por até 90 (noventa) dias após o término, para encerramento das ações em andamento.</p>'+
+  '<p><b>4.6. Revogação.</b> A MODELO pode revogar, para o futuro, a autorização de uso da sua imagem em novas peças mediante rescisão (Cláusula 9ª), ressalvado o material já entregue e consentido para venda (Cláusula 4.7), e observado o prazo de 90 dias do item 4.5.</p>'+
+  '<p><b>4.7. Conteúdo explícito e de nudez.</b> A MODELO autoriza expressamente a AGÊNCIA a comercializar todas as imagens explícitas e vídeos de nudez que ela produzir e consentir em disponibilizar, para venda nas Plataformas (OnlyFans, packs, PPV, conteúdos personalizados e similares), cabendo à MODELO a comissão da Cláusula 7ª (50% da Receita Líquida). O consentimento é dado a cada conjunto de material entregue para venda, presumindo-se a autorização pela própria entrega. Uma vez disponibilizado, o direito da AGÊNCIA de comercializar aquele material é irrevogável e por prazo indeterminado, inclusive após o término. Todo o material é de pessoa maior de 18 anos e produzido de forma consensual.</p>'+
+  '<p><b>4.8. Atendimento em nome da MODELO.</b> A MODELO autoriza a AGÊNCIA e sua equipe a conversar, responder e vender aos assinantes e clientes em nome dela (chat, mensagens e interações), mantendo a persona e os limites da MODELO, reconhecendo que nem toda interação será feita pessoalmente por ela.</p>'+
+  '<p><b>4.9. Abrangência mundial e idiomas.</b> A imagem, a voz, o nome e o Conteúdo poderão ser trabalhados, editados, adaptados, legendados, traduzidos para qualquer idioma, divulgados e comercializados no Brasil e em qualquer país, sem limitação geográfica, cabendo à MODELO a comissão da Cláusula 7ª em qualquer caso.</p>'+
+
+  '<h2>Cláusula 5ª — Prazo e Obrigações da Agência</h2>'+
+  '<p><b>5.1. Prazo.</b> Este contrato vigora pelo prazo inicial de 6 (seis) meses, contados da assinatura, renovável por igual período mediante acordo escrito. Não havendo manifestação, extingue-se ao fim do prazo.</p>'+
+  '<p><b>5.2.</b> A AGÊNCIA obriga-se a: gerir as contas e publicar o Conteúdo com diligência; planejar e executar o tráfego pago; realizar o atendimento e as vendas; prestar contas e repassar os valores devidos; manter sigilo; não expor a MODELO a risco indevido; e devolver acessos e materiais ao término.</p>'+
+  '<p><b>5.3. Estrutura à disposição da MODELO.</b> Em contrapartida à remuneração da Cláusula 7ª, a AGÊNCIA coloca à disposição, sem custo adicional (ressalvado o tráfego pago da Cláusula 8ª), toda a estrutura de gestão: marca no Instagram e demais redes, divulgação paga, copywriter, editor de vídeo e de foto, gestor de tráfego, equipe de atendimento e vendas, estratégia de monetização e relatórios. As Partes reconhecem que essa estrutura é a contrapartida que justifica a divisão de 50% da Cláusula 7ª.</p>'+
+
+  '<h2>Cláusula 6ª — Obrigações da Modelo, Exclusividade e Não-Circunvenção</h2>'+
+  '<p><b>6.1.</b> A MODELO obriga-se a: fornecer com regularidade o Conteúdo no padrão combinado; seguir as orientações da AGÊNCIA quanto aos posts; manter conduta compatível com a imagem profissional; não divulgar senhas; não repassar seu contato pessoal (telefone, redes privadas, Pix) a clientes ou assinantes; e comunicar qualquer contato comercial recebido.</p>'+
+  '<p><b>6.2. Exclusividade e gestão integral.</b> Durante a Vigência, a exclusividade é total nas plataformas indicadas pela AGÊNCIA. A MODELO não poderá, direta ou indiretamente: (i) produzir, publicar ou vender Conteúdo por fora deste contrato; (ii) atender clientes por conta própria; (iii) manter contas paralelas não informadas; (iv) repassar seu contato pessoal; ou (v) contratar outra agência para os mesmos fins.</p>'+
+  '<p><b>6.3. Não-circunvenção (anti-bypass).</b> A MODELO compromete-se a não comercializar, receber pagamentos ou desviar assinantes por fora do sistema da AGÊNCIA com o fim de burlar a divisão de receitas. A infração sujeita a MODELO a pagar o valor desviado acrescido de multa de 50%, sem prejuízo da rescisão por justa causa.</p>'+
+  '<p><b>6.4. Não-aliciância.</b> Durante a Vigência e por 12 meses após o término, a MODELO não aliciará equipe, fornecedores ou assinantes captados pela AGÊNCIA.</p>'+
+  '<p><b>6.5. Direção criativa.</b> A MODELO seguirá o planejamento da AGÊNCIA para posts, campanhas e produção, de caráter vinculante, salvo quando contrariarem a lei, a dignidade da MODELO ou limites fixados por escrito.</p>'+
+
+  '<h2>Cláusula 7ª — Contas, Remuneração (50/50) e Prestação de Contas</h2>'+
+  '<p><b>7.1. Titularidade das contas.</b> As contas serão mantidas em nome da MODELO, com acesso operacional concedido à AGÊNCIA. Senhas e 2FA compartilhados de forma segura e revogados ao término.</p>'+
+  '<p><b>7.2. Fluxo.</b> Os valores podem ser recebidos pela AGÊNCIA ou diretamente pela MODELO, aplicando-se a divisão de 50/50 em qualquer caso: (a) recebendo a AGÊNCIA, ela retém 50% e repassa 50% à MODELO; (b) recebendo a MODELO diretamente, ela paga 50% à AGÊNCIA, na mesma periodicidade.</p>'+
+  '<p><b>7.3. Divisão.</b> A Receita Líquida será dividida <b>50% para a AGÊNCIA e 50% para a MODELO</b>.</p>'+
+  '<p><b>7.4. Repasse.</b> Quinzenal, até o 5º dia útil após o fechamento de cada quinzena, via Pix ou transferência na conta indicada pela MODELO.</p>'+
+  '<p><b>7.5. Prestação de contas.</b> A AGÊNCIA enviará, a cada período, extrato com Receita Bruta, deduções, Receita Líquida e o valor repassado, com comprovantes quando solicitados.</p>'+
+
+  '<h2>Cláusula 8ª — Tráfego Pago, Despesas, Confidencialidade e Dados</h2>'+
+  '<p><b>8.1.</b> O investimento em anúncios é integralmente custeado pela AGÊNCIA e não é deduzido da base de rateio — sai da parte da AGÊNCIA. A MODELO recebe 50% sem desconto de tráfego, equipe ou produção.</p>'+
+  '<p><b>8.2.</b> Despesas extraordinárias dependem de aprovação prévia por escrito da parte que as suportará.</p>'+
+  '<p><b>8.3. Confidencialidade.</b> As Partes manterão sigilo sobre dados pessoais, financeiros, senhas, estratégias e a intimidade uma da outra, durante e após o contrato, salvo exigência legal.</p>'+
+  '<p><b>8.4. Proteção de dados (LGPD).</b> A AGÊNCIA tratará os dados conforme a Lei nº 13.709/2018 (LGPD), apenas para as finalidades deste contrato, com medidas de segurança, comunicando incidentes em até 72 horas e eliminando os dados quando não mais necessários ou ao término.</p>'+
+
+  '<h2>Cláusula 9ª — Conduta, Conteúdo Proibido e Rescisão</h2>'+
+  '<p><b>9.1. Conteúdo proibido.</b> É vedado produzir, publicar ou comercializar material que envolva menores de 18 anos, ausência de consentimento, violência ilícita ou conteúdo proibido por lei ou pelas Plataformas. A violação enseja rescisão imediata por justa causa e responsabilização exclusiva de quem lhe der causa.</p>'+
+  '<p><b>9.2. Rescisão sem justa causa.</b> Qualquer Parte pode rescindir mediante aviso prévio de 30 dias por escrito. A rescisão antecipada imotivada pela MODELO antes dos 6 meses, ou a quebra da exclusividade/anti-bypass (6.2 e 6.3), sujeita-a à multa de R$ 100.000,00, sem prejuízo dos valores devidos e de perdas e danos.</p>'+
+  '<p><b>9.3. Rescisão por justa causa.</b> O descumprimento de obrigação relevante, não sanado em 5 dias de notificação, permite a rescisão imediata pela Parte inocente, sem prejuízo de perdas e danos.</p>'+
+  '<p><b>9.4. Efeitos do término.</b> Cessam as autorizações de uso de imagem (ressalvado o material já vendido/consentido e o prazo de 90 dias); a MODELO altera senhas e 2FA em até 48h; a AGÊNCIA coopera na transição por até 7 dias; valores pendentes acertados em até 10 dias. Sobrevivem ao término as cláusulas de confidencialidade, proteção de dados, uso irrevogável do material vendido (4.7), anti-bypass, responsabilidade e foro.</p>'+
+
+  '<h2>Cláusula 10ª — Responsabilidade, Independência e Disposições Gerais</h2>'+
+  '<p><b>10.1. Independência.</b> A MODELO não é empregada, sócia nem subordinada da AGÊNCIA: atua como contratante dos serviços e profissional independente, sem vínculo empregatício, societário ou de subordinação. Cada Parte responde pelas suas obrigações fiscais e trabalhistas.</p>'+
+  '<p><b>10.2. Indenização.</b> Cada Parte responde pelos atos a que der causa. A MODELO indeniza a AGÊNCIA por reclamações decorrentes da inveracidade de suas declarações; a AGÊNCIA indeniza a MODELO pelo uso de imagem fora do autorizado.</p>'+
+  '<p><b>10.3. Limitação.</b> Nenhuma Parte responde por lucros cessantes ou danos indiretos, salvo dolo ou culpa grave.</p>'+
+  '<p><b>10.4. Gerais.</b> (a) alterações só por aditivo escrito; (b) a tolerância não implica novação; (c) a nulidade de uma cláusula não contamina as demais; (d) este é o acordo integral; (e) é vedada a cessão sem anuência da outra Parte.</p>'+
+  '<p><b>10.5. Lei e foro.</b> Aplica-se a lei brasileira. Fica eleito o foro da comarca da Capital de São Paulo/SP, com renúncia a qualquer outro.</p>'+
+
+  '<h2>Cláusula 11ª — Risco de Plataforma e Força Maior</h2>'+
+  '<p><b>11.1.</b> As Plataformas são terceiros, cujas regras, taxas e decisões de moderação estão fora do controle da AGÊNCIA e podem mudar sem aviso.</p>'+
+  '<p><b>11.2.</b> Se uma Plataforma suspender ou encerrar uma conta, a AGÊNCIA ajudará no recurso, mas não responde pela suspensão nem por suas consequências, salvo culpa própria.</p>'+
+  '<p><b>11.3. Força maior.</b> Nenhuma Parte responde por atraso ou falha causada por eventos fora de seu controle razoável, desde que comunique a outra prontamente e retome assim que possível.</p>'+
+
+  '<h2>Cláusula 12ª — Sem Garantia de Resultado</h2>'+
+  '<p><b>12.1.</b> A AGÊNCIA não garante faturamento, número de assinantes, crescimento ou qualquer outro resultado. Quaisquer números discutidos antes da assinatura são meras estimativas, sem valor de promessa.</p>'+
+
+  '<h2>Cláusula 13ª — Registros, Auditoria e Conferência</h2>'+
+  '<p><b>13.1.</b> A AGÊNCIA manterá registros corretos da receita, deduções e repasses por, no mínimo, 5 anos após o término.</p>'+
+  '<p><b>13.2.</b> Uma vez por ano e no término, a MODELO pode solicitar conferência da Receita Líquida e dos repasses dos últimos 12 meses, fornecida em até 30 dias; diferença superior a 5% é corrigida em até 14 dias.</p>'+
+
+  '<h2>Cláusula 14ª — Assinatura Eletrônica, Notificações e Idioma</h2>'+
+  '<p><b>14.1.</b> Este contrato pode ser assinado eletronicamente; a assinatura eletrônica ou o nome digitado tem o mesmo efeito de assinatura de próprio punho.</p>'+
+  '<p><b>14.2.</b> Avisos formais serão enviados por e-mail aos endereços indicados, considerando-se recebidos no dia útil seguinte ao envio.</p>'+
+  '<p><b>14.3.</b> Este contrato é celebrado em português, que prevalece sobre qualquer tradução.</p>'+
+
+  '<h2>Anexo I — Autorização de Uso de Imagem</h2>'+
+  '<p>A MODELO, maior de 18 anos, autoriza a IT’S BRAZILIAN LLC (AGÊNCIA) a usar sua imagem, voz e nome na forma da Cláusula 4ª, para divulgação e comercialização do Conteúdo e em campanhas de tráfego pago, no Brasil e no exterior, durante a vigência e pelo prazo residual previsto. Declara ter lido e concordado.</p>'+
+
+  '<h2>Anexo II — Entregas e Limites de Conteúdo</h2>'+
+  '<p>Entregas mínimas (piso): 1 dia de produção/semana; 20 fotos/semana; 2 vídeos curtos (1–3 min)/semana; 3 vídeos longos (5–15 min)/mês; 10 clipes/teasers/semana; até 5 personalizados/semana (48–72h); resposta à AGÊNCIA em até 24h úteis; entrega por pasta no Google Drive/Dropbox. Os limites da MODELO são os marcados por ela no formulário abaixo e serão respeitados em todo atendimento e divulgação. Encontros presenciais nunca serão ofertados pela AGÊNCIA.</p>'+
+  '</div>';
+}
+
+// ---------- RENDER ----------
+function boot(){
+  if(!TOKEN){ return showState("🔗","Link inválido","Este link de contrato não é válido. Peça um novo para a Vezclub."); }
+  root.innerHTML='<div class="spin"></div>';
+  api("get",{}).then(function(d){
+    if(!d||d.error==="not_found"){ return showState("🔎","Contrato não encontrado","Peça um novo link para a Vezclub."); }
+    if(d.error){ return showState("⚠️","Erro","Não consegui carregar. Recarregue a página."); }
+    if(d.status==="signed"){ return showState("✅","Contrato já assinado","Este contrato já foi assinado"+(d.signed_at?" em "+fmt(d.signed_at):"")+". Obrigado 💜"); }
+    if(d.status==="void"){ return showState("🚫","Contrato cancelado","Este contrato foi cancelado. Peça um novo para a Vezclub."); }
+    renderForm(d);
+  });
+}
+function showState(ic,t,p){
+  root.innerHTML='<div class="wrap"><div class="paper center"><div class="ic">'+ic+'</div><h1>'+esc(t)+'</h1><p class="sub" style="margin-top:6px">'+esc(p)+'</p></div></div>';
+}
+function fmt(ts){try{return new Date(ts).toLocaleString("pt-BR");}catch(e){return "";}}
+
+function renderForm(d){
+  var w=document.createElement("div");w.className="wrap";
+  w.innerHTML=
+    '<div class="paper"><span class="tag">Para assinar</span>'+contractHtml()+
+      '<div class="scrollnote">Role até aqui? Então é só preencher seus dados, marcar as confirmações e assinar abaixo. 👇</div>'+
+    '</div>'+
+    '<div class="paper">'+
+      '<h2 style="margin-top:0">Preencha seus dados</h2>'+
+      '<div class="field"><label>Nome completo (legal)</label><input id="f-nome" placeholder="Seu nome completo"></div>'+
+      '<div class="field"><label>Nome artístico</label><input id="f-art" placeholder="Como você é conhecida"></div>'+
+      '<div class="grid2">'+
+        '<div class="field"><label>Data de nascimento</label><input id="f-nasc" placeholder="DD/MM/AAAA" inputmode="numeric"></div>'+
+        '<div class="field"><label>Nacionalidade</label><input id="f-nac" placeholder="Ex.: Brasileira"></div>'+
+      '</div>'+
+      '<div class="grid2">'+
+        '<div class="field"><label>Estado civil</label><input id="f-ec" placeholder="Ex.: Solteira"></div>'+
+        '<div class="field"><label>RG / Documento</label><input id="f-rg" placeholder="Nº do documento"></div>'+
+      '</div>'+
+      '<div class="field"><label>CPF</label><input id="f-cpf" placeholder="000.000.000-00" inputmode="numeric"></div>'+
+      '<div class="field"><label>Endereço completo</label><input id="f-end" placeholder="Rua, número, bairro"></div>'+
+      '<div class="field"><label>Cidade / Estado / CEP</label><input id="f-cid" placeholder="Cidade, UF, CEP"></div>'+
+      '<div class="grid2">'+
+        '<div class="field"><label>E-mail</label><input id="f-email" type="email" placeholder="voce@email.com"></div>'+
+        '<div class="field"><label>Telefone / WhatsApp</label><input id="f-tel" placeholder="+55 ..." inputmode="tel"></div>'+
+      '</div>'+
+      '<div class="grid2">'+
+        '<div class="field"><label>Chave Pix (p/ receber)</label><input id="f-pix" placeholder="sua chave Pix"></div>'+
+        '<div class="field"><label>Tipo de chave</label><select id="f-pixt"><option value="cpf">CPF</option><option value="email">E-mail</option><option value="phone">Telefone</option><option value="random">Aleatória</option></select></div>'+
+      '</div>'+
+      '<div class="field"><label>Canal oficial de comunicação</label><select id="f-canal"><option value="WhatsApp">WhatsApp</option><option value="Telegram">Telegram</option><option value="E-mail">E-mail</option></select></div>'+
+      '<h3>Seus limites (marque o que você NÃO faz)</h3>'+
+      '<div class="limits">'+
+        lim("l-rosto","Mostrar o rosto")+
+        lim("l-local","Revelar localização ou cidade")+
+        lim("l-outros","Conteúdo com outras pessoas (colaborações, b/g)")+
+        lim("l-video","Chamadas de vídeo ao vivo")+
+        '<div class="field"><label>Outros limites (opcional)</label><input id="l-txt" placeholder="descreva, se houver"></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="paper">'+
+      '<h2 style="margin-top:0">Confirmações</h2>'+
+      '<label class="chk"><input type="checkbox" id="c-read"> Li e compreendi todo o contrato acima.</label>'+
+      '<label class="chk"><input type="checkbox" id="c-agree"> Concordo com todas as cláusulas e assino de livre e espontânea vontade.</label>'+
+      '<label class="chk"><input type="checkbox" id="c-adult"> Declaro ser <b>maior de 18 anos</b> e que os dados informados são verdadeiros.</label>'+
+      '<h2>Assinatura</h2>'+
+      '<p class="sub" style="margin-bottom:4px">Assine no quadro abaixo (com o dedo no celular ou o mouse):</p>'+
+      '<div class="sigbox" id="sigbox"><canvas id="sig"></canvas><div class="sigph" id="sigph">assine aqui</div><button type="button" class="sigclear" id="sigclr">limpar</button></div>'+
+      '<div class="field"><label>Confirme seu nome completo (assinatura digitada)</label><input id="f-signname" placeholder="Digite seu nome completo"></div>'+
+      '<button class="btn" id="submit">Assinar e enviar</button>'+
+      '<div id="msg"></div>'+
+      '<div class="foot">Ao enviar, registramos data, hora e seu IP como prova da assinatura eletrônica (Cláusula 14.1). IT’S BRAZILIAN LLC · Vezclub.</div>'+
+    '</div>';
+  root.innerHTML="";root.appendChild(w);
+  setupSignature();
+  document.getElementById("submit").onclick=submit;
+}
+function lim(id,txt){return '<label class="chk"><input type="checkbox" id="'+id+'"> '+esc(txt)+'</label>';}
+
+// signature pad
+var sigCtx,sigHas=false,sigCanvas;
+function setupSignature(){
+  sigCanvas=document.getElementById("sig");
+  var box=document.getElementById("sigbox");
+  var ratio=window.devicePixelRatio||1;
+  var w=box.clientWidth, h=180;
+  sigCanvas.width=w*ratio; sigCanvas.height=h*ratio;
+  sigCtx=sigCanvas.getContext("2d"); sigCtx.scale(ratio,ratio);
+  sigCtx.lineWidth=2.2; sigCtx.lineCap="round"; sigCtx.lineJoin="round"; sigCtx.strokeStyle="#1a1726";
+  var drawing=false,last=null;
+  function pos(e){var r=sigCanvas.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return {x:t.clientX-r.left,y:t.clientY-r.top};}
+  function start(e){e.preventDefault();drawing=true;last=pos(e);document.getElementById("sigph").style.display="none";}
+  function move(e){if(!drawing)return;e.preventDefault();var p=pos(e);sigCtx.beginPath();sigCtx.moveTo(last.x,last.y);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();last=p;sigHas=true;}
+  function end(e){drawing=false;}
+  sigCanvas.addEventListener("mousedown",start);sigCanvas.addEventListener("mousemove",move);window.addEventListener("mouseup",end);
+  sigCanvas.addEventListener("touchstart",start,{passive:false});sigCanvas.addEventListener("touchmove",move,{passive:false});sigCanvas.addEventListener("touchend",end);
+  document.getElementById("sigclr").onclick=function(){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);sigHas=false;document.getElementById("sigph").style.display="grid";};
+}
+
+function val(id){var e=document.getElementById(id);return e?(e.value||"").trim():"";}
+function chk(id){var e=document.getElementById(id);return !!(e&&e.checked);}
+
+function submit(){
+  var msg=document.getElementById("msg");
+  function err(t){msg.innerHTML='<div class="msg err">'+esc(t)+'</div>';}
+  if(val("f-nome").length<3) return err("Preencha seu nome completo.");
+  if(!val("f-cpf")) return err("Preencha seu CPF.");
+  if(!val("f-pix")) return err("Preencha sua chave Pix.");
+  if(!chk("c-read")||!chk("c-agree")||!chk("c-adult")) return err("Marque as três confirmações para assinar.");
+  if(!sigHas) return err("Faça sua assinatura no quadro.");
+  if(val("f-signname").length<3) return err("Digite seu nome completo na assinatura.");
+  var fields={
+    nome_completo:val("f-nome"),nome_artistico:val("f-art"),nascimento:val("f-nasc"),
+    nacionalidade:val("f-nac"),estado_civil:val("f-ec"),rg:val("f-rg"),cpf:val("f-cpf"),
+    endereco:val("f-end"),cidade:val("f-cid"),email:val("f-email"),telefone:val("f-tel"),
+    pix_key:val("f-pix"),pix_type:val("f-pixt"),canal:val("f-canal"),
+    limites:{rosto:chk("l-rosto"),localizacao:chk("l-local"),outras_pessoas:chk("l-outros"),chamadas_video:chk("l-video"),outros:val("l-txt")}
+  };
+  var png="";try{png=sigCanvas.toDataURL("image/png");}catch(e){}
+  var consent={read:chk("c-read"),agree:chk("c-agree"),adult:chk("c-adult")};
+  var btn=document.getElementById("submit");btn.disabled=true;btn.textContent="Enviando…";msg.innerHTML="";
+  api("sign",{fields:fields,consent:consent,signed_name:val("f-signname"),signature_png:png}).then(function(r){
+    if(r&&r.ok){ showState("✅","Contrato assinado!","Pronto 💜 seu contrato foi enviado assinado para a Vezclub. Você pode fechar esta página."); return; }
+    btn.disabled=false;btn.textContent="Assinar e enviar";
+    if(r&&r.error==="already_signed") return err("Este contrato já foi assinado.");
+    if(r&&r.error==="missing_consent") return err("Marque as três confirmações.");
+    if(r&&r.error==="missing_signature") return err("Faça sua assinatura no quadro.");
+    err("Não consegui enviar. Tente de novo.");
+  });
+}
+
+boot();
+})();
+</script>
+</body>
+</html>
