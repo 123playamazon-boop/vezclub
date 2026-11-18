@@ -1034,7 +1034,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b157"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b158"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6082,9 +6082,30 @@ fbq('track', 'PageView');
     buildChatPackBar();
     fbt("ViewContent", { content_name: cid, content_category: "chat" }); // abriu uma conversa
     clar("event", "chat_open"); clar("set", "funnel_stage", "chat_open"); clar("set", "modelo", cid);
-    function setBal(n) { bal = Math.max(0, n | 0); timeEl.textContent = "🪙 " + bal; } // agora mostra COINS, não tempo
-    function flush() {} // chat cobra por mensagem (coins) — sem relógio de segundos
-    function startClock() {} // no-op no modelo de coins (sem contagem regressiva)
+    // ===== PASSE DE TEMPO: saldo em segundos + cronômetro regressivo =====
+    var subscribed = false, timedOut = false, _tsync = 0;
+    function fmtClock(s) { s = Math.max(0, s | 0); var m = Math.floor(s / 60), x = s % 60; return (m < 10 ? "0" : "") + m + ":" + (x < 10 ? "0" : "") + x; }
+    function setBal(n) {
+      bal = Math.max(0, n | 0);
+      if (subscribed) { timeEl.textContent = "∞"; return; }
+      timeEl.textContent = "⏳ " + fmtClock(bal);
+      if (bal > 0) { timedOut = false; var i2 = document.getElementById("chat-text"); if (i2) i2.disabled = false; var s2 = document.getElementById("chat-send"); if (s2) s2.disabled = false; }
+    }
+    function stopClock() { if (tick) { clearInterval(tick); tick = null; } }
+    function onTimeOut() { if (timedOut) return; timedOut = true; var i2 = document.getElementById("chat-text"); if (i2) i2.disabled = true; var s2 = document.getElementById("chat-send"); if (s2) s2.disabled = true; showTimeWall(); }
+    function startClock() {
+      if (subscribed) return;
+      stopClock();
+      if (bal <= 0) { onTimeOut(); return; }
+      tick = setInterval(function () {
+        if (!document.body.contains(body)) { stopClock(); return; }
+        bal = Math.max(0, bal - 1); if (!subscribed) timeEl.textContent = "⏳ " + fmtClock(bal);
+        _tsync++;
+        if (_tsync % 15 === 0) { try { sb.rpc("time_tick").then(function (r) { if (r && typeof r.data === "number") { bal = Math.max(0, r.data | 0); if (!subscribed) timeEl.textContent = "⏳ " + fmtClock(bal); if (bal <= 0) { stopClock(); onTimeOut(); } } }, function () {}); } catch (e) {} }
+        if (bal <= 0) { stopClock(); onTimeOut(); }
+      }, 1000);
+    }
+    function flush() { stopClock(); }
     function her(t) { body.insertAdjacentHTML("beforeend", '<div class="bub her">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function me(t) { body.insertAdjacentHTML("beforeend", '<div class="bub me">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
     function note(t) { body.insertAdjacentHTML("beforeend", '<div class="chat-empty" style="margin:.5rem auto;color:var(--faint);font-size:.78rem;text-align:center">' + escHtml(t) + '</div>'); body.scrollTop = body.scrollHeight; }
@@ -6247,6 +6268,103 @@ fbq('track', 'PageView');
       body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
       wirePkgs(body);
     }
+    // ===== PAYWALL DO PASSE DE TEMPO (escadinha 10/30/60 via Pix) =====
+    var TIME_PACKS = [
+      { code: "t10", min: 10, cents: 599 },
+      { code: "t30", min: 30, cents: 1490 },
+      { code: "t60", min: 60, cents: 2490 }
+    ];
+    function brlc2(c) { return "R$ " + ((c || 0) / 100).toFixed(2).replace(".", ","); }
+    function showTimeWall() {
+      logPaywall();
+      if (document.getElementById("time-wall")) { body.scrollTop = body.scrollHeight; return; }
+      var packs = TIME_PACKS.map(function (p) {
+        var best = (p.min === 60) ? ' · ' + L("melhor preço", "best value", "mejor precio") : '';
+        var nm = (p.min === 10) ? L("Esquenta", "Warm-up", "Calentamiento") : (p.min === 30 ? L("Sem pressa", "Take your time", "Sin prisa") : L("A noite toda", "All night", "Toda la noche"));
+        return '<button class="btn btn-primary btn-block" data-tpack="' + p.code + '" data-min="' + p.min + '" data-cents="' + p.cents + '" style="margin-bottom:.5rem">' + nm + ' · ' + p.min + ' min — ' + brlc2(p.cents) + best + '</button>';
+      }).join("");
+      var h = '<div id="time-wall" style="margin:.7rem 0 .2rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-2,rgba(127,127,127,.06));text-align:center">' +
+        '<div style="font-weight:800;font-size:1.05rem;margin-bottom:.25rem">' + L("Pra falar comigo, pega um tempinho 😏", "To talk to me, grab some time 😏", "Para hablar conmigo, toma un tiempito 😏") + '</div>' +
+        '<div class="muted-note" style="margin-bottom:.8rem">' + L("É só você e eu, no particular. Quanto mais tempo, mais barato o minuto 💜", "Just you and me, private. The more time, the cheaper the minute 💜", "Solo tú y yo, en privado. Cuanto más tiempo, más barato el minuto 💜") + '</div>' +
+        packs +
+        '<div style="font-size:.78rem;opacity:.6;margin:.6rem 0 .5rem">' + L("ou assina e fala sem limite", "or subscribe and talk unlimited", "o suscríbete y habla sin límite") + '</div>' +
+        '<div id="tw-sub"></div>' +
+        '</div>';
+      body.insertAdjacentHTML("beforeend", h); body.scrollTop = body.scrollHeight;
+      body.querySelectorAll("[data-tpack]").forEach(function (b) {
+        b.addEventListener("mousedown", function (e) { e.preventDefault(); });
+        b.onclick = function () {
+          var code = b.getAttribute("data-tpack"), min = +b.getAttribute("data-min"), cents = +b.getAttribute("data-cents");
+          try { if (sb) sb.rpc("track_ux", { p_event: "time_buy_click", p_creator_key: cid, p_meta: { min: min, cents: cents, market: vezMarket() } }).then(function () {}, function () {}); } catch (e) {}
+          logIntent("buy_click", { creator_key: cid, pack: min + "min", price_cents: cents, currency: "BRL", variant: FD_VAR });
+          fbt("InitiateCheckout", { content_name: cid, value: cents / 100, currency: "BRL", contents: [{ id: min + "min", quantity: 1 }] });
+          clar("event", "buy_click"); clar("set", "funnel_stage", "buy_intent");
+          ensureSessionThen(function () { if (!sb || !account) { toast(L("Entra rapidinho pra pagar 🙏", "Quick sign-in to pay 🙏", "Entra rápido para pagar 🙏")); return; } buyTime(code, min, cents, b); });
+        };
+      });
+      var subHost = document.getElementById("tw-sub");
+      if (subHost) {
+        subHost.innerHTML = subCardHtml(cid, false);
+        var _done = function () {
+          var w = document.getElementById("time-wall"); if (w) w.remove();
+          subscribed = true; timeEl.textContent = "∞"; timedOut = false;
+          var i2 = document.getElementById("chat-text"); if (i2) i2.disabled = false;
+          var s2 = document.getElementById("chat-send"); if (s2) s2.disabled = false;
+          note(L("Linha Privada ativa 💜 agora é sem limite — fala comigo 😏", "Private Line active 💜 no limits now — talk to me 😏", "Línea Privada activa 💜 sin límites ahora — háblame 😏"));
+          try { document.getElementById("chat-text").focus(); } catch (_) {}
+        };
+        try { wireSubBuy(subHost, _done); wireSubPay(subHost, _done); } catch (e) {}
+      }
+    }
+    function buyTime(code, min, cents, btn) {
+      try { btn.disabled = true; } catch (e) {}
+      var pid = "tpix-" + Date.now();
+      body.insertAdjacentHTML("beforeend", '<div id="' + pid + '" style="margin:.7rem 0 .2rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:var(--surface-2,rgba(127,127,127,.06));text-align:center"><div style="font-weight:800;margin-bottom:.4rem">Pix · ' + min + ' min — ' + brlc2(cents) + '</div><div class="muted-note">' + L("Gerando seu Pix…", "Generating your Pix…", "Generando tu Pix…") + '</div></div>');
+      body.scrollTop = body.scrollHeight;
+      var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+      sb.functions.invoke("time_pix", { body: { pack_code: code, ref: _ref } }).then(function (res) {
+        var d = res && res.data;
+        if ((res && res.error) || !d || !d.pix_code) { var el = document.getElementById(pid); if (el) el.innerHTML = '<div class="muted-note">' + L("Não consegui gerar o Pix agora. Tenta de novo 🙏", "Couldn't generate Pix now. Try again 🙏", "No pude generar el Pix. Inténtalo de nuevo 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} return; }
+        renderTimePix(pid, d.pix_code, d.identifier, min, cents);
+      }).catch(function () { var el = document.getElementById(pid); if (el) el.innerHTML = '<div class="muted-note">' + L("Falha de conexão. Tenta de novo 🙏", "Connection failed. Try again 🙏", "Fallo de conexión. Inténtalo 🙏") + '</div>'; try { btn.disabled = false; } catch (e) {} });
+    }
+    function renderTimePix(pid, code, identifier, min, cents) {
+      var el = document.getElementById(pid); if (!el) return;
+      var qr = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=" + encodeURIComponent(code);
+      el.innerHTML =
+        '<div style="font-weight:800;margin-bottom:.5rem">Pix · ' + min + ' min — ' + brlc2(cents) + '</div>' +
+        '<div style="background:#fff;padding:8px;border-radius:12px;display:inline-block"><img src="' + qr + '" alt="QR Pix" style="width:196px;height:196px;display:block" onerror="this.parentNode.style.display=\'none\'"></div>' +
+        '<div style="font-size:.82rem;margin:.6rem 0 .35rem;opacity:.92">' + L("Abra o app do seu banco → Pix → ", "Open your bank app → Pix → ", "Abre tu banco → Pix → ") + '<b>' + L("Pagar com QR Code", "Pay with QR code", "Pagar con QR") + '</b>' + L(", ou copie o código:", ", or copy the code:", ", o copia el código:") + '</div>' +
+        '<div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.55rem"><input readonly value="' + escHtml(code) + '" id="' + pid + '-code" style="flex:1;min-width:0;font-size:.7rem;padding:.5rem;border:1px solid var(--line);border-radius:8px;background:var(--surface,#fff);color:inherit"><button id="' + pid + '-copy" class="btn btn-primary btn-sm" style="white-space:nowrap">' + L("Copiar", "Copy", "Copiar") + '</button></div>' +
+        '<div id="' + pid + '-status" style="font-size:.84rem;font-weight:700;color:var(--muted)">⏳ ' + L("Aguardando o pagamento… (confirma sozinho)", "Waiting for payment… (auto-confirms)", "Esperando el pago… (confirma solo)") + '</div>';
+      body.scrollTop = body.scrollHeight;
+      var cp = document.getElementById(pid + "-copy");
+      if (cp) cp.onclick = function () { try { var i = document.getElementById(pid + "-code"); i.select(); navigator.clipboard.writeText(code); } catch (e) {} cp.textContent = L("Copiado ✓", "Copied ✓", "Copiado ✓"); setTimeout(function () { cp.textContent = L("Copiar", "Copy", "Copiar"); }, 1500); };
+      var tries = 0, pp = setInterval(function () {
+        tries++;
+        if (!document.body.contains(el) || tries > 150) { clearInterval(pp); return; }
+        // poll direto no time_webhook: re-verifica no SyncPay e credita (idempotente)
+        sb.functions.invoke("time_webhook", { body: { identifier: identifier } }).then(function (r) {
+          var d = r && r.data;
+          if (d && (typeof d.credited_min === "number" || d.already === true)) {
+            clearInterval(pp);
+            var st = document.getElementById(pid + "-status"); if (st) st.innerHTML = '✅ <span style="color:#16a34a">' + L("Pagamento confirmado!", "Payment confirmed!", "¡Pago confirmado!") + '</span>';
+            try { fbt("Purchase", { value: cents / 100, currency: "BRL", content_name: cid }); } catch (e) {}
+            try { clar("event", "purchase"); } catch (e) {}
+            setTimeout(function () {
+              sb.from("wallets").select("time_balance_sec").maybeSingle().then(function (w) {
+                var secs = (w.data && w.data.time_balance_sec) || (min * 60);
+                var tw = document.getElementById("time-wall"); if (tw) tw.remove();
+                var e2 = document.getElementById(pid); if (e2) e2.remove();
+                timedOut = false; setBal(secs); startClock();
+                note(L("Tempo liberado 💜 tô toda sua agora 😏", "Time unlocked 💜 I'm all yours now 😏", "Tiempo liberado 💜 soy toda tuya ahora 😏"));
+                try { document.getElementById("chat-text").focus(); } catch (_) {}
+              });
+            }, 1000);
+          }
+        }, function () {});
+      }, 4000);
+    }
     function showBuy() {
       // acabaram as mensagens grátis / os coins → oferece COINS (não apaga a conversa: o paywall entra ABAIXO dela)
       logPaywall();
@@ -6306,12 +6424,20 @@ fbq('track', 'PageView');
     try { if (sb && account) sb.from("credit_ledger").select("id").eq("creator_key", cid).eq("reason", "email_trial").limit(1).then(function (lr) { if (lr && lr.data && lr.data.length) emailDone = true; }); } catch (e) {}
 
     function startBalance() {
-      // modelo de COINS: as 10 primeiras mensagens são grátis (controlado no servidor); aqui só carrega o saldo e fisga.
-      sb.from("wallets").select("coin_balance").maybeSingle().then(function (r) {
-        setBal((r.data && r.data.coin_balance) || 0);
-        note(L("Tuas primeiras 20 mensagens são por minha conta 💜 é só escrever", "Your first 20 messages are on me 💜 just start typing", "Tus primeros 20 mensajes van por mi cuenta 💜 solo escribe"));
-        maybeAutoSend();
-      }, function () { setBal(0); maybeAutoSend(); });
+      // PASSE DE TEMPO: assinante da modelo fala livre; senão precisa de tempo comprado (sem grátis — trava no 1º contato).
+      function loadTime() {
+        sb.from("wallets").select("time_balance_sec").maybeSingle().then(function (r) {
+          var secs = (r.data && r.data.time_balance_sec) || 0;
+          setBal(secs);
+          if (secs > 0) { startClock(); maybeAutoSend(); }
+          else { showTimeWall(); }
+        }, function () { setBal(0); showTimeWall(); });
+      }
+      sb.rpc("is_subscribed", { p_creator: cid }).then(function (sr) {
+        subscribed = !!(sr && sr.data);
+        if (subscribed) { timeEl.textContent = "∞"; maybeAutoSend(); return; }
+        loadTime();
+      }, function () { loadTime(); });
     }
     function showGreeting() { her(greeting); } // greeting ja vem no idioma do app (banco), sem traducao no cliente
     // carrega o HISTORICO antes do saldo (pra nao perder a conversa quando a pessoa volta do pagamento)
@@ -6393,18 +6519,23 @@ fbq('track', 'PageView');
             }, 700);
             return;
           }
-          if (d && d.error === "no_credit") { if (typeof d.coins === "number") setBal(d.coins); showBuy(); return; }
+          if (d && (d.error === "no_time" || d.error === "no_credit")) { setBal((typeof d.seconds_left === "number") ? d.seconds_left : 0); onTimeOut(); return; }
           if (d && d.error === "model_error") { note("(o provedor filtrou essa resposta — hora de trocar o motor pro adulto)"); return; }
           if (d && d.error === "no_model_key") { note("(motor sem chave configurada)"); return; }
           note("(não consegui responder agora)"); return;
         }
         if (!threadId) sb.from("chat_threads").select("id").eq("creator_key", cid).maybeSingle().then(function (tr) { if (tr.data) { threadId = tr.data.id; captureGeo(); } });
         if (d.human) { // um atendente assumiu — a resposta vem pelo poll, sem quebrar o clima
-          if (typeof d.coins === "number") setBal(d.coins);
+          if (typeof d.seconds_left === "number") setBal(d.seconds_left);
           try { document.getElementById("chat-text").focus(); } catch (_) {}
           return;
         }
         her(d.reply);
+        // PASSE DE TEMPO: assinante = ∞; senão sincroniza o cronômetro com o tempo restante do servidor
+        if (typeof d.seconds_left === "number") {
+          if (d.seconds_left >= 999999) { subscribed = true; timeEl.textContent = "∞"; }
+          else { setBal(d.seconds_left); if (!tick && bal > 0) startClock(); if (bal <= 0) onTimeOut(); }
+        }
         userTurns++;
         if (userTurns === 3 && !pdOffered) setTimeout(productTease, 1100); // oferta suave do pack cedo (3ª msg): a pessoa entende que dá pra comprar, não é só papo
         if (typeof d.free_left === "number" && d.free_left >= 0 && d.free_left <= 3) { note(L("restam " + d.free_left + " mensagens grátis 💜", d.free_left + " free messages left 💜", "quedan " + d.free_left + " mensajes gratis 💜")); }
@@ -6413,7 +6544,7 @@ fbq('track', 'PageView');
           function showGiftImg() { body.insertAdjacentHTML("beforeend", '<div class="bub her" style="padding:3px;max-width:230px;position:relative"><img class="chat-img" src="' + d.gift.url + '" alt="" style="width:100%;border-radius:12px;display:block;cursor:zoom-in" onclick="window.__zoom&&window.__zoom(this.src)"><span style="position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:27px;height:27px;display:flex;align-items:center;justify-content:center;font-size:.92rem;pointer-events:none">🔍</span></div>'); body.scrollTop = body.scrollHeight; }
           if (d.gift.caption) { var tgtLang = gLang(d.reply) || gLang(v) || lang || "pt"; var capL = gLang(d.gift.caption); if (capL && capL !== tgtLang) { translateOne(d.gift.caption, tgtLang, function (t) { her(t || d.gift.caption); showGiftImg(); }); } else { her(d.gift.caption); showGiftImg(); } } else { showGiftImg(); }
         }, 800); }
-        if (typeof d.coins === "number") { setBal(d.coins); if (d.free === false && d.coins > 0 && d.coins <= 9) note(L("teus coins tão acabando 😳", "your coins are running low 😳", "tus coins se están acabando 😳")); }
+        if (typeof d.seconds_left !== "number" && typeof d.coins === "number") { setBal(d.coins); if (d.free === false && d.coins > 0 && d.coins <= 9) note(L("teus coins tão acabando 😳", "your coins are running low 😳", "tus coins se están acabando 😳")); }
         if (d.ppv) { setTimeout(function () { try { herPpv(d.ppv); } catch (e) {} }, d.gift && d.gift.url ? 1700 : 900); } // IA ofereceu conteúdo pago (PPV)
         try { document.getElementById("chat-text").focus(); } catch (_) {}
       }).catch(function () { sending = false; var sb3 = document.getElementById("chat-send"); if (sb3) sb3.disabled = false; note("(falha de conexão)"); });
