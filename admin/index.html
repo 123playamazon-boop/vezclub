@@ -162,6 +162,7 @@ input:focus,select:focus{border-color:var(--ac)}
       <a data-sec="geral" class="on"><span class="ic">📊</span>Visão Geral</a>
       <a data-sec="operacao"><span class="ic">⚡</span>Operação <span class="cnt" id="n-op" style="display:none">0</span></a>
       <div class="grp">Plataforma</div>
+      <a data-sec="chats"><span class="ic">💬</span>Chats ao vivo</a>
       <a data-sec="clientes"><span class="ic">👥</span>Clientes</a>
       <a data-sec="produtoras"><span class="ic">👩</span>Produtoras</a>
       <a data-sec="modelos"><span class="ic">🤖</span>Modelos IA</a>
@@ -279,10 +280,95 @@ input:focus,select:focus{border-color:var(--ac)}
   }
   function deltaHtml(d){ if(d==null) return ''; var up=d>0,flat=d===0; return '<span class="delta '+(flat?'flat':up?'up':'down')+'">'+(flat?'•':up?'▲':'▼')+' '+(up?'+':'')+d+'%</span>'; }
 
+  /* ===== Chats ao vivo ===== */
+  function chatCss(){
+    if(document.getElementById('chatcss')) return;
+    var st=document.createElement('style'); st.id='chatcss';
+    st.textContent='.chat-wrap{display:flex;gap:12px;height:62vh;min-height:380px}'
+      +'.chat-list{width:300px;flex:none;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#0e0c17}'
+      +'.chat-conv{flex:1;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:#0e0c17;overflow:hidden}'
+      +'.chat-item{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}'
+      +'.chat-item:hover{background:#171226}.chat-item.on{background:#1d1733}.chat-item.flag{border-left:3px solid #ef4444}'
+      +'.ci-top{display:flex;align-items:center;gap:6px;font-size:13px}.ci-time{margin-left:auto;color:var(--muted);font-size:11px}'
+      +'.ci-who{color:var(--muted);font-size:11px;margin:2px 0}.ci-msg{font-size:12px;color:#cfc9e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      +'.human-pill{background:#7c3aed;color:#fff;font-size:10px;padding:1px 6px;border-radius:7px}'
+      +'.chat-empty{margin:auto;color:var(--muted);font-size:13px;padding:20px;text-align:center}'
+      +'.conv-head{display:flex;gap:8px;padding:8px;border-bottom:1px solid var(--line);align-items:center}'
+      +'.conv-msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}'
+      +'.bub{max-width:76%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.35;white-space:pre-wrap;word-break:break-word}'
+      +'.bub .bub-tag{font-size:10px;opacity:.6;margin-bottom:2px}'
+      +'.bub.her{align-self:flex-start;background:#241c3a}.bub.me{align-self:flex-end;background:#3a2a6a}'
+      +'.conv-send{display:flex;gap:8px;padding:8px;border-top:1px solid var(--line)}'
+      +'.conv-send textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:10px;background:#141021;color:var(--tx);padding:8px;font-size:13px}'
+      +'@media(max-width:720px){.chat-wrap{flex-direction:column;height:auto}.chat-list{width:100%;max-height:230px}.chat-conv{min-height:360px}}';
+    document.head.appendChild(st);
+  }
+  function renderChats(v){
+    chatCss();
+    v.innerHTML='<div class="card"><div class="ch-head"><h3>💬 Chats ao vivo · intervenção humana</h3><button class="btn sec sm" id="ch-refresh">↻ Atualizar</button></div>'
+      +'<p class="muted" style="margin:-2px 0 10px;font-size:13px">Conversas em andamento. 🔴 citou cancelamento, reembolso, chargeback ou sofrimento. Abra, <b>assuma</b> (o robô para na hora) e responda você mesmo — pro cliente continua sendo a modelo.</p>'
+      +'<div class="chat-wrap"><div class="chat-list" id="ch-list">'+LOADING+'</div><div class="chat-conv" id="ch-conv"><div class="chat-empty">👈 Escolha uma conversa para abrir.</div></div></div></div>';
+    var names={}, curTid=null;
+    function loadList(){
+      var box=$('ch-list'); if(!box) return; box.innerHTML=LOADING;
+      api('chat_threads').then(function(r){
+        if(forbidden(r)) return;
+        var box2=$('ch-list'); if(!box2) return;
+        if(r.error){ box2.innerHTML=errState(); return; }
+        names=r.names||{}; var items=r.items||[];
+        if(!items.length){ box2.innerHTML='<p class="muted" style="padding:12px;font-size:13px">Nenhuma conversa ainda.</p>'; return; }
+        box2.innerHTML=items.map(function(t){
+          var nm=names[t.creator_key]?names[t.creator_key].name:t.creator_key;
+          var who=t.email||'anônimo';
+          var msg=String(t.last_user_msg||t.last_msg||'');
+          return '<div class="chat-item'+(t.flagged?' flag':'')+(t.thread_id===curTid?' on':'')+'" data-tid="'+esc(t.thread_id)+'">'
+            +'<div class="ci-top"><b>'+esc(nm)+'</b>'+(t.flagged?' 🔴':'')+(t.human_mode?' <span class="human-pill">você</span>':'')+'<span class="ci-time">'+dhm(t.last_message_at)+'</span></div>'
+            +'<div class="ci-who">'+esc(who)+' · '+(t.user_msgs||0)+' msgs</div>'
+            +'<div class="ci-msg">'+esc(msg.slice(0,60))+'</div></div>';
+        }).join('');
+        Array.prototype.forEach.call(box2.querySelectorAll('[data-tid]'),function(el){ el.onclick=function(){ openConv(el.getAttribute('data-tid')); }; });
+      });
+    }
+    function openConv(tid){
+      curTid=tid;
+      Array.prototype.forEach.call(document.querySelectorAll('#ch-list .chat-item'),function(x){ x.classList.toggle('on', x.getAttribute('data-tid')===tid); });
+      var c=$('ch-conv'); if(!c) return; c.innerHTML=LOADING;
+      api('chat_msgs',{thread_id:tid}).then(function(r){
+        if(forbidden(r)) return;
+        var c2=$('ch-conv'); if(!c2||curTid!==tid) return;
+        if(r.error){ c2.innerHTML=errState(); return; }
+        var msgs=r.items||[];
+        var body=msgs.map(function(m){
+          var mine=m.role==='assistant';
+          var tag=mine?(m.by_human?'modelo (você)':'modelo (robô)'):'cliente';
+          return '<div class="bub '+(mine?'me':'her')+'"><div class="bub-tag">'+esc(tag)+'</div>'+esc(m.content)+'</div>';
+        }).join('')||'<div class="chat-empty">Sem mensagens.</div>';
+        c2.innerHTML='<div class="conv-head"><button class="btn sec sm" id="ch-assume">🙋 Assumir (parar robô)</button><button class="btn sec sm" id="ch-back">↩︎ Devolver pro robô</button></div>'
+          +'<div class="conv-msgs" id="ch-msgs">'+body+'</div>'
+          +'<div class="conv-send"><textarea id="ch-text" rows="2" placeholder="Responder como a modelo…"></textarea><button class="btn sm" id="ch-send">Enviar</button></div>';
+        var mb=$('ch-msgs'); if(mb) mb.scrollTop=mb.scrollHeight;
+        $('ch-assume').onclick=function(){ var b=this;b.disabled=true; api('chat_assume',{thread_id:tid,on:true}).then(function(){ b.disabled=false; openConv(tid); loadList(); }); };
+        $('ch-back').onclick=function(){ var b=this;b.disabled=true; api('chat_assume',{thread_id:tid,on:false}).then(function(){ b.disabled=false; openConv(tid); loadList(); }); };
+        $('ch-send').onclick=function(){
+          var t=($('ch-text').value||'').trim(); if(!t) return;
+          var btn=this; btn.disabled=true; btn.textContent='…';
+          api('chat_send',{thread_id:tid,content:t}).then(function(rr){
+            btn.disabled=false; btn.textContent='Enviar';
+            if(rr&&rr.ok){ $('ch-text').value=''; openConv(tid); loadList(); } else { alert('Não deu pra enviar.'); }
+          });
+        };
+        $('ch-text').addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ $('ch-send').click(); } });
+      });
+    }
+    $('ch-refresh').onclick=loadList;
+    loadList();
+  }
+
   /* ===== section routing ===== */
   var META={
     geral:['Visão Geral','Controle, performance e crescimento da plataforma'],
     operacao:['Operação','O que a equipe precisa fazer agora'],
+    chats:['Chats ao vivo','Acompanhe, assuma e responda as conversas em andamento'],
     clientes:['Clientes','Todos os usuários da plataforma'],
     produtoras:['Produtoras','Criadoras aprovadas e ativas'],
     modelos:['Modelos IA','Personas de IA ativas'],
@@ -310,7 +396,7 @@ input:focus,select:focus{border-color:var(--ac)}
   }
   Array.prototype.forEach.call(document.querySelectorAll('#nav a'),function(a){ a.onclick=function(){ showSection(a.getAttribute('data-sec')); }; });
 
-  var RENDER={geral:renderBI,operacao:renderOperacao,clientes:renderClientes,produtoras:renderProdutoras,modelos:renderModelos,conteudo:renderConteudo,assinaturas:renderAssinaturas,vendas:renderVendas,financeiro:renderFinanceiro,pedidos:renderPedidos,afiliados:renderAfiliados,contratos:renderContratos,pendentes:renderPendentes,relatorios:renderRelatorios,equipe:renderEquipe,config:renderConfig};
+  var RENDER={geral:renderBI,operacao:renderOperacao,chats:renderChats,clientes:renderClientes,produtoras:renderProdutoras,modelos:renderModelos,conteudo:renderConteudo,assinaturas:renderAssinaturas,vendas:renderVendas,financeiro:renderFinanceiro,pedidos:renderPedidos,afiliados:renderAfiliados,contratos:renderContratos,pendentes:renderPendentes,relatorios:renderRelatorios,equipe:renderEquipe,config:renderConfig};
   function render(){ var v=$('view'); v.innerHTML=LOADING; (RENDER[current]||renderBI)(v); refreshBadges(); }
 
   async function refreshBadges(){
