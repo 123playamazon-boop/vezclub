@@ -1034,7 +1034,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b158"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b159"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4295,7 +4295,7 @@ fbq('track', 'PageView');
     var b = modalRoot.querySelector("[data-story-go]");
     if (b) b.onclick = function () { closeModal(); state.creatorId = cid; state.view = "store"; render(); };
     var cb = modalRoot.querySelector("[data-chat-open]");
-    if (cb) cb.onclick = function () { closeModal(); if (AI_PERSONAS[cid]) openAiChat(cid); else { if (needLogin()) return; openChatThread(cid); } };
+    if (cb) cb.onclick = function () { closeModal(); openAiChat(cid); }; // chat = extra por tempo (R$5,99/10min), assinante livre
   }
 
   // Flash PPV: o story já "some em Xh" — torna isso comprável (desbloqueia o álbum dela com urgência real)
@@ -5934,7 +5934,8 @@ fbq('track', 'PageView');
     if (!ageOk()) { ageGate(function () { openAiChat(cid, firstMsg); }); return; } // confirma 18+ antes do chat
     if (!sb) return;
     if (!account) { ensureSessionThen(function () { openAiChat(cid, firstMsg); }); return; }
-    if (!requireSub(cid)) return; // chat é benefício da assinatura — tem que assinar antes (fecha o furo do chat grátis)
+    // chat é um EXTRA avulso (passe de tempo R$5,99/10min), separado da assinatura: NÃO exige assinar.
+    // Assinante da modelo fala livre; não-assinante compra tempo. A trava de pagamento é por tempo (ver startBalance/showTimeWall).
     var persona = AI_PERSONAS[cid] || {};
     var greeting = persona.greeting || "oi 🌙";
     var first = (c.name || "").split(" ")[0];
@@ -6875,8 +6876,7 @@ fbq('track', 'PageView');
       openCallApp(_ck);
     } else if (chatOpen) {
       var _coid = chatOpen.getAttribute("data-chat-open");
-      if (AI_PERSONAS[_coid]) { openAiChat(_coid); } // chat de IA (persona): funil próprio
-      else { if (!requireSub(_coid)) return; openChatThread(_coid); } // modelo real: chat só pra assinante
+      openAiChat(_coid); // chat = extra avulso (passe de tempo), vale pra toda modelo; assinante fala livre
     } else if (gift) {
       claimGift(gift.getAttribute("data-gift"));
     } else if (story) {
