@@ -1034,7 +1034,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b162"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b163"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2975,17 +2975,29 @@ fbq('track', 'PageView');
       // ===== Clube VIP: oferta nomeada + stack de valor + planos (R$, Pix) =====
       if (c.hasSub !== false) {
         var firstNm = (c.name || "VIP").split(" ")[0];
+        var isReal = !c.ai;
         var stackItems = [
           L("Feed completo, sem censura", "Full uncensored feed", "Feed completo, sin censura"),
+          L("Conteúdo novo TODO DIA", "New content EVERY DAY", "Contenido nuevo CADA DÍA"),
           L("Vídeos sem corte", "Uncut videos", "Videos sin cortes"),
-          L("Chat direto com ela", "Direct chat with her", "Chat directo con ella"),
-          L("Conteúdo novo toda semana", "New content every week", "Contenido nuevo cada semana"),
-          L("Cancela quando quiser · sem fidelidade", "Cancel anytime · no lock-in", "Cancela cuando quieras · sin permanencia")
+          L("Chat direto com ela", "Direct chat with her", "Chat directo con ella")
         ];
-        var stackHtml = stackItems.map(function (it) { return '<div style="display:flex;align-items:center;gap:9px;padding:5px 0;font-size:.93rem"><span style="color:#16a34a;font-weight:900;flex:none">✓</span><span>' + it + '</span></div>'; }).join("");
+        if (isReal) stackItems.push(L("100% modelo real, nada de IA", "100% real model, no AI", "100% modelo real, nada de IA"));
+        stackItems.push(L("Cancela quando quiser · sem fidelidade", "Cancel anytime · no lock-in", "Cancela cuando quieras · sin permanencia"));
+        var stackHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;margin:.35rem 0 .8rem">' + stackItems.map(function (it) { return '<div style="display:flex;align-items:flex-start;gap:7px;padding:4px 0;font-size:.85rem;line-height:1.3"><span style="color:#16a34a;font-weight:900;flex:none">✓</span><span>' + it + '</span></div>'; }).join("") + '</div>';
+        var subIntro = '<div style="font-size:.9rem;line-height:1.5;margin:.15rem 0 .7rem">' + L(
+          "Assinatura não é pra ver uma vez e esquecer: <b>todo dia</b> tem coisa nova dela te esperando — foto, vídeo e o papo. Você acompanha ela de verdade, dia após dia 😏",
+          "A subscription isn't look-once-and-forget: <b>every single day</b> there's something new from her waiting — photos, videos and the chat. You follow her for real, day after day 😏",
+          "La suscripción no es para mirar una vez: <b>cada día</b> hay algo nuevo de ella esperándote — fotos, videos y el chat. La sigues de verdad, día tras día 😏"
+        ) + '</div>';
+        var subTrust = isReal ? '<div style="margin:.2rem 0 .8rem;padding:10px 12px;border:1px solid rgba(22,163,74,.35);background:rgba(22,163,74,.07);border-radius:11px;font-size:.85rem;line-height:1.5"><b>✅ ' + L("Ela é REAL — não é IA.", "She is REAL — not AI.", "Es REAL — no IA.") + '</b> ' + L(
+          "Modelo de verdade: ela grava, aparece e até faz vídeo chamando o seu nome. Tem muita gente por aí vendendo foto feita por robô — aqui é ela mesma, de verdade 😉",
+          "A real model: she records, shows up and will even make a video saying your name. Plenty of people out there sell robot-made photos — here it is really her 😉",
+          "Modelo de verdad: graba, aparece y hasta hace un video diciendo tu nombre. Mucha gente por ahí vende fotos hechas por robot — aquí es ella misma, de verdad 😉"
+        ) + '</div>' : '';
         hh += '<div class="pf-section">' +
           '<div class="pf-h" style="display:flex;align-items:center;gap:8px">' + L("Clube VIP de ", "VIP Club of ", "Club VIP de ") + firstNm + ' <span style="font-weight:800;font-size:.66rem;background:var(--accent,#1b74e8);color:#fff;padding:3px 9px;border-radius:999px;letter-spacing:.05em">VIP</span></div>' +
-          '<div style="margin:.35rem 0 .8rem">' + stackHtml + '</div>' +
+          subIntro + subTrust + stackHtml +
           '<div id="pf-plans"><p class="muted-note">' + L("Carregando planos…", "Loading plans…", "Cargando planes…") + '</p></div>' +
         '</div>';
       }
