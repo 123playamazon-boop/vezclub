@@ -906,6 +906,19 @@ fbq('track', 'PageView');
   .rc-locked .price { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; background: rgba(0,0,0,.34); padding: 0.18rem 0.6rem; border-radius: 999px; }
   /* bloco único travado (estilo Privacy): sem foto-por-foto, só o cadeado + totais + CTA de assinatura */
   .rc-locked-all { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin-top: 0.3rem; background: var(--panel, #fff); }
+  /* feed do assinante estilo Privacy (por dia) */
+  .sfeed { display: flex; flex-direction: column; gap: 14px; margin-top: 0.4rem; }
+  .sfeed-day { align-self: flex-start; background: var(--accent, #1b74e8); color: #fff; font-weight: 800; font-size: 0.74rem; letter-spacing: 0.02em; text-transform: capitalize; padding: 4px 13px; border-radius: 999px; margin: 0.5rem 0 0.1rem; }
+  .sfeed-post { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--panel, #fff); }
+  .sfeed-head { display: flex; align-items: center; gap: 9px; padding: 10px 12px; }
+  .sfeed-av { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none; background: var(--surface-3); }
+  .sfeed-id { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .sfeed-id b { font-size: 0.9rem; }
+  .sfeed-id span { font-size: 0.74rem; color: var(--muted); }
+  .sfeed-date { margin-left: auto; font-size: 0.74rem; color: var(--muted); flex: none; }
+  .sfeed-cap { padding: 0 12px 9px; font-size: 0.93rem; line-height: 1.42; }
+  .sfeed-media { position: relative; width: 100%; background: #000; min-height: 160px; }
+  .sfeed-media img, .sfeed-media video { width: 100%; display: block; max-height: 78vh; object-fit: contain; background: #000; }
   .rla-body { position: relative; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: linear-gradient(135deg, rgba(27,116,232,.08), rgba(27,116,232,.015)); border-bottom: 1px solid var(--line); }
   .rla-body > svg { width: 44px; height: 44px; color: var(--muted); opacity: .55; }
   .rla-counts { display: flex; gap: .4rem; align-items: center; color: var(--muted); font-weight: 700; font-size: .95rem; letter-spacing: .01em; }
@@ -1034,7 +1047,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b163"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b164"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4460,6 +4473,14 @@ fbq('track', 'PageView');
   }
 
   function fmtDate(ms) { try { return new Date(ms).toLocaleDateString("pt-BR"); } catch (e) { return ""; } }
+  // feed do assinante: agrupa por dia (fuso BR)
+  function dayKeyBR(ms) { try { return new Date(ms).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }); } catch (e) { return new Date(ms).toLocaleDateString("pt-BR"); } }
+  function dayLabelBR(ms) {
+    var k = dayKeyBR(ms), today = dayKeyBR(Date.now()), yest = dayKeyBR(Date.now() - 864e5);
+    if (k === today) return L("Hoje", "Today", "Hoy");
+    if (k === yest) return L("Ontem", "Yesterday", "Ayer");
+    try { return new Date(ms).toLocaleDateString(lang === "en" ? "en-US" : lang === "es" ? "es-ES" : "pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "long" }); } catch (e) { return k; }
+  }
   function wireSub(b, creatorKey, subPrice) {
     b.querySelectorAll("[data-subscribe]").forEach(function (btn) {
       btn.onclick = function () { purchaseModal({ id: "sub-" + creatorKey, title: "Assinatura · 30 dias de tudo", price: subPrice, icon: "tile", creator: currentCreatorName(), realSub: creatorKey, realSubAmount: subPrice * 100, tier: "entry" }); };
@@ -4573,12 +4594,27 @@ fbq('track', 'PageView');
       var FREE_CAP = 3, freeShown = 0, freeOkSet = {};
       pr.data.forEach(function (p) { if (p.is_free && freeShown < FREE_CAP) { freeOkSet[p.id] = true; freeShown++; } });
       var subCents = (cObj && cObj.subPriceCents) || Math.round(subPrice * 100);
-      // ASSINANTE: tudo liberado
+      // ASSINANTE: feed por dia (estilo Privacy) — novas postagens caem como novos dias
       if (subActive) {
-        b.innerHTML = '<div class="rc-grid">' + pr.data.map(function (p) {
-          return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div></div>';
-        }).join("") + '</div>' + cta;
-        pr.data.forEach(function (p) { showUnlocked(p); });
+        var av = (cObj && cObj.avatarUrl) ? cObj.avatarUrl : "";
+        var nm = (cObj && cObj.name) || "";
+        var hd = (cObj && cObj.handle) || ("@" + creatorKey);
+        var feedPosts = pr.data.slice().sort(function (a, b2) { return new Date(b2.created_at).getTime() - new Date(a.created_at).getTime(); });
+        var fhtml = "", lastDay = null;
+        feedPosts.forEach(function (p) {
+          var ms = new Date(p.created_at).getTime();
+          var dk = dayKeyBR(ms);
+          if (dk !== lastDay) { lastDay = dk; fhtml += '<div class="sfeed-day">' + escHtml(dayLabelBR(ms)) + '</div>'; }
+          fhtml += '<div class="sfeed-post">' +
+            '<div class="sfeed-head">' + (av ? '<img class="sfeed-av" src="' + av + '" alt="">' : '') +
+              '<div class="sfeed-id"><b>' + escHtml(nm) + '</b><span>' + escHtml(hd) + '</span></div>' +
+              '<span class="sfeed-date">' + escHtml(fmtDate(ms)) + '</span></div>' +
+            (p.caption ? '<div class="sfeed-cap">' + escHtml(p.caption) + '</div>' : '') +
+            '<div class="sfeed-media" id="rc-' + p.id + '"></div>' +
+          '</div>';
+        });
+        b.innerHTML = '<div class="sfeed">' + fhtml + '</div>' + cta;
+        feedPosts.forEach(function (p) { showUnlocked(p); });
         wireSub(b, creatorKey, subPrice);
         applyDynTranslation();
         return;
