@@ -1034,7 +1034,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b159"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b160"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -8406,14 +8406,7 @@ fbq('track', 'PageView');
     try { window.top.location.replace(PANIC_URL); return; } catch (e) {}
     try { window.location.replace(PANIC_URL); } catch (e) { try { window.location.href = PANIC_URL; } catch (e2) {} }
   }
-  (function () {
-    var pb = document.createElement("button");
-    pb.id = "panic-btn"; pb.type = "button"; pb.setAttribute("aria-label", "Sair rápido");
-    pb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Sair rápido';
-    pb.onclick = panicExit;
-    document.body.appendChild(pb);
-  })();
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") panicExit(); });
+  // botão "Sair rápido" (panic) removido a pedido do Bruno — sem botão flutuante e sem atalho Esc.
 
   /* i18n: extra dynamic strings + boot wiring */
   (function () {
