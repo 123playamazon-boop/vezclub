@@ -27,6 +27,9 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
 .seg{display:flex;gap:6px;background:#0e0c14;border:1px solid var(--line);border-radius:11px;padding:4px;margin-top:6px}
 .seg button{flex:1;padding:9px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-weight:700;cursor:pointer}
 .seg button.on{background:var(--ac);color:#fff}
+.schip{border:1px solid var(--line);background:#14101c;color:var(--muted);font-weight:700;font-size:13px;padding:7px 12px;border-radius:999px;cursor:pointer}
+.schip:hover{color:#fff;border-color:var(--ac)}
+.schip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
 .cell{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;font-size:12px}
 .cell .tag{position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.6)}
@@ -175,8 +178,18 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       <label>Legenda (opcional)</label>
       <textarea id="f-cap" rows="2" placeholder="escreva algo provocante 😏"></textarea>
       <label>🗓️ Agendar liberação (opcional)</label>
-      <input id="f-sched" type="datetime-local">
-      <p class="hint">Deixe vazio pra publicar <b>agora</b>. Com data, o conteúdo entra sozinho no feed do assinante nesse dia — dá pra montar o <b>mês inteiro de uma vez</b> (ex.: dia 20 libera 3 fotos + 1 vídeo, dia 22 mais um tanto…).</p>
+      <div id="sched-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button type="button" class="schip" data-q="clear">Agora</button>
+        <button type="button" class="schip" data-q="1">Amanhã</button>
+        <button type="button" class="schip" data-q="2">+2 dias</button>
+        <button type="button" class="schip" data-q="3">+3 dias</button>
+        <button type="button" class="schip" data-q="7">+7 dias</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="f-sched-date" type="date" style="flex:2;min-width:0">
+        <input id="f-sched-time" type="time" style="flex:1;min-width:0">
+      </div>
+      <p class="hint">Deixe vazio pra publicar <b>agora</b>. Toque no 📅 pra <b>abrir o mês</b> e escolher o dia (ou use os botões). Com data marcada, o conteúdo entra sozinho no feed nesse dia — dá pra montar o <b>mês inteiro de uma vez</b>. Sem hora, libera às 09:00.</p>
       <div id="prog"><div></div></div>
       <div class="err" id="u-err"></div>
       <button class="btn" id="u-btn" style="margin-top:12px">Publicar</button>
@@ -293,6 +306,24 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     b.onclick=function(){ isFree=+b.getAttribute('data-free'); Array.prototype.forEach.call($('seg-type').children,function(x){x.classList.remove('on');}); b.classList.add('on'); $('price-wrap').style.display=isFree?'none':'block'; };
   });
 
+  // agendamento: botoes rapidos + data minima hoje
+  (function(){
+    function pad(n){ return (n<10?'0':'')+n; }
+    function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+    var sd=$('f-sched-date'); if(sd){ sd.min=ymd(new Date()); }
+    function markChip(el){ Array.prototype.forEach.call(document.querySelectorAll('#sched-chips .schip'),function(x){x.classList.remove('on');}); if(el) el.classList.add('on'); }
+    Array.prototype.forEach.call(document.querySelectorAll('#sched-chips [data-q]'),function(b){
+      b.onclick=function(){
+        var q=b.getAttribute('data-q');
+        if(q==='clear'){ sd.value=''; $('f-sched-time').value=''; markChip(b); return; }
+        var d=new Date(); d.setDate(d.getDate()+parseInt(q,10)); sd.value=ymd(d);
+        if(!$('f-sched-time').value) $('f-sched-time').value='09:00';
+        markChip(b);
+      };
+    });
+    if(sd){ sd.addEventListener('change',function(){ markChip(null); if(sd.value && !$('f-sched-time').value) $('f-sched-time').value='09:00'; }); }
+  })();
+
   var authMode='login';
   function renderMode(){
     var su=authMode==='signup';
@@ -396,8 +427,9 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     err('u-err',''); var btn=this; btn.disabled=true;
     var price=Math.round(parseFloat(($('f-price').value||'0').replace(',','.'))*100)||0;
     var cap=$('f-cap').value;
-    var schedRaw=($('f-sched').value||'').trim();
-    var schedIso=null; if(schedRaw){ var dd=new Date(schedRaw); if(!isNaN(dd.getTime())) schedIso=dd.toISOString(); }
+    var sdate=($('f-sched-date').value||'').trim();
+    var stime=($('f-sched-time').value||'').trim();
+    var schedIso=null; if(sdate){ var dd=new Date(sdate+'T'+(stime||'09:00')); if(!isNaN(dd.getTime())) schedIso=dd.toISOString(); }
     $('prog').style.display='block';
     var total=picked.length, okCount=0, failNames=[];
     for(var i=0;i<total;i++){
@@ -417,7 +449,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     }
     $('prog').firstElementChild.style.width='100%';
     if(failNames.length){ err('u-err', okCount+' publicado(s). Falhou em '+failNames.length+': '+failNames.slice(0,3).join(', ')+(failNames.length>3?'…':'')); }
-    else { var uok=$('u-err'); if(uok){ uok.style.color=schedIso?'#9effc0':''; uok.textContent=schedIso?('✓ '+okCount+' agendado(s) para '+new Date(schedIso).toLocaleString('pt-BR')+' — entram no feed sozinhos nesse dia.'):''; } $('f-cap').value=''; $('f-price').value='0'; $('f-sched').value=''; }
+    else { var uok=$('u-err'); if(uok){ uok.style.color=schedIso?'#9effc0':''; uok.textContent=schedIso?('✓ '+okCount+' agendado(s) para '+new Date(schedIso).toLocaleString('pt-BR')+' — entram no feed sozinhos nesse dia.'):''; } $('f-cap').value=''; $('f-price').value='0'; $('f-sched-date').value=''; $('f-sched-time').value=''; Array.prototype.forEach.call(document.querySelectorAll('#sched-chips .schip'),function(x){x.classList.remove('on');}); }
     // remove os que subiram, mantém os que falharam
     picked=picked.filter(function(f){ return failNames.indexOf(f.name)>=0 || failNames.indexOf(f.name+' (conta não aprovada)')>=0; });
     renderPicked();
