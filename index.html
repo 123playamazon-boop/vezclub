@@ -1047,7 +1047,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b164"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b165"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4495,7 +4495,7 @@ fbq('track', 'PageView');
     var subCents = (cObj && cObj.subPriceCents) || Math.round(subPrice * 100);
     var likes = (cObj && cObj.likes) || 0;
     Promise.all([
-      sb.from("posts").select("id,caption,media_path,media_type,is_free").eq("creator_key", creatorKey).eq("status", "approved").eq("is_free", true).order("created_at", { ascending: false }).limit(3),
+      sb.from("posts").select("id,caption,media_path,media_type,is_free").eq("creator_key", creatorKey).eq("status", "approved").eq("is_free", true).or("publish_at.is.null,publish_at.lte." + new Date().toISOString()).order("created_at", { ascending: false }).limit(3),
       sb.rpc("creator_pack_counts", { p_creator_key: creatorKey })
     ]).then(function (res) {
       var b = document.getElementById("rc-list"); if (!b) return;
@@ -4565,7 +4565,7 @@ fbq('track', 'PageView');
     if (!sb) { box.innerHTML = '<p class="muted-note">' + L("Entre pra ver o conteúdo.", "Sign in to see the content.", "Entra para ver el contenido.") + '</p>'; return; }
     if (!account) { return loadGuestTeasers(creatorKey); }
     Promise.all([
-      sb.from("posts").select("*").eq("creator_key", creatorKey).eq("status", "approved").order("created_at", { ascending: false }).limit(30),
+      sb.from("posts").select("*").eq("creator_key", creatorKey).eq("status", "approved").or("publish_at.is.null,publish_at.lte." + new Date().toISOString()).order("created_at", { ascending: false }).limit(60),
       sb.from("unlocks").select("post_id,expires_at"),
       sb.from("subscriptions").select("creator_key,expires_at,tier").eq("creator_key", creatorKey)
     ]).then(function (res) {
@@ -4599,10 +4599,11 @@ fbq('track', 'PageView');
         var av = (cObj && cObj.avatarUrl) ? cObj.avatarUrl : "";
         var nm = (cObj && cObj.name) || "";
         var hd = (cObj && cObj.handle) || ("@" + creatorKey);
-        var feedPosts = pr.data.slice().sort(function (a, b2) { return new Date(b2.created_at).getTime() - new Date(a.created_at).getTime(); });
+        var effMs = function (p) { return new Date(p.publish_at || p.created_at).getTime(); };
+        var feedPosts = pr.data.slice().sort(function (a, b2) { return effMs(b2) - effMs(a); });
         var fhtml = "", lastDay = null;
         feedPosts.forEach(function (p) {
-          var ms = new Date(p.created_at).getTime();
+          var ms = effMs(p);
           var dk = dayKeyBR(ms);
           if (dk !== lastDay) { lastDay = dk; fhtml += '<div class="sfeed-day">' + escHtml(dayLabelBR(ms)) + '</div>'; }
           fhtml += '<div class="sfeed-post">' +

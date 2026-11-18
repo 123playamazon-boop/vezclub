@@ -174,6 +174,9 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
       </div>
       <label>Legenda (opcional)</label>
       <textarea id="f-cap" rows="2" placeholder="escreva algo provocante 😏"></textarea>
+      <label>🗓️ Agendar liberação (opcional)</label>
+      <input id="f-sched" type="datetime-local">
+      <p class="hint">Deixe vazio pra publicar <b>agora</b>. Com data, o conteúdo entra sozinho no feed do assinante nesse dia — dá pra montar o <b>mês inteiro de uma vez</b> (ex.: dia 20 libera 3 fotos + 1 vídeo, dia 22 mais um tanto…).</p>
       <div id="prog"><div></div></div>
       <div class="err" id="u-err"></div>
       <button class="btn" id="u-btn" style="margin-top:12px">Publicar</button>
@@ -393,6 +396,8 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     err('u-err',''); var btn=this; btn.disabled=true;
     var price=Math.round(parseFloat(($('f-price').value||'0').replace(',','.'))*100)||0;
     var cap=$('f-cap').value;
+    var schedRaw=($('f-sched').value||'').trim();
+    var schedIso=null; if(schedRaw){ var dd=new Date(schedRaw); if(!isNaN(dd.getTime())) schedIso=dd.toISOString(); }
     $('prog').style.display='block';
     var total=picked.length, okCount=0, failNames=[];
     for(var i=0;i<total;i++){
@@ -405,14 +410,14 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
         if(uu.error){ failNames.push(f.name+(uu.error==='not_approved'?' (conta não aprovada)':'')); continue; }
         var up=await sb.storage.from('content').uploadToSignedUrl(uu.path, uu.token, f);
         if(up.error){ failNames.push(f.name); continue; }
-        var pr=await api('post',{media_path:uu.path, media_type:uu.media_type, is_free:!!isFree, price_cents:isFree?0:price, caption:cap});
+        var pr=await api('post',{media_path:uu.path, media_type:uu.media_type, is_free:!!isFree, price_cents:isFree?0:price, caption:cap, publish_at:schedIso});
         if(pr.error){ failNames.push(f.name); continue; }
         okCount++;
       }catch(e){ failNames.push(f&&f.name||'arquivo'); }
     }
     $('prog').firstElementChild.style.width='100%';
     if(failNames.length){ err('u-err', okCount+' publicado(s). Falhou em '+failNames.length+': '+failNames.slice(0,3).join(', ')+(failNames.length>3?'…':'')); }
-    else { err('u-err',''); $('f-cap').value=''; $('f-price').value='0'; }
+    else { var uok=$('u-err'); if(uok){ uok.style.color=schedIso?'#9effc0':''; uok.textContent=schedIso?('✓ '+okCount+' agendado(s) para '+new Date(schedIso).toLocaleString('pt-BR')+' — entram no feed sozinhos nesse dia.'):''; } $('f-cap').value=''; $('f-price').value='0'; $('f-sched').value=''; }
     // remove os que subiram, mantém os que falharam
     picked=picked.filter(function(f){ return failNames.indexOf(f.name)>=0 || failNames.indexOf(f.name+' (conta não aprovada)')>=0; });
     renderPicked();
@@ -620,7 +625,9 @@ label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
     $('posts').innerHTML=posts.map(function(p){
       var tag=p.is_free?'<span class="tag free">GRÁTIS</span>':'<span class="tag paid">'+(p.price_cents?BRL(p.price_cents):'ASSIN.')+'</span>';
       var ic=p.media_type==='video'?'▶':'🖼️';
-      return '<div class="cell" data-id="'+p.id+'">'+tag+'<span class="del" data-del="'+p.id+'">🗑</span><div style="font-size:26px">'+ic+'</div></div>';
+      var sched=p.publish_at && new Date(p.publish_at).getTime()>Date.now();
+      var schedTag=sched?'<span class="tag" style="background:#3b2a00;color:#ffcf6b;left:6px;right:auto;top:28px">⏰ '+new Date(p.publish_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+'</span>':'';
+      return '<div class="cell" data-id="'+p.id+'"'+(sched?' style="outline:1.5px solid #ffcf6b55"':'')+'>'+tag+schedTag+'<span class="del" data-del="'+p.id+'">🗑</span><div style="font-size:26px">'+ic+'</div></div>';
     }).join('');
     Array.prototype.forEach.call(document.querySelectorAll('[data-del]'),function(el){
       el.onclick=async function(){ if(!confirm('Apagar este post?')) return; await api('update',{id:+el.getAttribute('data-del'),delete:true}); refresh(); };
