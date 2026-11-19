@@ -1073,7 +1073,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b173"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b174"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4702,7 +4702,7 @@ fbq('track', 'PageView');
         wireSub(b, creatorKey, subPrice);
         applyDynTranslation();
         // ===== abas Postagens/Mídias (estilo Privacy) =====
-        var _mediaBuilt = false, _curMF = "all";
+        var _mediaBuilt = false, _curMF = "all", _mgSigned = {};
         function _openVideoLB(src) {
           var ov = document.createElement("div"); ov.className = "lightbox";
           ov.innerHTML = '<button class="lb-close" aria-label="fechar">✕</button><div class="lb-wrap"><video src="' + src + '" controls autoplay playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture style="max-width:92vw;max-height:82vh;border-radius:10px;background:#000"></video></div>';
@@ -4734,25 +4734,34 @@ fbq('track', 'PageView');
           var list = filter === "fotos" ? _photos : filter === "videos" ? _videos : feedPosts;
           if (!list.length) { grid.innerHTML = '<p class="muted-note" style="padding:.6rem;grid-column:1/-1">' + L("Nada por aqui ainda.", "Nothing here yet.", "Nada aquí.") + '</p>'; return; }
           grid.innerHTML = list.map(_cell).join("");
-          grid.querySelectorAll(".mgcell").forEach(function (cell) {
-            var path = cell.getAttribute("data-mpath"), type = cell.getAttribute("data-mtype");
-            if (!path) { cell.remove(); return; }
-            signUrl(path).then(function (u) {
-              if (!u) { cell.remove(); return; }
-              var ph = cell.querySelector(".mg-ph"); if (!ph) { cell.classList.remove("loading"); return; }
-              if (type === "video") {
-                var vd = document.createElement("video");
-                vd.src = u + "#t=0.1"; vd.muted = true; vd.playsInline = true; vd.preload = "metadata";
-                vd.onloadeddata = function () { cell.classList.remove("loading"); };
-                vd.onerror = function () { cell.remove(); };
-                ph.appendChild(vd);
-              } else {
-                var im = new Image();
-                im.onload = function () { ph.style.backgroundImage = "url('" + u + "')"; cell.classList.remove("loading"); };
-                im.onerror = function () { cell.remove(); };
-                im.src = u;
-              }
-            }, function () { cell.remove(); });
+          function _fillCell(cell, u) {
+            var type = cell.getAttribute("data-mtype");
+            if (!u) { cell.remove(); return; }
+            var ph = cell.querySelector(".mg-ph"); if (!ph) { cell.classList.remove("loading"); return; }
+            if (type === "video") {
+              var vd = document.createElement("video");
+              vd.src = u + "#t=0.1"; vd.muted = true; vd.playsInline = true; vd.preload = "metadata";
+              vd.onloadeddata = function () { cell.classList.remove("loading"); };
+              vd.onerror = function () { cell.remove(); };
+              ph.appendChild(vd);
+            } else {
+              var im = new Image();
+              im.onload = function () { ph.style.backgroundImage = "url('" + u + "')"; cell.classList.remove("loading"); };
+              im.onerror = function () { cell.remove(); };
+              im.src = u;
+            }
+          }
+          var cells = [].slice.call(grid.querySelectorAll(".mgcell"));
+          var paths = []; cells.forEach(function (cell) { var p = cell.getAttribute("data-mpath"); if (p) paths.push(p); else cell.remove(); });
+          if (!paths.length) return;
+          // 1 requisição assina TODAS as mídias de uma vez (muito mais rápido que 1 por célula)
+          sb.storage.from("content").createSignedUrls(paths, 1800).then(function (res) {
+            var map = {}; ((res && res.data) || []).forEach(function (o) { if (o && o.path && o.signedUrl) map[o.path] = o.signedUrl; });
+            _mgSigned = map;
+            cells.forEach(function (cell) { var p = cell.getAttribute("data-mpath"); if (cell.isConnected) _fillCell(cell, map[p]); });
+          }, function () {
+            // fallback: assina uma a uma se o lote falhar
+            cells.forEach(function (cell) { var p = cell.getAttribute("data-mpath"); signUrl(p).then(function (u) { if (cell.isConnected) _fillCell(cell, u); }, function () { cell.remove(); }); });
           });
         }
         b.querySelectorAll(".pt2").forEach(function (tb) { tb.onclick = function () {
@@ -4772,6 +4781,8 @@ fbq('track', 'PageView');
         if (_mg) _mg.addEventListener("click", function (e) {
           var cell = e.target.closest && e.target.closest(".mgcell"); if (!cell) return;
           var path = cell.getAttribute("data-mpath"), type = cell.getAttribute("data-mtype");
+          var cached = _mgSigned[path];
+          if (cached) { if (type === "video") _openVideoLB(cached); else if (window.__zoom) window.__zoom(cached); return; }
           signUrl(path).then(function (u) { if (!u) return; if (type === "video") _openVideoLB(u); else if (window.__zoom) window.__zoom(u); });
         });
         return;
@@ -6254,17 +6265,14 @@ fbq('track', 'PageView');
       '<div><div class="ch-name">' + escHtml(first) + '</div><div class="ch-stat" id="ch-stat">' + L("online agora", "online now", "en línea ahora") + '</div></div>' +
       '<span style="font-size:9px;color:var(--faint);align-self:flex-start;margin-left:auto">' + BUILD + '</span>' +
       '<span id="ch-time" style="margin-left:6px;font-weight:700;font-variant-numeric:tabular-nums;font-size:.9rem;color:var(--muted)"></span>' +
-      '<button class="icon-btn" id="ch-shop" title="' + L("Loja dela", "Her shop", "Su tienda") + '" style="width:auto;padding:0 .35rem;font-size:1.05rem;margin-left:4px">🛍</button>' +
       '<button class="ch-x" data-close>' + XICON + '</button></div>' +
       '<div id="ch-packbar"></div>' +
       '<div class="chat-body" id="chat-body"></div>' +
-      '<div style="font-size:.66rem;color:var(--faint);text-align:center;padding:2px 8px 0">' + L("conversas podem ser assistidas por IA", "chats may be AI-assisted", "los chats pueden ser asistidos por IA") + '</div>' +
       '<div class="chat-input"><input id="chat-text" placeholder="' + escHtml(L("Escreve pra ", "Message ", "Escribe a ") + first) + '…" autocomplete="off"><button id="chat-send">' + I.send + '</button></div>' +
       '</div></div>';
 
     var body = document.getElementById("chat-body");
     var timeEl = document.getElementById("ch-time");
-    (function () { var shopB = document.getElementById("ch-shop"); if (shopB) shopB.onclick = function () { openProductStore(cid); }; })();
     // faixa fixa de ASSINATURA logo abaixo do nome dela (vê tudo + chat sem limite). Só BR (Pix).
     function buildChatPackBar() {
       var bar = document.getElementById("ch-packbar"); if (!bar) return;
