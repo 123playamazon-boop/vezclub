@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b192"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b193"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -1608,6 +1608,25 @@
     var isca = PHOTO_LADDER[0].usd;
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
     html += '<div class="page-head"><div class="eyebrow">' + L("Conteúdo exclusivo", "Exclusive content", "Contenido exclusivo") + '</div><h1>' + L("As mais gostosas do Brasil — e tudo que elas escondem.", "The hottest girls in Brazil — and everything they hide.", "Las más ricas de Brasil — y todo lo que esconden.") + '</h1><p>' + L("Assine e veja o que elas não postam em mais nenhum lugar: fotos sem censura, vídeos sem corte e o chat direto com ela. Acesso na hora, sem fidelidade.", "Subscribe and see what they don't post anywhere else: uncensored photos, uncut videos and direct chat with her. Instant access, no commitment.", "Suscríbete y mira lo que no publican en ningún otro lugar: fotos sin censura, videos sin cortes y chat directo con ella. Acceso al instante, sin permanencia.") + '</p></div>';
+    // GANCHO: modelo em destaque no topo — dá ao tráfego frio (que cai na home genérica) um próximo passo quente e óbvio: o chat dela
+    (function () {
+      var pool = CREATORS.filter(function (c) { return c.online && c.hasChat !== false && (c.coverUrl || c.coverPath); });
+      pool.sort(function (a, b) { return (b.subs || 0) - (a.subs || 0); });
+      var F = pool[0]; if (!F) return;
+      var fn = (F.name || "").split(" ")[0];
+      var fhook = ((F.hook || "").split(/[.!?\n]/)[0] || "").trim().slice(0, 90);
+      var bg = F.coverPath ? ("url('" + imgUrl(F.coverPath, 720, 70) + "');background-color:#17131f")
+             : (F.coverUrl ? ("url('" + F.coverUrl + "');background-color:#17131f") : "none;background:" + grad(F.color));
+      html += '<div class="feat-hero" data-chat-open="' + escHtml(F.id) + '">' +
+        '<div class="feat-cover" style="background-image:' + bg + '">' +
+          '<span class="feat-live"><span class="live-dot"></span>' + L("online agora", "online now", "en línea ahora") + '</span>' +
+          '<div class="feat-body">' +
+            '<div class="feat-name">' + escHtml(F.name) + '<span class="verif">' + I.verif + '</span></div>' +
+            (fhook ? '<div class="feat-hook">' + escHtml(fhook) + '</div>' : '') +
+            '<div class="feat-cta">' + I.chatic + ' ' + L("Falar com " + fn + " agora", "Chat with " + fn + " now", "Hablar con " + fn + " ahora") + ' 🔥</div>' +
+          '</div>' +
+        '</div></div>';
+    })();
     // combosBanners() DESCIDO pro final (preco no topo nao converte) — anexado depois do grid de modelos
     // seções próprias (DESCIDAS pro final — não converteram no topo): guardadas e anexadas depois do grid
     var sectionBanners = '<div style="display:flex;flex-direction:column;gap:.6rem;margin:1.4rem 0 1rem">' +
