@@ -956,9 +956,9 @@ fbq('track', 'PageView');
   .wm { position: absolute; inset: 0; z-index: 2; pointer-events: none; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; transform: rotate(-24deg) scale(1.4); opacity: .1; }
   .wm span { color: #fff; font-size: .6rem; font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.45); white-space: nowrap; margin: 20px 30px; }
   .wm-tag { position: absolute; right: 5px; bottom: 4px; z-index: 2; pointer-events: none; color: #fff; opacity: .28; font-size: .52rem; font-weight: 600; letter-spacing: .03em; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
-  .pf-legal { margin: 1.4rem 0 0.6rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-  .pf-legal-h { font-weight: 800; font-size: 0.82rem; color: var(--tx, #1b1830); margin-bottom: 0.35rem; }
-  .pf-legal p { margin: 0; font-size: 0.72rem; line-height: 1.5; color: var(--muted); }
+  .pf-legal { margin: 1.4rem 0 0.6rem; padding: 0.95rem 1rem; border: 2px solid #e11d48; border-radius: 12px; background: #fff1f2; box-shadow: 0 6px 18px -10px rgba(225,29,72,.45); }
+  .pf-legal-h { font-weight: 800; font-size: 0.86rem; color: #be123c; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: .02em; }
+  .pf-legal p { margin: 0; font-size: 0.74rem; line-height: 1.5; color: #9f1239; }
   .rc-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; display: block; }
   .free-badge { position: absolute; top: 8px; left: 8px; z-index: 3; background: var(--good); color: #fff; font-size: .68rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: .2rem .5rem; border-radius: 999px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .rc-media img, .rc-media video { cursor: zoom-in; }
@@ -1077,7 +1077,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b179"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b180"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
