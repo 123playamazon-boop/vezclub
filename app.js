@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b198"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b199"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -3569,7 +3569,8 @@
             '</div>' +
           '</div>'
         : '<div class="rc-locked-all"><div class="rla-body">' + I.lock + '<div class="rla-counts">📷 ' + nPh + ' · 🎥 ' + nVd + ' · ♡ ' + nfmt(likes) + '</div></div><div class="rla-cta"><div class="rla-h">' + L("Entra pra ver tudo dela", "Sign in to see all of her", "Entra para ver todo de ella") + '</div><div class="rla-s">' + L("As prévias acima são grátis. O resto é só pra quem entra.", "The previews above are free. The rest is for members.", "Las prévias de arriba son gratis. El resto es solo para quien entra.") + '</div><button class="btn btn-primary btn-block" data-gate-signup="1">' + L("Entrar", "Sign in", "Entrar") + '</button></div></div>';
-      b.innerHTML = prevHtml + block;
+      // modelo COM assinatura: mostra só as fotos grátis — o Clube VIP (planos) vem logo abaixo. Sem assinatura: mantém o CTA do bloco.
+      b.innerHTML = prevHtml + (hasSub ? '' : block);
       previews.forEach(function (p) { showFree(p); });
       if (gateOn) wireLeadGate(b);
       wireGuestCta(b);
