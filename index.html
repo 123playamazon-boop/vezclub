@@ -262,6 +262,8 @@ fbq('track', 'PageView');
   .mini-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .mini-tile.has-img::before { display: none; }
   .mini-free { position: absolute; bottom: 4px; left: 4px; z-index: 2; background: var(--good); color: #fff; font-size: .52rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: .08rem .3rem; border-radius: 999px; }
+  .mini-tile.gated img, .mini-tile.gated video { filter: blur(11px); transform: scale(1.12); }
+  .mini-tile.gated::after { content: "🔒"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.05rem; background: rgba(10,10,18,.25); z-index: 3; }
   .mini-empty { background: var(--surface-3); border: 1px dashed var(--line); color: var(--faint); flex-direction: column; gap: 2px; }
   .mini-empty svg { width: 15px; height: 15px; color: var(--faint); }
   .mini-empty b { font-size: .5rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
@@ -1086,7 +1088,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b183"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b184"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2690,6 +2692,9 @@ fbq('track', 'PageView');
     html += '<div class="field" style="margin-bottom:0.9rem"><input id="feed-search" type="search" placeholder="Buscar criadora, nicho…" autocomplete="off"></div>';
     html += '<div class="chips">' + CATS.map(function (c) { return '<span class="chip ' + (state.feedCat === c.k ? "on" : "") + '" data-cat="' + c.k + '">' + c.t + '</span>'; }).join("") + '</div>';
     html += '<div class="ticker" id="live-ticker"><span class="d"></span><span>' + tickerLine() + '</span></div>';
+    // gate de lead na home (só BR, anônimo, lead ainda não capturado): 1ª mini-foto é isca, resto borrado
+    var gatedHome = (coinMarket() === "br") && !account && !leadCaptured();
+    if (gatedHome) html += leadGateHtml();
     html += '<div class="feed-grid">';
     CREATORS.forEach(function (c, _i) {
       var strip, stripCols = 3;
@@ -2697,13 +2702,14 @@ fbq('track', 'PageView');
         var _fts = c.freeTiles.slice(0, 3);
         strip = _fts.map(function (ft, i) {
           var full = mediaUrl(ft.path);
+          var gcls = (gatedHome && i >= 1) ? " gated" : "";
           var badge = (i === 0 ? '<span class="mini-free">' + L("Grátis", "Free", "Gratis") + '</span>' : '');
           if (!full) return '<div class="mini-tile" style="background:' + grad(c.color) + '"></div>';
           if (ft.type === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(ft.path)) {
             // teaser em vídeo: mostra o 1º frame com ▶ (antes quebrava dentro de um <img>)
-            return '<div class="mini-tile has-img" style="position:relative"><video src="' + full + '#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;display:block"></video><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:1.05rem;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none">▶</span>' + badge + '</div>';
+            return '<div class="mini-tile has-img' + gcls + '" style="position:relative"><video src="' + full + '#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;display:block"></video><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:1.05rem;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none">▶</span>' + badge + '</div>';
           }
-          return '<div class="mini-tile has-img"><img src="' + imgUrl(ft.path, 320, 64) + '" data-full="' + full + '" style="cursor:zoom-in" loading="lazy" decoding="async" alt="">' + badge + '</div>';
+          return '<div class="mini-tile has-img' + gcls + '"><img src="' + imgUrl(ft.path, 320, 64) + '" data-full="' + full + '" style="cursor:zoom-in" loading="lazy" decoding="async" alt="">' + badge + '</div>';
         }).join("");
         // sem miniatura quebrada: a faixa se ajusta ao nº de fotos que a modelo tem
         if (_fts.length < 3) stripCols = _fts.length;
@@ -2739,6 +2745,7 @@ fbq('track', 'PageView');
     app.innerHTML = html;
     var _bm = document.getElementById("be-model"); if (_bm) _bm.onclick = function () { openCreatorPanel(); };
     startTicker();
+    if (gatedHome) wireLeadGate(app);
     refreshFabBadge();
     app.querySelectorAll(".chip[data-cat]").forEach(function (ch) {
       ch.onclick = function () {
@@ -4852,9 +4859,9 @@ fbq('track', 'PageView');
     if (!inp || !btn) return;
     function valid(v) { v = (v || "").trim(); if (v.indexOf("@") > 0 && /\.[a-z]{2,}$/i.test(v)) return v; var d = v.replace(/\D/g, ""); return d.length >= 10 ? d : null; }
     function unlock() {
-      scope.querySelectorAll(".rc-media.gated").forEach(function (el) { el.classList.remove("gated"); });
-      scope.querySelectorAll(".rc-foot .rc-until").forEach(function (el) { if (/🔒/.test(el.textContent)) el.textContent = L("Prévia grátis", "Free preview", "Prévia gratis"); });
-      var g = scope.querySelector("#lead-gate"); if (g) g.remove();
+      document.querySelectorAll(".rc-media.gated, .mini-tile.gated").forEach(function (el) { el.classList.remove("gated"); });
+      document.querySelectorAll(".rc-foot .rc-until").forEach(function (el) { if (/🔒/.test(el.textContent)) el.textContent = L("Prévia grátis", "Free preview", "Prévia gratis"); });
+      document.querySelectorAll("#lead-gate").forEach(function (g) { g.remove(); });
     }
     function submit() {
       var v = valid(inp.value);
@@ -6202,9 +6209,11 @@ fbq('track', 'PageView');
   document.addEventListener("click", function (e) {
     var im = e.target && e.target.closest ? e.target.closest("img[data-full]") : null;
     if (!im) return;
+    if (im.closest(".gated")) return; // gate de lead: foto borrada não abre o lightbox (segue pro clique do card -> perfil)
     var scope = im.closest(".cc-strip, .rc-grid, .pf-gallery");
-    var imgs = scope ? [].slice.call(scope.querySelectorAll("img[data-full]")) : [im];
+    var imgs = scope ? [].slice.call(scope.querySelectorAll("img[data-full]")).filter(function (x) { return !x.closest(".gated"); }) : [im];
     var srcs = imgs.map(function (x) { return x.getAttribute("data-full"); });
+    if (!srcs.length) return;
     e.preventDefault(); e.stopPropagation();
     window.__gallery(srcs, imgs.indexOf(im));
   }, true);
