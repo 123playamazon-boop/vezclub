@@ -929,6 +929,9 @@ fbq('track', 'PageView');
   .mfilter .mf.on { background: var(--accent); color: #fff; border-color: var(--accent); }
   .mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
   .mgcell { position: relative; aspect-ratio: 1 / 1; background: var(--surface-3); border-radius: 8px; overflow: hidden; cursor: pointer; }
+  .mgcell.isvid { background: #141018; }
+  .mgcell.loading { background: linear-gradient(100deg, var(--surface-3) 30%, rgba(255,255,255,.14) 50%, var(--surface-3) 70%); background-size: 200% 100%; animation: mgsh 1.1s linear infinite; }
+  @keyframes mgsh { to { background-position: -200% 0; } }
   .mg-ph { position: absolute; inset: 0; background-size: cover; background-position: center; }
   .mg-ph video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .mg-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 1.4rem; text-shadow: 0 1px 7px rgba(0,0,0,.7); pointer-events: none; }
@@ -1064,7 +1067,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b168"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b169"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -3036,11 +3039,7 @@ fbq('track', 'PageView');
       if (c.hasChat !== false) hh += '<button class="btn btn-block" data-chat-open="' + c.id + '" style="background:#25c35e;color:#fff">' + I.chatic + ' ' + L("Mandar mensagem", "Send a message", "Enviar mensaje") + '</button>';
       if (c.availableForCalls) hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:#1b6fe3;color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       hh += '</div>';
-      // barra de contagem de conteúdo (estilo Privacy: Publicações · Mídia)
-      hh += '<div class="pf-section" style="padding-top:.2rem"><div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden">' +
-        '<div style="padding:13px;text-align:center;border-bottom:2px solid var(--accent,#1b74e8);font-weight:800"><span id="pf-cnt-posts">' + (c.posts || 0) + '</span> ' + L("Publicações", "Posts", "Publicaciones") + '</div>' +
-        '<div style="padding:13px;text-align:center;color:var(--muted);font-weight:700"><span id="pf-cnt-media">—</span> ' + L("Mídia", "Media", "Media") + '</div>' +
-      '</div></div>';
+      // (as abas Postagens/Mídias ficam dentro do feed do assinante — ver loadBuyerContent)
       // galeria de fotos (prévias bloqueadas) — dados reais
       hh += '<div class="pf-section" style="padding-top:.6rem"><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
       // iron quente: logo após o bloco travado vêm as encomendas (R$ alto ancora) e os mimos
@@ -4660,7 +4659,8 @@ fbq('track', 'PageView');
           document.body.appendChild(ov);
         }
         function _cell(p) {
-          return '<div class="mgcell" data-mpath="' + escHtml(p.media_path) + '" data-mtype="' + (p.media_type === "video" ? "video" : "photo") + '"><div class="mg-ph"></div>' + (p.media_type === "video" ? '<span class="mg-play">▶</span>' : '') + '</div>';
+          var isV = p.media_type === "video";
+          return '<div class="mgcell loading' + (isV ? ' isvid' : '') + '" data-mpath="' + escHtml(p.media_path) + '" data-mtype="' + (isV ? "video" : "photo") + '"><div class="mg-ph"></div>' + (isV ? '<span class="mg-play">▶</span>' : '') + '</div>';
         }
         function _buildGrid(filter) {
           var grid = document.getElementById("mgrid"); if (!grid) return;
@@ -4685,10 +4685,23 @@ fbq('track', 'PageView');
           grid.innerHTML = list.map(_cell).join("");
           grid.querySelectorAll(".mgcell").forEach(function (cell) {
             var path = cell.getAttribute("data-mpath"), type = cell.getAttribute("data-mtype");
-            signUrl(path).then(function (u) { if (!u) return; var ph = cell.querySelector(".mg-ph"); if (!ph) return;
-              if (type === "video") { ph.innerHTML = '<video src="' + u + '#t=0.1" muted playsinline preload="metadata"></video>'; }
-              else { ph.style.backgroundImage = "url('" + u + "')"; }
-            });
+            if (!path) { cell.remove(); return; }
+            signUrl(path).then(function (u) {
+              if (!u) { cell.remove(); return; }
+              var ph = cell.querySelector(".mg-ph"); if (!ph) { cell.classList.remove("loading"); return; }
+              if (type === "video") {
+                var vd = document.createElement("video");
+                vd.src = u + "#t=0.1"; vd.muted = true; vd.playsInline = true; vd.preload = "metadata";
+                vd.onloadeddata = function () { cell.classList.remove("loading"); };
+                vd.onerror = function () { cell.remove(); };
+                ph.appendChild(vd);
+              } else {
+                var im = new Image();
+                im.onload = function () { ph.style.backgroundImage = "url('" + u + "')"; cell.classList.remove("loading"); };
+                im.onerror = function () { cell.remove(); };
+                im.src = u;
+              }
+            }, function () { cell.remove(); });
           });
         }
         b.querySelectorAll(".pt2").forEach(function (tb) { tb.onclick = function () {
@@ -6201,26 +6214,23 @@ fbq('track', 'PageView');
     var body = document.getElementById("chat-body");
     var timeEl = document.getElementById("ch-time");
     (function () { var shopB = document.getElementById("ch-shop"); if (shopB) shopB.onclick = function () { openProductStore(cid); }; })();
-    // faixa fixa do pack logo abaixo do nome dela (reforço de venda rápida -> checkout). Só BR (Pix).
+    // faixa fixa de ASSINATURA logo abaixo do nome dela (vê tudo + chat sem limite). Só BR (Pix).
     function buildChatPackBar() {
       var bar = document.getElementById("ch-packbar"); if (!bar) return;
       if (coinMarket() !== "br") { bar.innerHTML = ""; return; }
-      var photos = (PACKS || []).filter(function (p) { return p.active && p.price_cents && p.kind !== "video"; });
-      if (!photos.length) { if (!PACKS || !PACKS.length) { loadPacks(function () { buildChatPackBar(); }); } return; }
-      photos.sort(function (a, b) { return a.price_cents - b.price_cents; });
-      var picks = photos.slice(0, 3); // 100 / 200 / 300 fotos
-      function cnt(p) { var n = p.item_count || parseInt(String(p.preview_text || "").replace(/[^0-9].*$/, ""), 10); return (n && !isNaN(n)) ? n : null; }
-      var chips = picks.map(function (p, i) {
-        var price = "R$ " + ((p.price_cents || 0) / 100).toFixed(2).replace(".", ",");
-        var n = cnt(p); var lab = n ? (n + " " + L("fotos", "photos", "fotos")) : escHtml(p.title);
-        return '<button class="chpk" data-pid="' + escHtml(p.id) + '" style="flex:1;min-width:0;border:0;cursor:pointer;color:#fff;background:linear-gradient(100deg,#1552b8,#db2777);padding:.38rem .2rem;line-height:1.12;' + (i > 0 ? 'border-left:1px solid rgba(255,255,255,.18);' : '') + '">' +
-          '<div style="font-weight:800;font-size:.8rem;white-space:nowrap">🔥 ' + lab + '</div>' +
-          '<div style="font-size:.71rem;opacity:.95;white-space:nowrap">' + price + '</div></button>';
-      }).join("");
-      bar.innerHTML = '<div style="display:flex;width:100%;border-bottom:1px solid rgba(0,0,0,.08)">' + chips + '</div>';
-      bar.querySelectorAll(".chpk").forEach(function (b) {
-        b.onclick = function () { var pid = b.getAttribute("data-pid"); try { if (window.clarity) window.clarity("event", "chat_packbar_click"); } catch (e) {} openCheckout("br_start", pid, cid); };
-      });
+      if (c.hasSub === false) { bar.innerHTML = ""; return; }
+      if (state.subscribed && state.subscribed[cid]) { bar.innerHTML = ""; return; } // já assina -> sem faixa
+      var price = "R$ " + (((c.subPriceCents || 1990)) / 100).toFixed(2).replace(".", ",");
+      bar.innerHTML = '<button class="chsubbar" style="display:flex;align-items:center;gap:.6rem;width:100%;border:0;cursor:pointer;color:#fff;background:linear-gradient(100deg,#7c3aed,#db2777);padding:.5rem .8rem;border-bottom:1px solid rgba(0,0,0,.08);text-align:left">' +
+        '<span style="font-size:1.1rem">🔓</span>' +
+        '<span style="flex:1;min-width:0;line-height:1.15">' +
+          '<span style="display:block;font-weight:800;font-size:.84rem">' + L("Assina e vê tudo + chat sem limite", "Subscribe — see it all + unlimited chat", "Suscríbete — ve todo + chat sin límite") + '</span>' +
+          '<span style="display:block;font-size:.72rem;opacity:.95">' + price + '/' + L("mês", "mo", "mes") + ' · ' + L("acesso na hora", "instant access", "acceso al instante") + '</span>' +
+        '</span>' +
+        '<span style="background:rgba(255,255,255,.22);border-radius:999px;padding:.28rem .7rem;font-weight:800;font-size:.8rem;white-space:nowrap">' + L("Assinar", "Subscribe", "Suscribir") + '</span>' +
+      '</button>';
+      var btn = bar.querySelector(".chsubbar");
+      if (btn) btn.onclick = function () { try { if (window.clarity) window.clarity("event", "chat_subbar_click"); } catch (e) {} openPixSub(cid, 1); };
     }
     buildChatPackBar();
     fbt("ViewContent", { content_name: cid, content_category: "chat" }); // abriu uma conversa
@@ -6451,6 +6461,7 @@ fbq('track', 'PageView');
         var _done = function () {
           var w = document.getElementById("time-wall"); if (w) w.remove();
           subscribed = true; timeEl.textContent = "∞"; timedOut = false;
+          try { if (state.subscribed) state.subscribed[cid] = true; buildChatPackBar(); } catch (e) {}
           var i2 = document.getElementById("chat-text"); if (i2) i2.disabled = false;
           var s2 = document.getElementById("chat-send"); if (s2) s2.disabled = false;
           note(L("Linha Privada ativa 💜 agora é sem limite — fala comigo 😏", "Private Line active 💜 no limits now — talk to me 😏", "Línea Privada activa 💜 sin límites ahora — háblame 😏"));
@@ -6628,14 +6639,15 @@ fbq('track', 'PageView');
     // Oferta suave do pack nas primeiras mensagens (copy Amanda) — natural, NAO cadeada: deixa claro que dá pra comprar um pack, não é só papo.
     function productTease() {
       if (pdOffered) return; pdOffered = true;
+      if (c.hasSub === false || (state.subscribed && state.subscribed[cid])) return; // já assina (ou sem assinatura) -> não oferece
       body.insertAdjacentHTML("beforeend", '<div class="bub her" style="max-width:90%">' + escHtml(L(
-        "tenho um cantinho que quase ninguém vê 🙈 um pack meu e das minhas amigas, daquelas fotos que a gente não posta em lugar nenhum. dá uma espiada 👇 ou, se não quiser agora, é só me responder que a gente continua 💜",
-        "I've got a little corner almost nobody sees 🙈 a pack of mine and my girls', the kind of photos we don't post anywhere. take a peek 👇 or, if not now, just reply and we keep going 💜",
-        "tengo un rincón que casi nadie ve 🙈 un pack mío y de mis amigas, de esas fotos que no publicamos en ningún lado. écha un ojo 👇 o, si no ahora, solo respóndeme y seguimos 💜"
+        "tem um lado meu que só quem assina vê 🙈 ali eu solto tudo e a gente fala sem limite de tempo, sem relógio correndo. se quiser, é só assinar 👇 ou me responde que a gente continua 💜",
+        "there's a side of me only subscribers see 🙈 that's where I let it all out and we talk with no time limit, no clock running. subscribe if you want 👇 or just reply and we keep going 💜",
+        "hay un lado mío que solo quien se suscribe ve 🙈 ahí lo suelto todo y hablamos sin límite de tiempo. suscríbete si quieres 👇 o respóndeme y seguimos 💜"
       )) + '</div>');
-      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">👀 ' + L("quero dar uma espiada", "lemme take a peek", "quiero espiar") + '</button></div>');
+      body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .5rem"><button class="btn btn-primary btn-sm" id="pd-tease-btn">🔓 ' + L("quero assinar", "subscribe", "quiero suscribir") + '</button></div>');
       body.scrollTop = body.scrollHeight;
-      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { try { if (window.clarity) window.clarity("event", "pack_tease_click"); } catch (e) {} if (coinMarket() === "br") { openCheckout("br_start", null, cid); } else { openHerPacks(); } };
+      var tb = document.getElementById("pd-tease-btn"); if (tb) tb.onclick = function () { try { if (window.clarity) window.clarity("event", "chat_sub_tease_click"); } catch (e) {} openPixSub(cid, 1); };
     }
     var sending = false;
     function doSend() {
@@ -6653,11 +6665,11 @@ fbq('track', 'PageView');
         if (e || !d || d.error) {
           if (d && d.error === "need_signup") {
             // NÃO quebra o clima: ela continua quente e empurra o desbloqueio (caminho do Pix, que o anônimo consegue). Cadastro vira opção secundária.
-            her(L("ai esse foi meu último grátis com você 😩 mas eu não quero parar agora… desbloqueia meu pack que eu te mostro o que mais ninguém vê 🔥", "ugh that was my last free one with you 😩 but I don't wanna stop now… unlock my pack and I'll show you what nobody else sees 🔥", "ay ese fue mi último gratis contigo 😩 pero no quiero parar… desbloquea mi pack y te muestro lo que nadie más ve 🔥"));
+            her(L("ai esse foi meu último grátis com você 😩 mas eu não quero parar agora… assina que eu te mostro tudo e a gente fala sem limite 🔥", "ugh that was my last free one with you 😩 but I don't wanna stop now… subscribe and I'll show you everything, no limits 🔥", "ay ese fue mi último gratis contigo 😩 pero no quiero parar… suscríbete y te muestro todo, sin límites 🔥"));
             setTimeout(function () {
-              body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .6rem;display:flex;flex-direction:column;gap:.4rem"><button class="btn btn-primary btn-sm" id="ns-unlock">🔓 ' + L("Quero desbloquear agora", "Unlock now", "Quiero desbloquear ahora") + '</button><button class="btn btn-ghost btn-sm" id="ns-signup" style="opacity:.72;font-size:.8rem">' + L("ou criar conta pra continuar o papo", "or create an account to keep chatting", "o crear cuenta para seguir el chat") + '</button></div>');
+              body.insertAdjacentHTML("beforeend", '<div style="align-self:flex-start;margin:.15rem 0 .6rem;display:flex;flex-direction:column;gap:.4rem"><button class="btn btn-primary btn-sm" id="ns-unlock">🔓 ' + L("Quero assinar", "Subscribe", "Quiero suscribir") + '</button><button class="btn btn-ghost btn-sm" id="ns-signup" style="opacity:.72;font-size:.8rem">' + L("ou criar conta pra continuar o papo", "or create an account to keep chatting", "o crear cuenta para seguir el chat") + '</button></div>');
               body.scrollTop = body.scrollHeight;
-              var ub = document.getElementById("ns-unlock"); if (ub) ub.onclick = function () { try { if (window.clarity) window.clarity("event", "freewall_unlock_click"); } catch (e) {} if (coinMarket() === "br") { openCheckout("br_start", null, cid); } else { openHerPacks(); } };
+              var ub = document.getElementById("ns-unlock"); if (ub) ub.onclick = function () { try { if (window.clarity) window.clarity("event", "freewall_sub_click"); } catch (e) {} openPixSub(cid, 1); };
               var sgb = document.getElementById("ns-signup"); if (sgb) sgb.onclick = function () { showAuthGate("signup", "buyer"); };
             }, 700);
             return;
@@ -6676,7 +6688,7 @@ fbq('track', 'PageView');
         her(d.reply);
         // PASSE DE TEMPO: assinante = ∞; senão sincroniza o cronômetro com o tempo restante do servidor
         if (typeof d.seconds_left === "number") {
-          if (d.seconds_left >= 999999) { subscribed = true; timeEl.textContent = "∞"; }
+          if (d.seconds_left >= 999999) { subscribed = true; timeEl.textContent = "∞"; try { if (state.subscribed) state.subscribed[cid] = true; buildChatPackBar(); } catch (e) {} }
           else { setBal(d.seconds_left); if (!tick && bal > 0) startClock(); if (bal <= 0) onTimeOut(); }
         }
         userTurns++;
