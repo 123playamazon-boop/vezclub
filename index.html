@@ -1088,7 +1088,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b184"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b185"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4596,9 +4596,13 @@ fbq('track', 'PageView');
       var nPh = row.fotos || 0, nVd = row.videos || 0;
       if (!hasSub) fillRealPacks(creatorKey, nPh, nVd, true);
       var previews = (pr && pr.data) || [];
+      // GATE DE LEAD (só BR, lead ainda não capturado): 1ª foto é isca livre, resto borrado até deixar WhatsApp/e-mail
+      var gateOn = (coinMarket() === "br") && !leadCaptured() && previews.length > 1;
       var prevHtml = previews.length
-        ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p) {
-            return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div></div></div>'; }).join("") + '</div>'
+        ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p, i) {
+            var gated = gateOn && i >= 1;
+            var foot = gated ? ('🔒 ' + L("Deixa teu contato", "Leave your contact", "Deja tu contacto")) : L("Prévia grátis", "Free preview", "Prévia gratis");
+            return '<div class="rc"><div class="rc-media' + (gated ? ' gated' : '') + '" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + foot + '</div></div></div>'; }).join("") + '</div>' + (gateOn ? leadGateHtml() : '')
         : '';
       var block = hasSub
         ? '<div class="rc-locked-all">' +
@@ -4614,6 +4618,7 @@ fbq('track', 'PageView');
         : '<div class="rc-locked-all"><div class="rla-body">' + I.lock + '<div class="rla-counts">📷 ' + nPh + ' · 🎥 ' + nVd + ' · ♡ ' + nfmt(likes) + '</div></div><div class="rla-cta"><div class="rla-h">' + L("Entra pra ver tudo dela", "Sign in to see all of her", "Entra para ver todo de ella") + '</div><div class="rla-s">' + L("As prévias acima são grátis. O resto é só pra quem entra.", "The previews above are free. The rest is for members.", "Las prévias de arriba son gratis. El resto es solo para quien entra.") + '</div><button class="btn btn-primary btn-block" data-gate-signup="1">' + L("Entrar", "Sign in", "Entrar") + '</button></div></div>';
       b.innerHTML = prevHtml + block;
       previews.forEach(function (p) { showFree(p); });
+      if (gateOn) wireLeadGate(b);
       wireGuestCta(b);
       applyDynTranslation();
     });
