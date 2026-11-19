@@ -920,6 +920,22 @@ fbq('track', 'PageView');
   .sfeed-cap { padding: 0 12px 9px; font-size: 0.93rem; line-height: 1.42; }
   .sfeed-media { position: relative; width: 100%; background: #000; min-height: 160px; }
   .sfeed-media img, .sfeed-media video { width: 100%; display: block; max-height: 78vh; object-fit: contain; background: #000; }
+  .pf-tabs2 { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 0.2rem 0 0.9rem; }
+  .pf-tabs2 .pt2 { flex: 1; padding: 0.85rem 0.5rem; border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: 0.9rem; cursor: pointer; border-bottom: 2px solid transparent; }
+  .pf-tabs2 .pt2.on { color: var(--accent); border-bottom-color: var(--accent); }
+  .pf-pane.hide { display: none; }
+  .mfilter { display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.1rem 0 0.7rem; -webkit-overflow-scrolling: touch; }
+  .mfilter .mf { flex: none; padding: 0.42rem 0.95rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+  .mfilter .mf.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .mgcell { position: relative; aspect-ratio: 1 / 1; background: var(--surface-3); border-radius: 8px; overflow: hidden; cursor: pointer; }
+  .mg-ph { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .mg-ph video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mg-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 1.4rem; text-shadow: 0 1px 7px rgba(0,0,0,.7); pointer-events: none; }
+  .mpaid { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 0.75rem; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 0.5rem; background: var(--surface); }
+  .mpaid .mp-ic { font-size: 1.45rem; flex: none; }
+  .mpaid .mp-main { flex: 1; min-width: 0; }
+  .mpaid .mp-d { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
   .rla-body { position: relative; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: linear-gradient(135deg, rgba(27,116,232,.08), rgba(27,116,232,.015)); border-bottom: 1px solid var(--line); }
   .rla-body > svg { width: 44px; height: 44px; color: var(--muted); opacity: .55; }
   .rla-counts { display: flex; gap: .4rem; align-items: center; color: var(--muted); font-weight: 700; font-size: .95rem; letter-spacing: .01em; }
@@ -1048,7 +1064,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b167"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b168"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4615,10 +4631,85 @@ fbq('track', 'PageView');
             '<div class="sfeed-media" id="rc-' + p.id + '"></div>' +
           '</div>';
         });
-        b.innerHTML = '<div class="sfeed">' + fhtml + '</div>' + cta;
+        var _photos = feedPosts.filter(function (p) { return p.media_type !== "video"; });
+        var _videos = feedPosts.filter(function (p) { return p.media_type === "video"; });
+        b.innerHTML =
+          '<div class="pf-tabs2">' +
+            '<button class="pt2 on" data-pt="posts"><b>' + feedPosts.length + '</b> ' + L("Postagens", "Posts", "Publicaciones") + '</button>' +
+            '<button class="pt2" data-pt="media"><b>' + feedPosts.length + '</b> ' + L("Mídias", "Media", "Medios") + '</button>' +
+          '</div>' +
+          '<div class="pf-pane" id="pane-posts"><div class="sfeed">' + fhtml + '</div></div>' +
+          '<div class="pf-pane hide" id="pane-media">' +
+            '<div class="mfilter">' +
+              '<button class="mf on" data-mf="all">' + L("Todos", "All", "Todos") + '</button>' +
+              '<button class="mf" data-mf="fotos">' + L("Fotos", "Photos", "Fotos") + '</button>' +
+              '<button class="mf" data-mf="videos">' + L("Vídeos", "Videos", "Vídeos") + '</button>' +
+              '<button class="mf" data-mf="pagos">' + L("Pagos", "Paid", "Pagos") + '</button>' +
+            '</div>' +
+            '<div class="mgrid" id="mgrid"></div>' +
+          '</div>' + cta;
         feedPosts.forEach(function (p) { showUnlocked(p); });
         wireSub(b, creatorKey, subPrice);
         applyDynTranslation();
+        // ===== abas Postagens/Mídias (estilo Privacy) =====
+        var _mediaBuilt = false, _curMF = "all";
+        function _openVideoLB(src) {
+          var ov = document.createElement("div"); ov.className = "lightbox";
+          ov.innerHTML = '<button class="lb-close" aria-label="fechar">✕</button><div class="lb-wrap"><video src="' + src + '" controls autoplay playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture style="max-width:92vw;max-height:82vh;border-radius:10px;background:#000"></video></div>';
+          ov.addEventListener("click", function (e) { if (e.target === ov || (e.target.closest && e.target.closest(".lb-close"))) ov.remove(); });
+          document.body.appendChild(ov);
+        }
+        function _cell(p) {
+          return '<div class="mgcell" data-mpath="' + escHtml(p.media_path) + '" data-mtype="' + (p.media_type === "video" ? "video" : "photo") + '"><div class="mg-ph"></div>' + (p.media_type === "video" ? '<span class="mg-play">▶</span>' : '') + '</div>';
+        }
+        function _buildGrid(filter) {
+          var grid = document.getElementById("mgrid"); if (!grid) return;
+          if (filter === "pagos") {
+            grid.className = "";
+            grid.innerHTML = '<p class="muted-note" style="padding:.4rem">' + L("Carregando…", "Loading…", "Cargando…") + '</p>';
+            sb.from("custom_offers").select("id,kind,title,description,price_cents,delivery_days").eq("creator_key", creatorKey).eq("active", true).order("price_cents", { ascending: false }).then(function (r) {
+              var g2 = document.getElementById("mgrid"); if (!g2) return;
+              var offers = (r.data) || [];
+              if (!offers.length) { g2.innerHTML = '<p class="muted-note" style="padding:.6rem">' + L("Nenhum pedido exclusivo disponível ainda.", "No paid orders yet.", "Aún no hay pedidos.") + '</p>'; return; }
+              g2.innerHTML = offers.map(function (o) {
+                var ic = o.kind === "audio" ? "🎧" : o.kind === "video" ? "🎬" : "⭐";
+                return '<div class="mpaid"><div class="mp-ic">' + ic + '</div><div class="mp-main"><b>' + escHtml(o.title) + '</b>' + (o.description ? '<div class="mp-d">' + escHtml(o.description) + '</div>' : '') + '</div><button class="btn btn-primary btn-sm" data-order-offer="' + o.id + '" data-title="' + escHtml(o.title) + '" data-price="' + o.price_cents + '">' + brlc(o.price_cents) + '</button></div>';
+              }).join("");
+              g2.querySelectorAll("[data-order-offer]").forEach(function (bb) { bb.onclick = function () { openOrderModal(creatorKey, +bb.getAttribute("data-order-offer"), bb.getAttribute("data-title"), +bb.getAttribute("data-price")); }; });
+            });
+            return;
+          }
+          grid.className = "mgrid";
+          var list = filter === "fotos" ? _photos : filter === "videos" ? _videos : feedPosts;
+          if (!list.length) { grid.innerHTML = '<p class="muted-note" style="padding:.6rem;grid-column:1/-1">' + L("Nada por aqui ainda.", "Nothing here yet.", "Nada aquí.") + '</p>'; return; }
+          grid.innerHTML = list.map(_cell).join("");
+          grid.querySelectorAll(".mgcell").forEach(function (cell) {
+            var path = cell.getAttribute("data-mpath"), type = cell.getAttribute("data-mtype");
+            signUrl(path).then(function (u) { if (!u) return; var ph = cell.querySelector(".mg-ph"); if (!ph) return;
+              if (type === "video") { ph.innerHTML = '<video src="' + u + '#t=0.1" muted playsinline preload="metadata"></video>'; }
+              else { ph.style.backgroundImage = "url('" + u + "')"; }
+            });
+          });
+        }
+        b.querySelectorAll(".pt2").forEach(function (tb) { tb.onclick = function () {
+          var pt = tb.getAttribute("data-pt");
+          b.querySelectorAll(".pt2").forEach(function (x) { x.classList.toggle("on", x === tb); });
+          var pp = document.getElementById("pane-posts"), pm = document.getElementById("pane-media");
+          if (pp) pp.classList.toggle("hide", pt !== "posts");
+          if (pm) pm.classList.toggle("hide", pt !== "media");
+          if (pt === "media" && !_mediaBuilt) { _mediaBuilt = true; _buildGrid(_curMF); }
+        }; });
+        b.querySelectorAll(".mf").forEach(function (fb) { fb.onclick = function () {
+          _curMF = fb.getAttribute("data-mf");
+          b.querySelectorAll(".mf").forEach(function (x) { x.classList.toggle("on", x === fb); });
+          _buildGrid(_curMF);
+        }; });
+        var _mg = document.getElementById("mgrid");
+        if (_mg) _mg.addEventListener("click", function (e) {
+          var cell = e.target.closest && e.target.closest(".mgcell"); if (!cell) return;
+          var path = cell.getAttribute("data-mpath"), type = cell.getAttribute("data-mtype");
+          signUrl(path).then(function (u) { if (!u) return; if (type === "video") _openVideoLB(u); else if (window.__zoom) window.__zoom(u); });
+        });
         return;
       }
       // NÃO-ASSINANTE: amostra (prévias grátis) + UM bloco grande travado (estilo Privacy), nunca foto-por-foto
