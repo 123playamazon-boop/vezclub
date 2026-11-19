@@ -1004,7 +1004,7 @@ fbq('track', 'PageView');
   <div class="page-head" id="boot-hero">
     <div class="eyebrow">Ao vivo agora</div>
     <h1>As mais gostosas do Brasil — e tudo que elas escondem.</h1>
-    <p>Assine e veja o que elas não postam em mais nenhum lugar: fotos sem censura, vídeos sem corte e o chat direto com ela. Acesso na hora, cancela quando quiser.</p>
+    <p>Assine e veja o que elas não postam em mais nenhum lugar: fotos sem censura, vídeos sem corte e o chat direto com ela. Acesso na hora, sem fidelidade.</p>
   </div>
   <div id="boot-sk" style="display:flex;flex-direction:column;gap:.55rem;margin-top:1rem" aria-hidden="true">
     <div style="height:62px;border-radius:16px;background:var(--surface-2,#eef2f9)"></div>
@@ -1073,7 +1073,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b174"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b175"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -1286,9 +1286,16 @@ fbq('track', 'PageView');
 
   var IMG_VER = "9"; // bump quando trocar imagens de modelo pra furar o cache (max-age 1h)
   function mediaUrl(path) { try { var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl; return u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + IMG_VER; } catch (e) { return null; } }
-  // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed)
-  // serve a imagem crua (webp ja otimizada no upload) — sem transformacao on-the-fly do Supabase (evita estourar a cota "Storage Image Transformations" e garante que a foto sempre carrega)
-  function imgUrl(path, w, q) { return mediaUrl(path); } // revertido: o render/image quebrava as miniaturas; volta pra imagem direta (confiavel). perf vem via lazy-load.
+  // miniatura redimensionada on-the-fly pelo Supabase (bem mais leve pro feed — crucial no webview do Insta/4G)
+  // o segredo é resize=contain (mantém a proporção); passar só width distorcia (foi o que quebrou antes). object-fit:cover no CSS cuida do corte.
+  function imgUrl(path, w, q) {
+    try {
+      var u = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      var t = u.replace("/object/public/", "/render/image/public/");
+      if (t === u) return mediaUrl(path); // formato inesperado -> cai pro cru
+      return t + (t.indexOf("?") < 0 ? "?" : "&") + "width=" + (w || 480) + "&resize=contain&quality=" + (q || 72) + "&v=" + IMG_VER;
+    } catch (e) { return mediaUrl(path); }
+  }
   function avThumb(c, w) { return c.avatarPath ? imgUrl(c.avatarPath, w || 160, 76) : (c.avatarUrl || null); }
   function seedRand(str, salt) { var h = 2166136261 >>> 0; var s = (str || "") + "|" + (salt || ""); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
   function vanityStats(key) {
@@ -1399,9 +1406,10 @@ fbq('track', 'PageView');
       var plans = (r.data || []).filter(function (p) { return p.price_cents > 0; });
       if (!plans.length) plans = [{ months: 1, price_cents: Math.round(c.subPrice * 100), label: "1 mês" }];
       var base = plans[0], baseMonthly = base.price_cents / base.months;
-      // melhor oferta = maior desconto (geralmente o plano mais longo) → já vem pré-selecionado
+      // "Melhor oferta" = maior desconto (plano mais longo) — só o SELO. A pré-seleção vai no plano mais barato (1 mês), menor barreira pro tráfego frio.
       var bestIdx = 0, bestOff = -1;
       plans.forEach(function (p, i) { var o = Math.round((1 - (p.price_cents / p.months) / baseMonthly) * 100); if (o > bestOff) { bestOff = o; bestIdx = i; } });
+      var selIdx = 0; // plans vêm ordenados por months asc -> índice 0 é o mais curto/barato
       var cards = plans.map(function (p, i) {
         var perMonth = p.price_cents / p.months;
         var off = (p.months > 1) ? Math.round((1 - perMonth / baseMonthly) * 100) : 0;
@@ -1409,10 +1417,10 @@ fbq('track', 'PageView');
         var anchor = brlc(p.price_cents * 2); // preço cheio (valor normal) ancorado, cortado
         var permoTxt = (p.months > 1)
           ? (brlc(perMonth) + '/' + L("mês", "mo", "mes") + ' · ' + L("acesso total", "full access", "acceso total"))
-          : L("acesso total · cancela quando quiser", "full access · cancel anytime", "acceso total · cancela cuando quieras");
+          : L("acesso total · 30 dias", "full access · 30 days", "acceso total · 30 días");
         var save = off > 0 ? '<div class="vp-save">' + L("Economize ", "Save ", "Ahorra ") + off + '%</div>' : '';
         var ribbon = (i === bestIdx && off > 0) ? '<div class="vp-ribbon">' + L("Melhor oferta", "Best deal", "Mejor oferta") + '</div>' : '';
-        var isSel = (i === bestIdx);
+        var isSel = (i === selIdx);
         return '<div class="vp-card' + (isSel ? ' sel' : '') + (i === bestIdx ? ' best' : '') + '" data-plan="' + i + '" data-months="' + p.months + '" data-price="' + p.price_cents + '">' +
           ribbon + save +
           '<div class="vp-l"><span class="vp-radio"></span><span><span class="vp-name">' + lbl + '</span><div class="vp-permo">' + permoTxt + '</div></span></div>' +
@@ -1420,8 +1428,8 @@ fbq('track', 'PageView');
         '</div>';
       }).join("");
       box.innerHTML = '<div class="vp-wrap">' + cards +
-        '<button class="vp-cta" id="vp-cta" data-pixsub="' + escHtml(c.id) + '" data-months="' + plans[bestIdx].months + '">' + L("Assinar agora", "Subscribe now", "Suscribir ahora") + ' — ' + brlc(plans[bestIdx].price_cents) + '</button>' +
-        '<div class="vp-note">' + I.lock + ' ' + L("Pix · acesso na hora · cancela quando quiser", "Pix · instant access · cancel anytime", "Pix · acceso al instante · cancela cuando quieras") + '</div>' +
+        '<button class="vp-cta" id="vp-cta" data-pixsub="' + escHtml(c.id) + '" data-months="' + plans[selIdx].months + '">' + L("Assinar agora", "Subscribe now", "Suscribir ahora") + ' — ' + brlc(plans[selIdx].price_cents) + '</button>' +
+        '<div class="vp-note">' + I.lock + ' ' + L("Pix · acesso na hora · sem fidelidade", "Pix · instant access · no commitment", "Pix · acceso al instante · sin permanencia") + '</div>' +
       '</div>';
       var cta = box.querySelector("#vp-cta");
       box.querySelectorAll(".vp-card").forEach(function (card) {
@@ -3083,7 +3091,7 @@ fbq('track', 'PageView');
       hh += '<div id="pf-packs" hidden></div>';
       hh += '</div>';
       if ((c.hasSub !== false) && !subbed) {
-        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brlc(c.subPriceCents || Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pix · acesso na hora · cancela quando quiser", "Pix · instant access · cancel anytime", "Pix · acceso al instante · cancela cuando quieras") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
+        hh += '<div class="pf-cta-bar show"><div class="cta-info"><div class="cta-price">' + brlc(c.subPriceCents || Math.round(pm * 100)) + '/' + L("mês", "mo", "mes") + '</div><div class="cta-sub">' + L("Pix · acesso na hora · sem fidelidade", "Pix · instant access · no commitment", "Pix · acceso al instante · sin permanencia") + '</div></div><button class="btn btn-primary" data-pixsub="' + c.id + '" data-months="1">' + L("Assinar", "Subscribe", "Suscribir") + '</button></div>';
       }
       app.innerHTML = hh;
       try { window.scrollTo(0, 0); } catch (e) {}
@@ -4507,12 +4515,7 @@ fbq('track', 'PageView');
       if (!eligible()) return;
       exitComboOffer();
     });
-    try { history.pushState({ vez: 1 }, ""); } catch (e) {} // mobile: absorve um "voltar"
-    window.addEventListener("popstate", function () {
-      if (!eligible()) return; // nao elegivel -> deixa sair normalmente
-      try { history.pushState({ vez: 1 }, ""); } catch (e) {}
-      exitComboOffer();
-    });
+    // mobile: NÃO sequestramos o botão voltar (irrita e a Meta pune a LP como má experiência). Só o exit-intent de desktop (mouseout) continua.
   }
 
   var chatCh = null, chatTypingTimer = null;
@@ -4520,7 +4523,7 @@ fbq('track', 'PageView');
 
   /* ---------------- real content (upload / moderation / unlock) ---------------- */
   function fileExt(n) { var m = /\.([a-z0-9]+)$/i.exec(n || ""); return m ? m[1].toLowerCase() : "jpg"; }
-  function wmHtml() { var e = escHtml((account && account.email) || "aura"); var s = ""; for (var i = 0; i < 9; i++) s += "<span>" + e + "</span>"; return '<div class="wm">' + s + "</div>"; }
+  function wmHtml() { var e = escHtml((account && account.email) || "aura"); var s = ""; for (var i = 0; i < 4; i++) s += "<span>" + e + "</span>"; return '<div class="wm">' + s + "</div>"; }
   function signUrl(path) { return sb.storage.from("content").createSignedUrl(path, 120).then(function (r) { return r.data && r.data.signedUrl; }).catch(function () { return null; }); }
 
   function loadMyPosts() {
@@ -7118,18 +7121,17 @@ fbq('track', 'PageView');
       // chat saiu da entrada: clicar no card/foto sempre abre o perfil (o chat fica só dentro do perfil)
       state.creatorId = id; state.view = "store"; render();
     } else if (sub) {
-      if (needLogin()) return;
+      // SEMPRE pagamento real (nada de grant grátis): BR -> Pix, US -> Stripe
       var cid = sub.getAttribute("data-sub");
       state.fanXP[cid] = (state.fanXP[cid] || 0) + 40;
-      if (sb && account) {
-        var cObjS = CREATORS.find(function (x) { return x.id === cid; });
-        sb.rpc("subscribe_creator", { p_creator_key: cid, p_amount_cents: (cObjS ? cObjS.subPrice : 19) * 100, p_tier: "entry" }).then(function (r) {
-          state.subscribed[cid] = true;
-          state.subscribedTier[cid] = "entry";
-          toast(r && r.error ? "Erro: " + r.error.message : L("Tá dentro 🔥 acesso a TUDO dela por 30 dias", "You're in 🔥 access to ALL of her for 30 days", "Estás dentro 🔥 acceso a TODO de ella por 30 días"));
-          render();
-        });
-      } else { state.subscribed[cid] = true; state.subscribedTier[cid] = "entry"; toast("Assinatura simulada"); render(); }
+      if (coinMarket() === "br") { openPixSub(cid, 1); return; }
+      if (needLogin()) return;
+      payInterstitial(function () {
+        sb.functions.invoke("sub_stripe", { body: { creator_key: cid } }).then(function (res) {
+          if (res && res.data && res.data.url) { window.location.href = res.data.url; }
+          else { toast(L("Não abriu o checkout 🙏", "Checkout didn't open 🙏", "No abrió el checkout 🙏")); }
+        }).catch(function () { toast(L("Falha no checkout 🙏", "Checkout failed 🙏", "Falló el checkout 🙏")); });
+      });
     } else if (subtier) {
       if (needLogin()) return;
       var scid = subtier.getAttribute("data-subtier"), samt = +subtier.getAttribute("data-amt");
