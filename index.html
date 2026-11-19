@@ -244,7 +244,7 @@ fbq('track', 'PageView');
   @media (max-width: 880px) { .feed-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .feed-grid { grid-template-columns: 1fr; } }
 
-  .creator-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; cursor: pointer; }
+  .creator-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; cursor: pointer; content-visibility: auto; contain-intrinsic-size: auto 420px; }
   .creator-card:active { transform: scale(0.992); }
   .cc-cover { aspect-ratio: 4 / 3; max-height: 200px; background-size: cover !important; background-position: center 18% !important; position: relative; overflow: hidden; }
   .cc-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; z-index: 0; }
@@ -1068,7 +1068,7 @@ fbq('track', 'PageView');
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <script>
 (function () {
   "use strict";
@@ -1089,7 +1089,8 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b189"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b190"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2145,7 +2146,7 @@ fbq('track', 'PageView');
     return '<div class="avatar ' + (cls || "") + '" style="background:' + grad(c.color) + '">' + initials(c.name) + '</div>';
   }
   function coverBg(c) { return c.coverUrl ? ("center/cover no-repeat url('" + c.coverUrl + "')") : grad(c.color); }
-  function coverImg(c, eager) { var u = c.coverPath ? imgUrl(c.coverPath, 480, 72) : c.coverUrl; if (!u) return ''; return eager ? '<img class="cc-cover-img" src="' + u + '" fetchpriority="high" decoding="async" alt="">' : '<img class="cc-cover-img" src="' + u + '" loading="lazy" decoding="async" alt="">'; }
+  function coverImg(c, eager) { var u = c.coverPath ? imgUrl(c.coverPath, 420, 64) : c.coverUrl; if (!u) return ''; return eager ? '<img class="cc-cover-img" src="' + u + '" fetchpriority="high" decoding="async" alt="">' : '<img class="cc-cover-img" src="' + u + '" loading="lazy" decoding="async" alt="">'; }
 
   function unreadTotal() { var n = 0; for (var k in state.unread) n += state.unread[k] || 0; return n; }
   function liveCount(c) { return Math.round(c.subs * 0.012) + (c.online ? 8 : 2); }
@@ -2694,7 +2695,7 @@ fbq('track', 'PageView');
     html += '<div class="chips">' + CATS.map(function (c) { return '<span class="chip ' + (state.feedCat === c.k ? "on" : "") + '" data-cat="' + c.k + '">' + c.t + '</span>'; }).join("") + '</div>';
     html += '<div class="ticker" id="live-ticker"><span class="d"></span><span>' + tickerLine() + '</span></div>';
     // gate de lead na home (só BR, anônimo, lead ainda não capturado): 1ª mini-foto é isca, resto borrado
-    var gatedHome = (coinMarket() === "br") && !account && !leadCaptured();
+    var gatedHome = FREE_GATE && (coinMarket() === "br") && !account && !leadCaptured();
     if (gatedHome) html += leadGateHtml();
     html += '<div class="feed-grid">';
     CREATORS.forEach(function (c, _i) {
@@ -2725,7 +2726,7 @@ fbq('track', 'PageView');
         ? '<div class="cc-status on"><span class="live-dot"></span>' + L("Online agora · conteúdo novo", "Online now · new content", "En línea ahora · contenido nuevo") + '</div>'
         : '<div class="cc-status on"><span class="live-dot"></span>' + L("Online · conteúdo novo toda semana", "Online · new content every week", "Online · contenido nuevo cada semana") + '</div>';
       html += '<div class="creator-card" data-creator="' + c.id + '" data-online="' + (c.online ? "1" : "0") + '" data-tags="' + escHtml((c.tag || "").toLowerCase()) + '" data-s="' + escHtml((c.name + " " + c.handle + " " + (c.tag || "") + " " + (c.hook || "")).toLowerCase()) + '">' +
-        '<div class="cc-cover" style="background:' + grad(c.color) + '">' + coverImg(c, _i < 2) + ribbon + (c.online ? '<div class="pf-online" style="top:10px;right:10px;font-size:0.66rem;padding:0.22rem 0.52rem"><span class="live"></span>online</div>' : '') + '</div>' +
+        '<div class="cc-cover" style="background:' + grad(c.color) + '">' + coverImg(c, _i < 1) + ribbon + (c.online ? '<div class="pf-online" style="top:10px;right:10px;font-size:0.66rem;padding:0.22rem 0.52rem"><span class="live"></span>online</div>' : '') + '</div>' +
         '<div class="cc-body">' +
           avatar(c) +
           '<div class="cc-name">' + c.name + '<span class="verif">' + I.verif + '</span></div>' +
@@ -4598,7 +4599,7 @@ fbq('track', 'PageView');
       if (!hasSub) fillRealPacks(creatorKey, nPh, nVd, true);
       var previews = (pr && pr.data) || [];
       // GATE DE LEAD (só BR, lead ainda não capturado): 1ª foto é isca livre, resto borrado até deixar WhatsApp/e-mail
-      var gateOn = (coinMarket() === "br") && !leadCaptured() && previews.length > 1;
+      var gateOn = FREE_GATE && (coinMarket() === "br") && !leadCaptured() && previews.length > 1;
       var prevHtml = previews.length
         ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p, i) {
             var gated = gateOn && i >= 1;
@@ -4832,7 +4833,7 @@ fbq('track', 'PageView');
       var nVd = pr.data.filter(function (p) { return p.media_type === "video"; }).length;
       var likes = (cObj && cObj.likes) || 0;
       // GATE DE LEAD (só BR, anônimo, lead ainda não capturado): 1ª foto é isca livre, resto borrado até deixar WhatsApp/e-mail
-      var gateOn = (coinMarket() === "br") && !account && !leadCaptured() && previews.length > 1;
+      var gateOn = FREE_GATE && (coinMarket() === "br") && !account && !leadCaptured() && previews.length > 1;
       var prevHtml = previews.length
         ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p, i) {
             var gated = gateOn && i >= 1;
