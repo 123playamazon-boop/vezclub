@@ -1073,7 +1073,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b175"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b176"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4523,7 +4523,7 @@ fbq('track', 'PageView');
 
   /* ---------------- real content (upload / moderation / unlock) ---------------- */
   function fileExt(n) { var m = /\.([a-z0-9]+)$/i.exec(n || ""); return m ? m[1].toLowerCase() : "jpg"; }
-  function wmHtml() { var e = escHtml((account && account.email) || "aura"); var s = ""; for (var i = 0; i < 4; i++) s += "<span>" + e + "</span>"; return '<div class="wm">' + s + "</div>"; }
+  function wmHtml() { var s = ""; for (var i = 0; i < 4; i++) s += "<span>vezclub.com</span>"; return '<div class="wm">' + s + "</div>"; }
   function signUrl(path) { return sb.storage.from("content").createSignedUrl(path, 120).then(function (r) { return r.data && r.data.signedUrl; }).catch(function () { return null; }); }
 
   function loadMyPosts() {
