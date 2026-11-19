@@ -1067,7 +1067,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b169"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b170"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -6589,7 +6589,7 @@ fbq('track', 'PageView');
       }
       sb.rpc("is_subscribed", { p_creator: cid }).then(function (sr) {
         subscribed = !!(sr && sr.data);
-        if (subscribed) { timeEl.textContent = "∞"; maybeAutoSend(); return; }
+        if (subscribed) { timeEl.textContent = "∞"; try { if (state.subscribed) state.subscribed[cid] = true; buildChatPackBar(); } catch (e) {} maybeAutoSend(); return; }
         loadTime();
       }, function () { loadTime(); });
     }
