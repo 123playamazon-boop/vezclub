@@ -973,6 +973,7 @@ fbq('track', 'PageView');
   .lead-gate input { flex: 1; min-width: 0; padding: .72rem .8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--card2, var(--surface)); color: inherit; font-size: .95rem; }
   .lead-gate button { flex: 0 0 auto; border: 0; border-radius: 10px; padding: .72rem 1rem; font-weight: 800; color: #fff; background: var(--accent); cursor: pointer; }
   .lead-gate .lg-err { color: var(--bad, #e11d48); font-size: .78rem; margin-top: .4rem; display: none; }
+  .lead-gate .lg-free { background: var(--good, #059669); color: #fff; padding: .05rem .4rem; border-radius: 6px; font-weight: 900; letter-spacing: .03em; }
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(5,8,16,0.94); display: flex; align-items: center; justify-content: center; padding: 16px; -webkit-user-select: none; user-select: none; }
   .lightbox .lb-wrap { position: relative; max-width: 100%; max-height: 100%; display: flex; }
   .lightbox img { max-width: 92vw; max-height: 82vh; object-fit: contain; border-radius: 10px; -webkit-user-drag: none; }
@@ -1088,7 +1089,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b185"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b186"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4601,7 +4602,7 @@ fbq('track', 'PageView');
       var prevHtml = previews.length
         ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p, i) {
             var gated = gateOn && i >= 1;
-            var foot = gated ? ('🔒 ' + L("Deixa teu contato", "Leave your contact", "Deja tu contacto")) : L("Prévia grátis", "Free preview", "Prévia gratis");
+            var foot = gated ? ('👀 ' + L("Grátis · deixa o contato", "Free · leave your contact", "Gratis · deja tu contacto")) : L("Prévia grátis", "Free preview", "Prévia gratis");
             return '<div class="rc"><div class="rc-media' + (gated ? ' gated' : '') + '" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + foot + '</div></div></div>'; }).join("") + '</div>' + (gateOn ? leadGateHtml() : '')
         : '';
       var block = hasSub
@@ -4835,7 +4836,7 @@ fbq('track', 'PageView');
       var prevHtml = previews.length
         ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p, i) {
             var gated = gateOn && i >= 1;
-            var foot = gated ? ('🔒 ' + L("Deixa teu contato", "Leave your contact", "Deja tu contacto")) : L("Prévia grátis", "Free preview", "Prévia gratis");
+            var foot = gated ? ('👀 ' + L("Grátis · deixa o contato", "Free · leave your contact", "Gratis · deja tu contacto")) : L("Prévia grátis", "Free preview", "Prévia gratis");
             return '<div class="rc"><div class="rc-media' + (gated ? ' gated' : '') + '" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + foot + '</div></div></div>'; }).join("") + '</div>'
         : '';
       // bloco grande "Veja tudo que ela esconde" removido (redundante com o Clube VIP no topo)
@@ -4853,9 +4854,9 @@ fbq('track', 'PageView');
   function leadCaptured() { try { return !!localStorage.getItem("vez_lead_ok"); } catch (e) { return false; } }
   function leadGateHtml() {
     return '<div class="lead-gate" id="lead-gate">' +
-      '<div class="lg-h">👀 ' + L("Quer ver sem borrão?", "Want to see it unblurred?", "¿Quieres verlo sin borrón?") + '</div>' +
-      '<div class="lg-s">' + L("Deixa teu WhatsApp ou e-mail e eu libero as fotos agora, de graça 💜", "Leave your WhatsApp or email and I'll unlock the photos now, free 💜", "Deja tu WhatsApp o correo y libero las fotos ahora, gratis 💜") + '</div>' +
-      '<div class="lg-row"><input id="lg-input" type="text" inputmode="email" autocomplete="off" placeholder="' + escHtml(L("WhatsApp ou e-mail", "WhatsApp or email", "WhatsApp o correo")) + '"><button id="lg-btn">' + L("Liberar", "Unlock", "Liberar") + '</button></div>' +
+      '<div class="lg-h">👀 ' + L("Ver sem borrão é ", "Seeing it unblurred is ", "Verlo sin borrón es ") + '<span class="lg-free">' + L("GRÁTIS", "FREE", "GRATIS") + '</span></div>' +
+      '<div class="lg-s">' + L("Não precisa pagar nada — é só deixar teu WhatsApp ou e-mail que eu libero todas as prévias na hora 💜", "No payment needed — just leave your WhatsApp or email and I'll unlock all the previews instantly 💜", "No hay que pagar nada — solo deja tu WhatsApp o correo y libero todas las prévias al instante 💜") + '</div>' +
+      '<div class="lg-row"><input id="lg-input" type="text" inputmode="email" autocomplete="off" placeholder="' + escHtml(L("Teu WhatsApp ou e-mail", "Your WhatsApp or email", "Tu WhatsApp o correo")) + '"><button id="lg-btn">' + L("Liberar grátis", "Unlock free", "Liberar gratis") + '</button></div>' +
       '<div class="lg-err" id="lg-err">' + L("Digita um WhatsApp ou e-mail válido 🙏", "Enter a valid WhatsApp or email 🙏", "Escribe un WhatsApp o correo válido 🙏") + '</div>' +
     '</div>';
   }
