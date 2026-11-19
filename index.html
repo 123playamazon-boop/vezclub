@@ -881,6 +881,12 @@ fbq('track', 'PageView');
   .story-view .sv-bar { position: absolute; top: 10px; left: 10px; right: 10px; height: 3px; background: rgba(255,255,255,0.4); border-radius: 2px; overflow: hidden; z-index: 2; }
   .story-view .sv-bar i { display: block; height: 100%; background: #fff; transform-origin: left; animation: storybar 5s linear forwards; }
   @keyframes storybar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  .story-view .sv-bar-multi { display: flex; gap: 3px; background: transparent; height: auto; }
+  .story-view .sv-seg { flex: 1; height: 3px; background: rgba(255,255,255,0.4); border-radius: 2px; overflow: hidden; }
+  .story-view .sv-seg b { display: block; height: 100%; width: 0; background: #fff; }
+  .story-view .sv-tap { position: absolute; top: 0; height: 72%; z-index: 3; cursor: pointer; }
+  .story-view .sv-tap-l { left: 0; width: 32%; }
+  .story-view .sv-tap-r { right: 0; width: 68%; }
   .story-view .sv-body { position: relative; z-index: 2; padding: 1.3rem; color: #fff; }
   .story-view .sv-name { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; }
   .story-view .sv-body p { margin: 0.4rem 0 1rem; font-size: 0.98rem; line-height: 1.4; }
@@ -1067,7 +1073,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b171"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b172"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4338,16 +4344,34 @@ fbq('track', 'PageView');
     render();
   }
 
+  var _storyTimer = null;
+  function _storyStop() { if (_storyTimer) { clearTimeout(_storyTimer); _storyTimer = null; } }
+  function _storyAdvance(idx, delta) { // avança/volta na fila; igual Instagram: ao acabar pula pra próxima
+    _storyStop();
+    if (!modalRoot.querySelector(".story-view")) return; // modal já fechado -> não reabre
+    var ni = idx + delta;
+    if (ni < 0) { openStory(CREATORS[0].id); return; }       // já na 1ª -> reinicia
+    if (ni >= CREATORS.length) { closeModal(); return; }     // acabou a fila -> fecha
+    openStory(CREATORS[ni].id);
+  }
   function openStory(cid) {
-    var c = CREATORS.find(function (x) { return x.id === cid; });
+    var idx = CREATORS.findIndex(function (x) { return x.id === cid; });
+    if (idx < 0) idx = 0;
+    var c = CREATORS[idx];
     state.storiesSeen[cid] = true;
     var sbg = c.coverUrl || c.avatarUrl;
     var svStyle = sbg
       ? "background:linear-gradient(to top, rgba(5,8,16,0.8) 0%, rgba(5,8,16,0.4) 22%, transparent 42%), center/cover no-repeat url('" + sbg + "')"
       : "background:" + grad(c.color);
+    // barra segmentada (uma por modelo) mostrando onde está na fila
+    var segs = CREATORS.map(function (_c, i) {
+      var fill = i < idx ? "100%" : "0%";
+      return '<span class="sv-seg"' + (i === idx ? ' data-cur="1"' : '') + '><b style="width:' + fill + '"></b></span>';
+    }).join("");
     modalRoot.innerHTML = '<div class="modal-bg" data-close><div class="modal" style="max-width:360px;background:transparent;border:0;box-shadow:none">' +
       '<div class="story-view' + (sbg ? ' has-img' : '') + '" style="' + svStyle + '">' +
-        '<div class="sv-bar"><i></i></div>' +
+        '<div class="sv-bar sv-bar-multi">' + segs + '</div>' +
+        '<div class="sv-tap sv-tap-l" data-story-prev></div><div class="sv-tap sv-tap-r" data-story-next></div>' +
         '<div class="sv-body"><div class="sv-name">' + c.name.split(" ")[0] + '</div><p class="sv-hook">' + escHtml(c.hook) + '</p>' +
         '<div id="sv-flash" style="margin-bottom:.45rem"></div>' +
         (c.hasChat ? '<button class="btn btn-block" data-chat-open="' + cid + '" style="background:var(--accent);color:#fff;margin-bottom:0.45rem">' + I.chatic + ' ' + L("Conversar agora", "Chat now", "Charlar ahora") + '</button>' : '') +
@@ -4355,10 +4379,17 @@ fbq('track', 'PageView');
       '</div></div></div>';
     applyDynTranslation();
     loadStoryFlash(cid, 3 + (c.left % 6));
+    // auto-avanço: ao encher a barra da modelo atual, pula sozinho pra próxima
+    _storyStop();
+    var curBar = modalRoot.querySelector('.sv-seg[data-cur="1"] b');
+    if (curBar) { curBar.style.transition = "width 5s linear"; requestAnimationFrame(function () { curBar.style.width = "100%"; }); }
+    _storyTimer = setTimeout(function () { _storyAdvance(idx, 1); }, 5000);
     var b = modalRoot.querySelector("[data-story-go]");
-    if (b) b.onclick = function () { closeModal(); state.creatorId = cid; state.view = "store"; render(); };
+    if (b) b.onclick = function (e) { e.stopPropagation(); _storyStop(); closeModal(); state.creatorId = cid; state.view = "store"; render(); };
     var cb = modalRoot.querySelector("[data-chat-open]");
-    if (cb) cb.onclick = function () { closeModal(); openAiChat(cid); }; // chat = extra por tempo (R$5,99/10min), assinante livre
+    if (cb) cb.onclick = function (e) { e.stopPropagation(); _storyStop(); closeModal(); openAiChat(cid); }; // chat = extra por tempo, assinante livre
+    var tn = modalRoot.querySelector("[data-story-next]"); if (tn) tn.onclick = function (e) { e.stopPropagation(); _storyAdvance(idx, 1); };
+    var tp = modalRoot.querySelector("[data-story-prev]"); if (tp) tp.onclick = function (e) { e.stopPropagation(); _storyAdvance(idx, -1); };
   }
 
   // Flash PPV: o story já "some em Xh" — torna isso comprável (desbloqueia o álbum dela com urgência real)
