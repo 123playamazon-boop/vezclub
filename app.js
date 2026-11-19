@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b193"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b194"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -1611,6 +1611,9 @@
     // GANCHO: modelo em destaque no topo — dá ao tráfego frio (que cai na home genérica) um próximo passo quente e óbvio: o chat dela
     (function () {
       var pool = CREATORS.filter(function (c) { return c.online && c.hasChat !== false && (c.coverUrl || c.coverPath); });
+      // prioriza modelo REAL (com assinatura) — converte de verdade; IA é fallback
+      var real = pool.filter(function (c) { return c.hasSub !== false; });
+      if (real.length) pool = real;
       pool.sort(function (a, b) { return (b.subs || 0) - (a.subs || 0); });
       var F = pool[0]; if (!F) return;
       var fn = (F.name || "").split(" ")[0];
