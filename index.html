@@ -969,9 +969,9 @@ fbq('track', 'PageView');
   .lead-gate { margin: 1rem 0 .3rem; padding: 1rem 1.05rem; border: 2px solid var(--accent); border-radius: 14px; background: linear-gradient(135deg, rgba(124,58,237,.08), transparent); }
   .lead-gate .lg-h { font-weight: 800; font-size: .98rem; margin-bottom: .2rem; }
   .lead-gate .lg-s { font-size: .82rem; color: var(--muted); margin-bottom: .7rem; }
-  .lead-gate .lg-row { display: flex; gap: .5rem; }
-  .lead-gate input { flex: 1; min-width: 0; padding: .72rem .8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--card2, var(--surface)); color: inherit; font-size: .95rem; }
-  .lead-gate button { flex: 0 0 auto; border: 0; border-radius: 10px; padding: .72rem 1rem; font-weight: 800; color: #fff; background: var(--accent); cursor: pointer; }
+  .lead-gate .lg-row { display: flex; flex-direction: column; gap: .5rem; }
+  .lead-gate input { width: 100%; box-sizing: border-box; padding: .8rem .9rem; border: 1px solid var(--line); border-radius: 10px; background: var(--card2, var(--surface)); color: inherit; font-size: 1rem; }
+  .lead-gate button { width: 100%; border: 0; border-radius: 10px; padding: .85rem 1rem; font-weight: 800; font-size: 1rem; color: #fff; background: var(--accent); cursor: pointer; }
   .lead-gate .lg-err { color: var(--bad, #e11d48); font-size: .78rem; margin-top: .4rem; display: none; }
   .lead-gate .lg-free { background: var(--good, #059669); color: #fff; padding: .05rem .4rem; border-radius: 6px; font-weight: 900; letter-spacing: .03em; }
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(5,8,16,0.94); display: flex; align-items: center; justify-content: center; padding: 16px; -webkit-user-select: none; user-select: none; }
@@ -1089,7 +1089,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b187"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b188"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
