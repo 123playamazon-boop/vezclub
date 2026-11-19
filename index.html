@@ -955,6 +955,7 @@ fbq('track', 'PageView');
   .rc-foot { padding: 0 0.8rem 0.8rem; }
   .wm { position: absolute; inset: 0; z-index: 2; pointer-events: none; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; transform: rotate(-24deg) scale(1.4); opacity: .1; }
   .wm span { color: #fff; font-size: .6rem; font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.45); white-space: nowrap; margin: 20px 30px; }
+  .wm-tag { position: absolute; right: 5px; bottom: 4px; z-index: 2; pointer-events: none; color: #fff; opacity: .28; font-size: .52rem; font-weight: 600; letter-spacing: .03em; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
   .rc-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; display: block; }
   .free-badge { position: absolute; top: 8px; left: 8px; z-index: 3; background: var(--good); color: #fff; font-size: .68rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: .2rem .5rem; border-radius: 999px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .rc-media img, .rc-media video { cursor: zoom-in; }
@@ -1073,7 +1074,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b176"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b177"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4523,7 +4524,12 @@ fbq('track', 'PageView');
 
   /* ---------------- real content (upload / moderation / unlock) ---------------- */
   function fileExt(n) { var m = /\.([a-z0-9]+)$/i.exec(n || ""); return m ? m[1].toLowerCase() : "jpg"; }
-  function wmHtml() { var s = ""; for (var i = 0; i < 4; i++) s += "<span>vezclub.com</span>"; return '<div class="wm">' + s + "</div>"; }
+  function wmHtml() {
+    var s = ""; for (var i = 0; i < 4; i++) s += "<span>vezclub.com</span>";
+    var uid = (account && account.id) ? String(account.id).slice(-8) : ""; // código discreto do comprador (rastreável no Supabase)
+    var tag = uid ? '<div class="wm-tag">#' + escHtml(uid) + "</div>" : "";
+    return '<div class="wm">' + s + "</div>" + tag;
+  }
   function signUrl(path) { return sb.storage.from("content").createSignedUrl(path, 120).then(function (r) { return r.data && r.data.signedUrl; }).catch(function () { return null; }); }
 
   function loadMyPosts() {
