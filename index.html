@@ -956,6 +956,9 @@ fbq('track', 'PageView');
   .wm { position: absolute; inset: 0; z-index: 2; pointer-events: none; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; transform: rotate(-24deg) scale(1.4); opacity: .1; }
   .wm span { color: #fff; font-size: .6rem; font-weight: 600; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.45); white-space: nowrap; margin: 20px 30px; }
   .wm-tag { position: absolute; right: 5px; bottom: 4px; z-index: 2; pointer-events: none; color: #fff; opacity: .28; font-size: .52rem; font-weight: 600; letter-spacing: .03em; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+  .pf-legal { margin: 1.4rem 0 0.6rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .pf-legal-h { font-weight: 800; font-size: 0.82rem; color: var(--tx, #1b1830); margin-bottom: 0.35rem; }
+  .pf-legal p { margin: 0; font-size: 0.72rem; line-height: 1.5; color: var(--muted); }
   .rc-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; display: block; }
   .free-badge { position: absolute; top: 8px; left: 8px; z-index: 3; background: var(--good); color: #fff; font-size: .68rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: .2rem .5rem; border-radius: 999px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .rc-media img, .rc-media video { cursor: zoom-in; }
@@ -1074,7 +1077,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b177"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b178"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4706,7 +4709,15 @@ fbq('track', 'PageView');
               '<button class="mf" data-mf="pagos">' + L("Pagos", "Paid", "Pagos") + '</button>' +
             '</div>' +
             '<div class="mgrid" id="mgrid"></div>' +
-          '</div>' + cta;
+          '</div>' + cta +
+          '<div class="pf-legal">' +
+            '<div class="pf-legal-h">🔒 ' + L("Conteúdo protegido · uso pessoal", "Protected content · personal use", "Contenido protegido · uso personal") + '</div>' +
+            '<p>' + L(
+              "Cada foto e vídeo aqui carrega um código único ligado à sua conta, e-mail e IP. Tirar print, baixar, copiar ou repassar qualquer mídia desta página é crime — violação de direito autoral e de imagem (Lei 9.610/98 e art. 216-B do Código Penal) — e dá processo civil e criminal. A gente rastreia e identifica quem vazou, e vai atrás. Isso aqui é só nosso. Mantém assim. 💜",
+              "Every photo and video here carries a unique code tied to your account, email and IP address. Screenshotting, downloading, copying or sharing any media from this page is illegal — copyright and right-of-publicity infringement — and will be pursued civilly and criminally. We trace and identify whoever leaks it, and we come after them. This stays between us. Keep it that way. 💜",
+              "Cada foto y video aquí lleva un código único ligado a tu cuenta, correo e IP. Hacer captura, descargar, copiar o compartir cualquier contenido de esta página es ilegal — violación de derechos de autor e imagen — y será perseguido civil y penalmente. Rastreamos e identificamos a quien lo filtre, y vamos tras él. Esto queda entre nosotros. Que siga así. 💜"
+            ) + '</p>' +
+          '</div>';
         feedPosts.forEach(function (p) { showUnlocked(p); });
         wireSub(b, creatorKey, subPrice);
         applyDynTranslation();
