@@ -1077,7 +1077,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b181"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b182"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -3035,10 +3035,10 @@ fbq('track', 'PageView');
       hh += '<div class="pf-name">' + c.name + '<span class="verif">' + I.verif + '</span></div>';
       hh += '<div class="pf-handle">' + (c.handle || ('@' + c.id)) + '</div>';
       if (c.hook) hh += '<div class="pf-hook">' + c.hook + '</div>';
-      if (c.story) hh += '<div class="pf-about" style="margin:.5rem 0 0;font-size:.95rem;line-height:1.45">' + c.story + '</div>';
+      if (c.story) hh += '<div class="pf-about"' + (c.hasChat !== false ? ' data-chat-open="' + c.id + '" style="margin:.5rem 0 0;font-size:.95rem;line-height:1.45;cursor:pointer"' : ' style="margin:.5rem 0 0;font-size:.95rem;line-height:1.45"') + '>' + c.story + '</div>';
       hh += '<button id="pf-order-hook" hidden style="display:none;margin-top:.7rem;width:100%;text-align:left;border:1px solid var(--line);background:linear-gradient(135deg,rgba(27,116,232,.07),transparent);border-radius:12px;padding:11px 13px;cursor:pointer;font-weight:700;color:inherit">💌 ' + L("Ela grava um conteúdo só pra você", "She records content just for you", "Ella graba contenido solo para ti") + ' <span style="float:right;opacity:.6">→</span></button>';
       hh += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), L("assinantes", "subscribers", "suscriptores")) + st(nfmt(c.likes), L("curtidas", "likes", "me gusta")) + '</div>';
-      if (c.online) hh += '<div class="pf-status"><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + '</div>';
+      if (c.online) hh += '<div class="pf-status"' + (c.hasChat !== false ? ' data-chat-open="' + c.id + '" style="cursor:pointer"' : '') + '><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + (c.hasChat !== false ? ' <span style="opacity:.6">→</span>' : '') + '</div>';
       hh += '<div id="pf-goal" class="pf-section" hidden></div>';
       // ===== Clube VIP: oferta nomeada + stack de valor + planos (R$, Pix) =====
       if (c.hasSub !== false) {
@@ -3131,7 +3131,7 @@ fbq('track', 'PageView');
     html += '<div class="pf-hook">' + c.hook + '</div>';
     html += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), "assinantes") + st(nfmt(c.likes), "curtidas") + '</div>';
     if (c.hasChat) {
-      if (c.online) html += '<div class="pf-status"><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + '</div>';
+      if (c.online) html += '<div class="pf-status"' + (c.hasChat !== false ? ' data-chat-open="' + c.id + '" style="cursor:pointer"' : '') + '><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + (c.hasChat !== false ? ' <span style="opacity:.6">→</span>' : '') + '</div>';
       else html += '<div class="pf-status" style="color:var(--muted)">' + I.clock + ' ' + L("Costuma responder em ", "Usually replies in ", "Suele responder en ") + c.responds + '</div>';
     } else {
       html += '<div class="pf-status"><span class="live-dot"></span>' + L("Online · conteúdo novo toda semana", "Online · new content every week", "Online · contenido nuevo cada semana") + '</div>';
