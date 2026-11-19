@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b197"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b198"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -2008,6 +2008,8 @@
       hh += '<div class="pf-stats">' + st(c.posts, "posts") + st(nfmt(c.subs), L("assinantes", "subscribers", "suscriptores")) + st(nfmt(c.likes), L("curtidas", "likes", "me gusta")) + '</div>';
       if (c.online) hh += '<div class="pf-status"' + (c.hasChat !== false ? ' data-chat-open="' + c.id + '" style="cursor:pointer"' : '') + '><span class="live-dot"></span>' + L("Online agora · responde na hora", "Online now · replies instantly", "En línea ahora · responde al instante") + (c.hasChat !== false ? ' <span style="opacity:.6">→</span>' : '') + '</div>';
       hh += '<div id="pf-goal" class="pf-section" hidden></div>';
+      // AMOSTRA GRÁTIS no topo — o cliente vê logo uma prévia dela antes do pitch de assinatura (padrão pra todas)
+      hh += '<div class="pf-section" style="padding-top:.5rem"><div class="pf-h" id="pf-sample-h">📸 ' + L("Amostra grátis", "Free sample", "Muestra gratis") + '</div><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
       // ===== Clube VIP: oferta nomeada + stack de valor + planos (R$, Pix) =====
       if (c.hasSub !== false) {
         var firstNm = (c.name || "VIP").split(" ")[0];
@@ -2043,8 +2045,7 @@
       if (c.availableForCalls) hh += '<button class="btn btn-block" data-call="' + escHtml(c.id) + '" style="background:#1b6fe3;color:#fff">📞 ' + L("Chamada de vídeo privada", "Private video call", "Videollamada privada") + '</button>';
       hh += '</div>';
       // (as abas Postagens/Mídias ficam dentro do feed do assinante — ver loadBuyerContent)
-      // galeria de fotos (prévias bloqueadas) — dados reais
-      hh += '<div class="pf-section" style="padding-top:.6rem"><div id="rc-list"><p class="muted-note">' + L("Carregando…", "Loading…", "Cargando…") + '</p></div></div>';
+      // (a galeria #rc-list foi movida pro TOPO do perfil — o cliente vê a amostra grátis logo de cara)
       // iron quente: logo após o bloco travado vêm as encomendas (R$ alto ancora) e os mimos
       hh += '<div id="pf-orders" class="pf-section" hidden></div>';
       // mimos (gorjetas)
@@ -3645,6 +3646,7 @@
       var subCents = (cObj && cObj.subPriceCents) || Math.round(subPrice * 100);
       // ASSINANTE: feed por dia (estilo Privacy) — novas postagens caem como novos dias
       if (subActive) {
+        var _sh = document.getElementById("pf-sample-h"); if (_sh) _sh.style.display = "none"; // assinante vê o feed completo, não "amostra grátis"
         var av = (cObj && cObj.avatarUrl) ? cObj.avatarUrl : "";
         var nm = (cObj && cObj.name) || "";
         var hd = (cObj && cObj.handle) || ("@" + creatorKey);
