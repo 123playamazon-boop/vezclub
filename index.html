@@ -962,6 +962,15 @@ fbq('track', 'PageView');
   .rc-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; display: block; }
   .free-badge { position: absolute; top: 8px; left: 8px; z-index: 3; background: var(--good); color: #fff; font-size: .68rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: .2rem .5rem; border-radius: 999px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
   .rc-media img, .rc-media video { cursor: zoom-in; }
+  .rc-media.gated img, .rc-media.gated video { filter: blur(16px); transform: scale(1.08); pointer-events: none; }
+  .rc-media.gated::after { content: "🔒"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.7rem; background: rgba(10,10,18,.22); z-index: 3; pointer-events: none; }
+  .lead-gate { margin: 1rem 0 .3rem; padding: 1rem 1.05rem; border: 2px solid var(--accent); border-radius: 14px; background: linear-gradient(135deg, rgba(124,58,237,.08), transparent); }
+  .lead-gate .lg-h { font-weight: 800; font-size: .98rem; margin-bottom: .2rem; }
+  .lead-gate .lg-s { font-size: .82rem; color: var(--muted); margin-bottom: .7rem; }
+  .lead-gate .lg-row { display: flex; gap: .5rem; }
+  .lead-gate input { flex: 1; min-width: 0; padding: .72rem .8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--card2, var(--surface)); color: inherit; font-size: .95rem; }
+  .lead-gate button { flex: 0 0 auto; border: 0; border-radius: 10px; padding: .72rem 1rem; font-weight: 800; color: #fff; background: var(--accent); cursor: pointer; }
+  .lead-gate .lg-err { color: var(--bad, #e11d48); font-size: .78rem; margin-top: .4rem; display: none; }
   .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(5,8,16,0.94); display: flex; align-items: center; justify-content: center; padding: 16px; -webkit-user-select: none; user-select: none; }
   .lightbox .lb-wrap { position: relative; max-width: 100%; max-height: 100%; display: flex; }
   .lightbox img { max-width: 92vw; max-height: 82vh; object-fit: contain; border-radius: 10px; -webkit-user-drag: none; }
@@ -1077,7 +1086,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b182"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b183"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4809,13 +4818,18 @@ fbq('track', 'PageView');
       var nPh = pr.data.filter(function (p) { return p.media_type !== "video"; }).length;
       var nVd = pr.data.filter(function (p) { return p.media_type === "video"; }).length;
       var likes = (cObj && cObj.likes) || 0;
+      // GATE DE LEAD (só BR, anônimo, lead ainda não capturado): 1ª foto é isca livre, resto borrado até deixar WhatsApp/e-mail
+      var gateOn = (coinMarket() === "br") && !account && !leadCaptured() && previews.length > 1;
       var prevHtml = previews.length
-        ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p) {
-            return '<div class="rc"><div class="rc-media" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + L("Prévia grátis", "Free preview", "Prévia gratis") + '</div></div></div>'; }).join("") + '</div>'
+        ? '<div class="rc-grid rc-grid-3">' + previews.map(function (p, i) {
+            var gated = gateOn && i >= 1;
+            var foot = gated ? ('🔒 ' + L("Deixa teu contato", "Leave your contact", "Deja tu contacto")) : L("Prévia grátis", "Free preview", "Prévia gratis");
+            return '<div class="rc"><div class="rc-media' + (gated ? ' gated' : '') + '" id="rc-' + p.id + '"></div><div class="rc-cap">' + escHtml(p.caption || "") + '</div><div class="rc-foot"><div class="rc-until" style="color:var(--good);font-weight:600">' + foot + '</div></div></div>'; }).join("") + '</div>'
         : '';
       // bloco grande "Veja tudo que ela esconde" removido (redundante com o Clube VIP no topo)
-      b.innerHTML = prevHtml + (hasSub ? '' : cta);
+      b.innerHTML = prevHtml + (gateOn ? leadGateHtml() : '') + (hasSub ? '' : cta);
       previews.forEach(function (p) { showFree(p); });
+      if (gateOn) wireLeadGate(b);
       wireSub(b, creatorKey, subPrice);
       if (!hasSub) {
         var paidPosts = pr.data.filter(function (p) { return !p.is_free; });
@@ -4823,6 +4837,38 @@ fbq('track', 'PageView');
       }
       applyDynTranslation();
     });
+  }
+  function leadCaptured() { try { return !!localStorage.getItem("vez_lead_ok"); } catch (e) { return false; } }
+  function leadGateHtml() {
+    return '<div class="lead-gate" id="lead-gate">' +
+      '<div class="lg-h">👀 ' + L("Quer ver sem borrão?", "Want to see it unblurred?", "¿Quieres verlo sin borrón?") + '</div>' +
+      '<div class="lg-s">' + L("Deixa teu WhatsApp ou e-mail e eu libero as fotos agora, de graça 💜", "Leave your WhatsApp or email and I'll unlock the photos now, free 💜", "Deja tu WhatsApp o correo y libero las fotos ahora, gratis 💜") + '</div>' +
+      '<div class="lg-row"><input id="lg-input" type="text" inputmode="email" autocomplete="off" placeholder="' + escHtml(L("WhatsApp ou e-mail", "WhatsApp or email", "WhatsApp o correo")) + '"><button id="lg-btn">' + L("Liberar", "Unlock", "Liberar") + '</button></div>' +
+      '<div class="lg-err" id="lg-err">' + L("Digita um WhatsApp ou e-mail válido 🙏", "Enter a valid WhatsApp or email 🙏", "Escribe un WhatsApp o correo válido 🙏") + '</div>' +
+    '</div>';
+  }
+  function wireLeadGate(scope) {
+    var inp = scope.querySelector("#lg-input"), btn = scope.querySelector("#lg-btn"), err = scope.querySelector("#lg-err");
+    if (!inp || !btn) return;
+    function valid(v) { v = (v || "").trim(); if (v.indexOf("@") > 0 && /\.[a-z]{2,}$/i.test(v)) return v; var d = v.replace(/\D/g, ""); return d.length >= 10 ? d : null; }
+    function unlock() {
+      scope.querySelectorAll(".rc-media.gated").forEach(function (el) { el.classList.remove("gated"); });
+      scope.querySelectorAll(".rc-foot .rc-until").forEach(function (el) { if (/🔒/.test(el.textContent)) el.textContent = L("Prévia grátis", "Free preview", "Prévia gratis"); });
+      var g = scope.querySelector("#lead-gate"); if (g) g.remove();
+    }
+    function submit() {
+      var v = valid(inp.value);
+      if (!v) { if (err) err.style.display = "block"; return; }
+      if (err) err.style.display = "none";
+      btn.disabled = true; btn.textContent = L("Liberando…", "Unlocking…", "Liberando…");
+      try { localStorage.setItem("vez_lead_ok", "1"); } catch (e) {}
+      var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+      try { sb.functions.invoke("lead", { body: { contact: v, ref: _ref, source: "free_gate" } }).then(function () {}, function () {}); } catch (e) {}
+      try { if (window.clarity) window.clarity("event", "free_gate_lead"); } catch (e) {}
+      unlock(); // libera na hora, sem esperar a rede
+    }
+    btn.onclick = submit;
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
   }
   function showFree(p) {
     var el = document.getElementById("rc-" + p.id); if (!el) return;
