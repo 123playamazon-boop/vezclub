@@ -1073,7 +1073,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b172"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b173"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2721,7 +2721,6 @@ fbq('track', 'PageView');
     app.innerHTML = html;
     var _bm = document.getElementById("be-model"); if (_bm) _bm.onclick = function () { openCreatorPanel(); };
     startTicker();
-    wireStoriesAutoScroll();
     refreshFabBadge();
     app.querySelectorAll(".chip[data-cat]").forEach(function (ch) {
       ch.onclick = function () {
