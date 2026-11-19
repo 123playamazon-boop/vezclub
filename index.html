@@ -1089,7 +1089,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b186"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b187"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4860,29 +4860,52 @@ fbq('track', 'PageView');
       '<div class="lg-err" id="lg-err">' + L("Digita um WhatsApp ou e-mail válido 🙏", "Enter a valid WhatsApp or email 🙏", "Escribe un WhatsApp o correo válido 🙏") + '</div>' +
     '</div>';
   }
+  function leadValid(v) { v = (v || "").trim(); if (v.indexOf("@") > 0 && /\.[a-z]{2,}$/i.test(v)) return v; var d = v.replace(/\D/g, ""); return d.length >= 10 ? d : null; }
+  function leadUnlockAll() {
+    document.querySelectorAll(".rc-media.gated, .mini-tile.gated").forEach(function (el) { el.classList.remove("gated"); });
+    document.querySelectorAll(".rc-foot .rc-until").forEach(function (el) { if (/contato|contact|contacto/i.test(el.textContent)) el.textContent = L("Prévia grátis", "Free preview", "Prévia gratis"); });
+    document.querySelectorAll("#lead-gate").forEach(function (g) { g.remove(); });
+    var m = document.getElementById("lead-modal"); if (m) m.remove();
+    try { document.body.style.overflow = ""; } catch (e) {}
+  }
+  function submitLead(raw) {
+    var v = leadValid(raw); if (!v) return false;
+    try { localStorage.setItem("vez_lead_ok", "1"); } catch (e) {}
+    var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
+    try { sb.functions.invoke("lead", { body: { contact: v, ref: _ref, source: "free_gate" } }).then(function () {}, function () {}); } catch (e) {}
+    try { if (window.clarity) window.clarity("event", "free_gate_lead"); } catch (e) {}
+    leadUnlockAll(); // libera na hora, sem esperar a rede
+    return true;
+  }
   function wireLeadGate(scope) {
     var inp = scope.querySelector("#lg-input"), btn = scope.querySelector("#lg-btn"), err = scope.querySelector("#lg-err");
     if (!inp || !btn) return;
-    function valid(v) { v = (v || "").trim(); if (v.indexOf("@") > 0 && /\.[a-z]{2,}$/i.test(v)) return v; var d = v.replace(/\D/g, ""); return d.length >= 10 ? d : null; }
-    function unlock() {
-      document.querySelectorAll(".rc-media.gated, .mini-tile.gated").forEach(function (el) { el.classList.remove("gated"); });
-      document.querySelectorAll(".rc-foot .rc-until").forEach(function (el) { if (/🔒/.test(el.textContent)) el.textContent = L("Prévia grátis", "Free preview", "Prévia gratis"); });
-      document.querySelectorAll("#lead-gate").forEach(function (g) { g.remove(); });
-    }
-    function submit() {
-      var v = valid(inp.value);
-      if (!v) { if (err) err.style.display = "block"; return; }
-      if (err) err.style.display = "none";
-      btn.disabled = true; btn.textContent = L("Liberando…", "Unlocking…", "Liberando…");
-      try { localStorage.setItem("vez_lead_ok", "1"); } catch (e) {}
-      var _ref = ""; try { _ref = localStorage.getItem("vez_ref") || ""; } catch (e) {}
-      try { sb.functions.invoke("lead", { body: { contact: v, ref: _ref, source: "free_gate" } }).then(function () {}, function () {}); } catch (e) {}
-      try { if (window.clarity) window.clarity("event", "free_gate_lead"); } catch (e) {}
-      unlock(); // libera na hora, sem esperar a rede
-    }
-    btn.onclick = submit;
-    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
+    function go() { if (!submitLead(inp.value)) { if (err) err.style.display = "block"; return; } }
+    btn.onclick = go;
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") go(); });
   }
+  // pop-up: a pessoa clica na foto borrada -> abre o pedido de contato na hora (é onde o usuário clica, não no box de baixo)
+  function openLeadGateModal() {
+    if (document.getElementById("lead-modal")) return;
+    var ov = document.createElement("div"); ov.id = "lead-modal";
+    ov.style.cssText = "position:fixed;inset:0;z-index:10040;background:rgba(5,8,16,.74);display:flex;align-items:center;justify-content:center;padding:1rem";
+    ov.innerHTML = '<div style="max-width:380px;width:100%;position:relative">' +
+      '<button id="lm-x" aria-label="fechar" style="position:absolute;top:-34px;right:0;background:none;border:0;color:#fff;font-size:1.5rem;cursor:pointer">✕</button>' +
+      leadGateHtml().replace('class="lead-gate"', 'class="lead-gate" style="margin:0;background:var(--card,#fff);box-shadow:0 24px 60px rgba(0,0,0,.5)"') +
+    '</div>';
+    document.body.appendChild(ov);
+    try { document.body.style.overflow = "hidden"; } catch (e) {}
+    ov.addEventListener("click", function (e) { if (e.target === ov || (e.target.closest && e.target.closest("#lm-x"))) { ov.remove(); try { document.body.style.overflow = ""; } catch (_) {} } });
+    var card = ov.querySelector(".lead-gate"); if (card) wireLeadGate(card);
+    setTimeout(function () { var i = ov.querySelector("#lg-input"); if (i) i.focus(); }, 80);
+  }
+  // clique em QUALQUER foto borrada (home ou perfil) abre o pop-up, antes de navegar
+  document.addEventListener("click", function (e) {
+    var g = e.target && e.target.closest ? e.target.closest(".mini-tile.gated, .rc-media.gated") : null;
+    if (!g) return;
+    e.preventDefault(); e.stopPropagation();
+    openLeadGateModal();
+  }, true);
   function showFree(p) {
     var el = document.getElementById("rc-" + p.id); if (!el) return;
     var u = mediaUrl(p.media_path);
