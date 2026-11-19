@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b196"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b197"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -1608,7 +1608,7 @@
     var isca = PHOTO_LADDER[0].usd;
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
     html += '<div class="page-head"><div class="eyebrow">' + L("Conteúdo exclusivo", "Exclusive content", "Contenido exclusivo") + '</div><h1>' + L("As mais gostosas do Brasil — e tudo que elas escondem.", "The hottest girls in Brazil — and everything they hide.", "Las más ricas de Brasil — y todo lo que esconden.") + '</h1><p>' + L("Assine e veja o que elas não postam em mais nenhum lugar: fotos sem censura, vídeos sem corte e o chat direto com ela. Acesso na hora, sem fidelidade.", "Subscribe and see what they don't post anywhere else: uncensored photos, uncut videos and direct chat with her. Instant access, no commitment.", "Suscríbete y mira lo que no publican en ningún otro lugar: fotos sin censura, videos sin cortes y chat directo con ella. Acceso al instante, sin permanencia.") + '</p></div>';
-    // GANCHO: modelo em destaque no topo — dá ao tráfego frio (que cai na home genérica) um próximo passo quente e óbvio: o chat dela
+    // GANCHO: modelo em destaque no topo — leva o tráfego frio direto pro PERFIL dela (onde estão os pacotes de assinatura), não pro chat
     (function () {
       var pool = CREATORS.filter(function (c) { return c.online && c.hasChat !== false && (c.coverUrl || c.coverPath); });
       // prioriza modelo REAL (humana, não IA) — converte de verdade no BR; IA é fallback
@@ -1620,13 +1620,13 @@
       var fhook = ((F.hook || "").split(/[.!?\n]/)[0] || "").trim().slice(0, 90);
       var bg = F.coverPath ? ("url('" + imgUrl(F.coverPath, 720, 70) + "');background-color:#17131f")
              : (F.coverUrl ? ("url('" + F.coverUrl + "');background-color:#17131f") : "none;background:" + grad(F.color));
-      html += '<div class="feat-hero" data-chat-open="' + escHtml(F.id) + '">' +
+      html += '<div class="feat-hero" data-creator="' + escHtml(F.id) + '">' +
         '<div class="feat-cover" style="background-image:' + bg + '">' +
           '<span class="feat-live"><span class="live-dot"></span>' + L("online agora", "online now", "en línea ahora") + '</span>' +
           '<div class="feat-body">' +
             '<div class="feat-name">' + escHtml(F.name) + '<span class="verif">' + I.verif + '</span></div>' +
             (fhook ? '<div class="feat-hook">' + escHtml(fhook) + '</div>' : '') +
-            '<div class="feat-cta">' + I.chatic + ' ' + L("Falar com " + fn + " agora", "Chat with " + fn + " now", "Hablar con " + fn + " ahora") + ' 🔥</div>' +
+            '<div class="feat-cta">' + L("Ver o perfil da " + fn, "See " + fn + "'s profile", "Ver el perfil de " + fn) + ' 🔥</div>' +
           '</div>' +
         '</div></div>';
     })();
