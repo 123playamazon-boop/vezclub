@@ -1067,7 +1067,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b170"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b171"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -2177,6 +2177,26 @@ fbq('track', 'PageView');
       return '<div class="story ' + (seen ? "seen" : "") + '" data-story="' + c.id + '"><div class="ring">' + av + '</div><div class="nm">' + c.name.split(" ")[0] + '</div><div class="exp">' + (seen ? "visto" : "expira em " + (3 + c.left % 6) + "h") + '</div></div>';
     }).join("") + '</div>';
   }
+  // auto-scroll do stories tipo Instagram: desliza sozinho, pausa quando a pessoa toca/passa o mouse, volta ao início no fim
+  function wireStoriesAutoScroll() {
+    var row = document.querySelector(".stories"); if (!row) return;
+    if (row._autoWired) return; row._autoWired = true;
+    var paused = false, dir = 1, raf = null;
+    var resume = null;
+    function pause(ms) { paused = true; if (resume) clearTimeout(resume); resume = setTimeout(function () { paused = false; }, ms || 2200); }
+    ["pointerdown", "touchstart", "wheel", "mouseenter"].forEach(function (ev) { row.addEventListener(ev, function () { pause(2600); }, { passive: true }); });
+    function step() {
+      raf = requestAnimationFrame(step);
+      if (paused) return;
+      var max = row.scrollWidth - row.clientWidth;
+      if (max <= 4) return; // nada pra rolar
+      row.scrollLeft += dir * 0.45; // velocidade suave
+      if (row.scrollLeft >= max - 1) { dir = -1; pause(1400); }      // chegou no fim -> volta
+      else if (row.scrollLeft <= 1 && dir === -1) { dir = 1; pause(1400); } // voltou no início -> segue
+    }
+    // começa após um instante pra não competir com o load
+    setTimeout(function () { if (!row.isConnected) return; raf = requestAnimationFrame(step); }, 1200);
+  }
 
   /* ---------------- i18n engine (UI strings) ---------------- */
   // DICT: whole-text-node PT string -> [en, es]. PAT: regex for interpolated strings.
@@ -2695,6 +2715,7 @@ fbq('track', 'PageView');
     app.innerHTML = html;
     var _bm = document.getElementById("be-model"); if (_bm) _bm.onclick = function () { openCreatorPanel(); };
     startTicker();
+    wireStoriesAutoScroll();
     refreshFabBadge();
     app.querySelectorAll(".chip[data-cat]").forEach(function (ch) {
       ch.onclick = function () {
