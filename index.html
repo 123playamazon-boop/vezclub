@@ -1089,7 +1089,7 @@ fbq('track', 'PageView');
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b188"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b189"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
     try {
@@ -4855,7 +4855,7 @@ fbq('track', 'PageView');
   function leadGateHtml() {
     return '<div class="lead-gate" id="lead-gate">' +
       '<div class="lg-h">👀 ' + L("Ver sem borrão é ", "Seeing it unblurred is ", "Verlo sin borrón es ") + '<span class="lg-free">' + L("GRÁTIS", "FREE", "GRATIS") + '</span></div>' +
-      '<div class="lg-s">' + L("Não precisa pagar nada — é só deixar teu WhatsApp ou e-mail que eu libero todas as prévias na hora 💜", "No payment needed — just leave your WhatsApp or email and I'll unlock all the previews instantly 💜", "No hay que pagar nada — solo deja tu WhatsApp o correo y libero todas las prévias al instante 💜") + '</div>' +
+      '<div class="lg-s">' + L("Não precisa pagar nada — deixa teu WhatsApp ou e-mail e eu libero na hora as prévias grátis de TODAS as modelos, não só desta 💜", "No payment needed — leave your WhatsApp or email and I'll instantly unlock the free previews of ALL the models, not just this one 💜", "No hay que pagar nada — deja tu WhatsApp o correo y libero al instante las prévias gratis de TODAS las modelos, no solo esta 💜") + '</div>' +
       '<div class="lg-row"><input id="lg-input" type="text" inputmode="email" autocomplete="off" placeholder="' + escHtml(L("Teu WhatsApp ou e-mail", "Your WhatsApp or email", "Tu WhatsApp o correo")) + '"><button id="lg-btn">' + L("Liberar grátis", "Unlock free", "Liberar gratis") + '</button></div>' +
       '<div class="lg-err" id="lg-err">' + L("Digita um WhatsApp ou e-mail válido 🙏", "Enter a valid WhatsApp or email 🙏", "Escribe un WhatsApp o correo válido 🙏") + '</div>' +
     '</div>';
