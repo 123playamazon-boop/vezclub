@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b191"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b192"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -1607,7 +1607,7 @@
     var CATS = [{ k: "alta", t: "Em alta" }, { k: "online", t: "Online agora" }, { k: "fitness", t: "Fitness" }, { k: "fashion", t: "Fashion" }, { k: "lifestyle", t: "Lifestyle" }];
     var isca = PHOTO_LADDER[0].usd;
     var html = protoNotice('<span><b>Feed do comprador.</b> Toque numa criadora pra ver o perfil dela. Compras são simuladas.</span>');
-    html += '<div class="page-head"><div class="eyebrow">' + L("Conteúdo exclusivo", "Exclusive content", "Contenido exclusivo") + '</div><h1>' + L("As mais gostosas do Brasil — e tudo que elas escondem.", "The hottest girls in Brazil — and everything they hide.", "Las más ricas de Brasil — y todo lo que esconden.") + '</h1><p>' + L("Assine e veja o que elas não postam em mais nenhum lugar: fotos sem censura, vídeos sem corte e o chat direto com ela. Acesso na hora, cancela quando quiser.", "Subscribe and see what they don't post anywhere else: uncensored photos, uncut videos and direct chat with her. Instant access, cancel anytime.", "Suscríbete y mira lo que no publican en ningún otro lugar: fotos sin censura, videos sin cortes y chat directo con ella. Acceso al instante, cancela cuando quieras.") + '</p></div>';
+    html += '<div class="page-head"><div class="eyebrow">' + L("Conteúdo exclusivo", "Exclusive content", "Contenido exclusivo") + '</div><h1>' + L("As mais gostosas do Brasil — e tudo que elas escondem.", "The hottest girls in Brazil — and everything they hide.", "Las más ricas de Brasil — y todo lo que esconden.") + '</h1><p>' + L("Assine e veja o que elas não postam em mais nenhum lugar: fotos sem censura, vídeos sem corte e o chat direto com ela. Acesso na hora, sem fidelidade.", "Subscribe and see what they don't post anywhere else: uncensored photos, uncut videos and direct chat with her. Instant access, no commitment.", "Suscríbete y mira lo que no publican en ningún otro lugar: fotos sin censura, videos sin cortes y chat directo con ella. Acceso al instante, sin permanencia.") + '</p></div>';
     // combosBanners() DESCIDO pro final (preco no topo nao converte) — anexado depois do grid de modelos
     // seções próprias (DESCIDAS pro final — não converteram no topo): guardadas e anexadas depois do grid
     var sectionBanners = '<div style="display:flex;flex-direction:column;gap:.6rem;margin:1.4rem 0 1rem">' +
