@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b200"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b201"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -1128,12 +1128,15 @@
     }, 3500);
   }
   function storiesRow() {
-    return '<div class="stories">' + CREATORS.map(function (c) {
-      var seen = state.storiesSeen[c.id];
-      var av = c.avatarUrl
-        ? '<div class="av" style="background-image:url(\'' + avThumb(c, 130) + '\');background-size:cover;background-position:center"></div>'
-        : '<div class="av" style="background:' + grad(c.color) + '">' + initials(c.name) + '</div>';
-      return '<div class="story ' + (seen ? "seen" : "") + '" data-story="' + c.id + '"><div class="ring">' + av + '</div><div class="nm">' + c.name.split(" ")[0] + '</div><div class="exp">' + (seen ? "visto" : "expira em " + (3 + c.left % 6) + "h") + '</div></div>';
+    // fileira de FOTOS (capa) das modelos — mais apelativa que a bolinha de rosto; clicar abre o PERFIL
+    var pool = CREATORS.slice().sort(function (a, b) { return (b.online ? 1 : 0) - (a.online ? 1 : 0); });
+    return '<div class="stories">' + pool.map(function (c) {
+      var ph = c.coverPath ? imgUrl(c.coverPath, 260, 62) : (c.coverUrl || (c.avatarUrl ? avThumb(c, 180) : ""));
+      var img = ph
+        ? '<div class="pcard-img" style="background-image:url(\'' + ph + '\')">'
+        : '<div class="pcard-img" style="background:' + grad(c.color) + '">';
+      var live = c.online ? '<span class="pcard-live"></span>' : '';
+      return '<div class="pcard" data-creator="' + c.id + '">' + img + live + '</div><div class="nm">' + escHtml(c.name.split(" ")[0]) + '</div></div>';
     }).join("") + '</div>';
   }
   // auto-scroll do stories tipo Instagram: desliza sozinho, pausa quando a pessoa toca/passa o mouse, volta ao início no fim
