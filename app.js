@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b199"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b200"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -5152,7 +5152,7 @@
     document.body.appendChild(ov);
   };
   // galeria com swipe (carrossel) pras fotos free — passa o dedo pra frente/tras + abre/fecha
-  window.__gallery = function (srcs, idx) {
+  window.__gallery = function (srcs, idx, cta) {
     srcs = (srcs || []).filter(Boolean); if (!srcs.length) return;
     idx = Math.max(0, Math.min(idx || 0, srcs.length - 1));
     var ov = document.createElement("div");
@@ -5186,10 +5186,36 @@
     ov.addEventListener("click", function (e) { if (!moved && e.target === ov) destroy(); });
     document.addEventListener("keydown", onKey);
     ov.appendChild(img); ov.appendChild(prev); ov.appendChild(next); ov.appendChild(close); ov.appendChild(dotWrap); ov.appendChild(hint);
+    if (cta && cta.label) {
+      // o toque na foto grátis vira o momento da venda: CTA de assinatura dentro do lightbox
+      var ctaBtn = document.createElement("button");
+      ctaBtn.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:max(56px,calc(env(safe-area-inset-bottom,0px) + 40px));z-index:4;border:0;border-radius:999px;padding:14px 26px;font-weight:800;font-size:1rem;color:#fff;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 10px 30px rgba(219,38,127,.45);cursor:pointer;max-width:92vw";
+      ctaBtn.textContent = cta.label;
+      ctaBtn.onclick = function (e) { e.stopPropagation(); destroy(); try { if (typeof cta.onClick === "function") cta.onClick(); } catch (x) {} };
+      ov.appendChild(ctaBtn);
+      hint.style.display = "none";
+    }
     document.body.appendChild(ov); paint();
   };
+  // CTA de assinatura pro lightbox: só em perfil com planos (Clube VIP). Fecha o zoom e rola pros planos.
+  function profileSubCta() {
+    var plans = document.getElementById("pf-plans"); if (!plans) return null;
+    return { label: L("Ver tudo sem censura · Assinar", "See it all uncensored · Subscribe", "Ver todo sin censura · Suscríbete"), onClick: function () {
+      try { if (window.clarity) window.clarity("event", "lightbox_sub_cta"); } catch (x) {}
+      var sec = plans.closest(".pf-section") || plans;
+      try { sec.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (x) { sec.scrollIntoView(); }
+      sec.style.transition = "box-shadow .3s"; sec.style.boxShadow = "0 0 0 3px rgba(219,38,127,.55)";
+      setTimeout(function () { sec.style.boxShadow = "none"; }, 1400);
+    } };
+  }
   // clique numa foto free abre a galeria do conjunto (swipe entre as do mesmo bloco)
   document.addEventListener("click", function (e) {
+    // foto de capa do perfil (hero) — era um clique morto; agora abre a amostra grátis no lightbox
+    var cov = e.target && e.target.closest ? e.target.closest(".pf-cover") : null;
+    if (cov) {
+      var gsrcs = [].slice.call(document.querySelectorAll("#rc-list .rc-grid img[data-full]")).filter(function (x) { return !x.closest(".gated"); }).map(function (x) { return x.getAttribute("data-full"); });
+      if (gsrcs.length) { e.preventDefault(); e.stopPropagation(); window.__gallery(gsrcs, 0, profileSubCta()); return; }
+    }
     var im = e.target && e.target.closest ? e.target.closest("img[data-full]") : null;
     if (!im) return;
     if (im.closest(".gated")) return; // gate de lead: foto borrada não abre o lightbox (segue pro clique do card -> perfil)
@@ -5198,7 +5224,9 @@
     var srcs = imgs.map(function (x) { return x.getAttribute("data-full"); });
     if (!srcs.length) return;
     e.preventDefault(); e.stopPropagation();
-    window.__gallery(srcs, imgs.indexOf(im));
+    // se a foto está dentro do grid de amostra grátis do perfil, anexa o CTA de assinatura
+    var cta = im.closest("#rc-list") ? profileSubCta() : null;
+    window.__gallery(srcs, imgs.indexOf(im), cta);
   }, true);
   function openAiChat(cid, firstMsg) {
     var c = CREATORS.find(function (x) { return x.id === cid; });
