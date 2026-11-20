@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Abrindo…</title>
+<style>
+html,body{margin:0;height:100%;background:#0e0b16;color:#f3eefb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:grid;place-items:center;text-align:center}
+.box{padding:24px}
+.sp{width:40px;height:40px;border-radius:50%;border:4px solid #2a2238;border-top-color:#d6267f;margin:0 auto 16px;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+a{color:#d6267f}
+</style>
+</head>
+<body>
+<div class="box">
+<div class="sp"></div>
+<div>Abrindo o Telegram… 🔥</div>
+<div style="margin-top:14px;font-size:13px;color:#9a8fb5">Se não abrir, <a id="fallback" href="https://t.me/silmara_vezbot?start=meta_silmara">toque aqui</a></div>
+</div>
+<script>
+(function(){
+  // Pixel ID do Meta (preenchido quando o gestor informar). Vazio = sem pixel, só captura fbclid.
+  var PIXEL = "";
+  var BOT = "silmara_vezbot";
+  var FN = "https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/tg-click";
+  var AK = "sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+  function qp(n){try{return new URLSearchParams(location.search).get(n)||"";}catch(e){return "";}}
+  function cookie(n){try{var m=document.cookie.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):"";}catch(e){return "";}}
+  var fbclid = qp("fbclid");
+  var ref = qp("ref") || "meta_silmara";
+  // Meta Pixel (só se configurado) — gera o _fbp e dispara ViewContent no navegador
+  if (PIXEL){
+    try{
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', PIXEL); fbq('track', 'PageView'); fbq('track', 'ViewContent');
+    }catch(e){}
+  }
+  var done = false;
+  function go(id){ if(done) return; done=true; location.replace("https://t.me/"+BOT+"?start="+encodeURIComponent(id||"meta_silmara")); }
+  function send(){
+    var fbp = cookie("_fbp");
+    document.getElementById("fallback").href = "https://t.me/"+BOT+"?start="+encodeURIComponent(ref);
+    fetch(FN,{method:"POST",headers:{"Content-Type":"application/json","apikey":AK},body:JSON.stringify({ref:ref,fbclid:fbclid,fbp:fbp})})
+      .then(function(r){return r.json();})
+      .then(function(d){ go(d&&d.id?d.id:ref); })
+      .catch(function(){ go(ref); });
+  }
+  // dá um tiquinho pro pixel setar o _fbp, depois redireciona
+  setTimeout(send, PIXEL ? 600 : 120);
+  // trava de segurança
+  setTimeout(function(){ go(ref); }, 3500);
+})();
+</script>
+</body>
+</html>
