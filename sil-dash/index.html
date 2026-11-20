@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Silmara · Painel ao vivo</title>
+<style>
+:root{--bg:#0e0b16;--card:#1a1526;--line:#2a2238;--ink:#f3eefb;--mut:#9a8fb5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:18px 14px 70px}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:19px;margin:0 0 2px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:560px){.grid{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card .v{font-size:26px;font-weight:800;background:linear-gradient(135deg,#c084fc,#f472b6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.card .l{font-size:12px;color:var(--mut);margin-top:2px}
+.card .s{font-size:11px;color:var(--mut);margin-top:3px}
+h2{font-size:14px;margin:24px 0 8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.mut{color:var(--mut)}
+.err{color:#f472b6;padding:20px 0}
+</style>
+</head>
+<body><div class="wrap">
+<h1>🔥 Silmara · Painel ao vivo</h1>
+<div class="sub" id="sub">carregando…</div>
+<div class="grid" id="cards"></div>
+<h2>Por origem (link do anúncio)</h2>
+<table><thead><tr><th>origem</th><th>entraram</th><th>Pix</th><th>assinaram</th></tr></thead><tbody id="refs"></tbody></table>
+<h2>Últimos leads</h2>
+<table><thead><tr><th>nome</th><th>origem</th><th>fase</th><th>msgs</th><th>recup.</th><th>quando</th></tr></thead><tbody id="recent"></tbody></table>
+</div>
+<script>
+var FN="https://mfxyavlpbofcdiylnnjm.supabase.co/functions/v1/silmara-dash?k=sildash_vz_7b3e91c4";
+var AK="sb_publishable_RZdvipvnj0yWXAzNcpSIVg_1axK7wmj";
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function pct(a,b){return b?Math.round(a/b*100)+"%":"—";}
+function fase(c){if(c.pago)return "💰 assinou";if(c.state==="pix_sent")return "🧾 recebeu Pix";if(c.offered)return "🔥 ofertado";return "💬 conversando";}
+function hhmm(t){try{return new Date(t).toLocaleString("pt-BR",{timeZone:"America/Bahia",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});}catch(e){return "";}}
+function card(l,v,s){return '<div class="card"><div class="v">'+v+'</div><div class="l">'+l+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'</div>';}
+function load(){
+  fetch(FN,{headers:{apikey:AK,Authorization:"Bearer "+AK},cache:"no-store"}).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok){document.getElementById("sub").innerHTML='<span class="err">sem acesso aos dados</span>';return;}
+    document.getElementById("sub").textContent="Telegram · atualiza sozinho a cada 30s · "+new Date(d.ts).toLocaleString("pt-BR",{timeZone:"America/Bahia"});
+    var s=d.stat;
+    document.getElementById("cards").innerHTML=
+      card("entraram (total)",s.total,(s.d24)+" nas últimas 24h")+
+      card("receberam Pix",s.pix,pct(s.pix,s.total)+" dos que entraram")+
+      card("assinaram",s.pago,pct(s.pago,s.pix)+" dos Pix")+
+      card("ofertados",s.off,"");
+    document.getElementById("refs").innerHTML=(d.refs||[]).map(function(r){
+      return '<tr><td>'+esc(r.ref)+'</td><td>'+r.entrou+'</td><td>'+r.pix+' <span class="mut">('+pct(r.pix,r.entrou)+')</span></td><td><b>'+r.pago+'</b> <span class="mut">('+pct(r.pago,r.entrou)+')</span></td></tr>';
+    }).join("")||'<tr><td colspan="4" class="mut">sem dados ainda</td></tr>';
+    document.getElementById("recent").innerHTML=(d.recent||[]).map(function(c){
+      return '<tr><td>'+esc(c.nome)+'</td><td class="mut">'+esc(c.origem)+'</td><td>'+fase(c)+'</td><td class="mut">'+c.msgs+'</td><td class="mut">'+c.recov+'</td><td class="mut">'+hhmm(c.quando)+'</td></tr>';
+    }).join("")||'<tr><td colspan="6" class="mut">sem dados ainda</td></tr>';
+  }).catch(function(){document.getElementById("sub").innerHTML='<span class="err">erro ao carregar — tenta recarregar</span>';});
+}
+load();
+setInterval(load,30000);
+</script>
+</body>
+</html>
