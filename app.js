@@ -17,7 +17,7 @@
     } catch (e) {}
     return "en"; // padrao final: ingles
   })();
-  var BUILD = "b201"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
+  var BUILD = "b202"; // selo de versao (diagnostico de cache) — some no cabecalho do chat
   var FREE_GATE = false; // gate de lead nas fotos grátis (borrão BR) — desligado: não converteu no tráfego frio, espantava. Virar true pra religar.
   // AUTO-ATUALIZACAO: se o navegador serviu uma versao velha em cache, detecta e recarrega ja na nova (fura o cache)
   (function () {
@@ -1132,12 +1132,24 @@
     var pool = CREATORS.slice().sort(function (a, b) { return (b.online ? 1 : 0) - (a.online ? 1 : 0); });
     return '<div class="stories">' + pool.map(function (c) {
       var ph = c.coverPath ? imgUrl(c.coverPath, 260, 62) : (c.coverUrl || (c.avatarUrl ? avThumb(c, 180) : ""));
+      // lazy: só o placeholder (gradiente) sai no HTML; a foto entra via IntersectionObserver quando chega perto da dobra
       var img = ph
-        ? '<div class="pcard-img" style="background-image:url(\'' + ph + '\')">'
+        ? '<div class="pcard-img" data-bg="' + escHtml(ph) + '" style="background:' + grad(c.color) + '">'
         : '<div class="pcard-img" style="background:' + grad(c.color) + '">';
       var live = c.online ? '<span class="pcard-live"></span>' : '';
       return '<div class="pcard" data-creator="' + c.id + '">' + img + live + '</div><div class="nm">' + escHtml(c.name.split(" ")[0]) + '</div></div>';
     }).join("") + '</div>';
+  }
+  // carrega as fotos da fileira só quando chegam perto da viewport (libera banda pro hero -> LCP menor)
+  function wireStoriesLazy() {
+    var imgs = document.querySelectorAll(".stories .pcard-img[data-bg]");
+    if (!imgs.length) return;
+    function load(el) { var u = el.getAttribute("data-bg"); if (!u) return; el.style.backgroundImage = "url('" + u + "')"; el.removeAttribute("data-bg"); }
+    if (!("IntersectionObserver" in window)) { imgs.forEach(load); return; }
+    var io = new IntersectionObserver(function (ents) {
+      ents.forEach(function (e) { if (e.isIntersecting) { load(e.target); io.unobserve(e.target); } });
+    }, { root: null, rootMargin: "300px" });
+    imgs.forEach(function (el) { io.observe(el); });
   }
   // auto-scroll do stories tipo Instagram: desliza sozinho, pausa quando a pessoa toca/passa o mouse, volta ao início no fim
   function wireStoriesAutoScroll() {
@@ -1621,8 +1633,10 @@
       var F = pool[0]; if (!F) return;
       var fn = (F.name || "").split(" ")[0];
       var fhook = ((F.hook || "").split(/[.!?\n]/)[0] || "").trim().slice(0, 90);
-      var bg = F.coverPath ? ("url('" + imgUrl(F.coverPath, 720, 70) + "');background-color:#17131f")
-             : (F.coverUrl ? ("url('" + F.coverUrl + "');background-color:#17131f") : "none;background:" + grad(F.color));
+      var heroUrl = F.coverPath ? imgUrl(F.coverPath, 720, 70) : (F.coverUrl || "");
+      // preload do hero (é o elemento de LCP) — busca já com prioridade alta
+      if (heroUrl) { try { if (!document.querySelector('link[data-herop]')) { var pl = document.createElement("link"); pl.rel = "preload"; pl.as = "image"; pl.href = heroUrl; pl.setAttribute("fetchpriority", "high"); pl.setAttribute("data-herop", "1"); document.head.appendChild(pl); } } catch (e) {} }
+      var bg = heroUrl ? ("url('" + heroUrl + "');background-color:#17131f") : ("none;background:" + grad(F.color));
       html += '<div class="feat-hero" data-creator="' + escHtml(F.id) + '">' +
         '<div class="feat-cover" style="background-image:' + bg + '">' +
           '<span class="feat-live"><span class="live-dot"></span>' + L("online agora", "online now", "en línea ahora") + '</span>' +
@@ -1698,6 +1712,7 @@
     if (CREATORS.some(function (x) { return x.hasChat; })) html += '<button class="chat-fab" data-chat-fab="1" aria-label="Mensagens">' + I.chatic + '</button>';
     html += '<div style="text-align:center;margin:2.4rem 0 1.2rem;padding-top:1.3rem;border-top:1px solid var(--line)"><button id="be-model" style="background:none;border:0;color:var(--muted);font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px">' + L("É modelo? Quero ganhar dinheiro na Vezclub →", "Are you a model? I want to earn on Vezclub →", "¿Eres modelo? Quiero ganar en Vezclub →") + '</button></div>';
     app.innerHTML = html;
+    wireStoriesLazy();
     var _bm = document.getElementById("be-model"); if (_bm) _bm.onclick = function () { openCreatorPanel(); };
     startTicker();
     if (gatedHome) wireLeadGate(app);
