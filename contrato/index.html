@@ -335,8 +335,10 @@ function fmt(ts){try{return new Date(ts).toLocaleString(ES?"es-ES":"pt-BR");}cat
 
 function renderForm(d){
   var w=document.createElement("div");w.className="wrap";
+  // contrato personalizado (negociado) tem prioridade sobre o template padrão
+  var docHtml = (d && d.custom_html) ? d.custom_html : contractHtml();
   w.innerHTML= ES ?
-    ('<div class="paper"><span class="tag">Para firmar</span>'+contractHtml()+
+    ('<div class="paper"><span class="tag">Para firmar</span>'+docHtml+
       '<div class="scrollnote">¿Llegaste hasta aquí? Entonces solo completa tus datos, marca las confirmaciones y firma abajo. 👇</div>'+
     '</div>'+
     '<div class="paper">'+
@@ -386,7 +388,7 @@ function renderForm(d){
       '<div class="foot">Al enviar, registramos fecha, hora y tu IP como prueba de la firma electrónica (Cláusula 14.1). IT’S BRAZILIAN LLC · Vezclub.</div>'+
     '</div>')
     :
-    ('<div class="paper"><span class="tag">Para assinar</span>'+contractHtml()+
+    ('<div class="paper"><span class="tag">Para assinar</span>'+docHtml+
       '<div class="scrollnote">Role até aqui? Então é só preencher seus dados, marcar as confirmações e assinar abaixo. 👇</div>'+
     '</div>'+
     '<div class="paper">'+
